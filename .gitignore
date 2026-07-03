@@ -49,3 +49,8 @@ coverage/
 # ==========================
 .DS_Store
 Thumbs.db
+
+# ==========================
+# Local Phases Checklist
+# ==========================
+phases.txt
