@@ -7,7 +7,10 @@ class BaseRepository {
    * @param {Array} params - Query arguments
    * @returns {Promise<any>} MariaDB result object
    */
-  static async query(sql, params = []) {
+  static async query(sql, params = [], connection = null) {
+    if (connection) {
+      return await connection.query(sql, params);
+    }
     let conn;
     try {
       conn = await pool.getConnection();

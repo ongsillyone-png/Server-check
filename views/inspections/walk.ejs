@@ -1,0 +1,546 @@
+<%- include('../layouts/header') %>
+<%- include('../layouts/sidebar') %>
+
+<!-- Top Bar Control -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <div>
+    <h1 class="h2 fw-bold text-dark">Walkthrough Inspect</h1>
+    <p class="text-muted small mb-0">รอบตรวจที่: #<%= session.id %> | ผู้บันทึก: <%= user.name %> | เริ่มเมื่อ: <%= formatThaiDate(session.started_at, true) %></p>
+  </div>
+  <div class="btn-toolbar mb-2 mb-md-0 gap-2">
+    <!-- Cancel Session Button -->
+    <button class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1 px-3" onclick="confirmCancelSession()">
+      <i class="bi bi-x-circle"></i> ยกเลิกรอบตรวจนี้
+    </button>
+    <!-- Complete Session Form -->
+    <form action="/inspections/complete" method="POST" id="completeSessionForm">
+      <input type="hidden" name="sessionId" value="<%= session.id %>">
+      <button type="submit" class="btn btn-sm btn-success d-flex align-items-center gap-1 px-3 fw-bold">
+        <i class="bi bi-check-circle"></i> ส่งงาน/เสร็จสิ้นรอบตรวจ
+      </button>
+    </form>
+  </div>
+</div>
+
+<% if (typeof error !== 'undefined' && error) { %>
+  <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-3" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i><%= error %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<% } %>
+
+<!-- Main Multi-step Grid -->
+<div class="row g-4 mb-4">
+  <!-- Left Side: Wizard Navigation Tree -->
+  <div class="col-12 col-lg-5">
+    <!-- STEP 1: SELECT ROOM -->
+    <div class="card border-0 shadow-sm rounded-4 mb-3">
+      <div class="card-header bg-white border-0 pt-3 pb-1">
+        <h6 class="fw-bold text-primary uppercase fs-8 tracking-wider mb-0">ขั้นตอนที่ 1: เลือกห้อง Server</h6>
+      </div>
+      <div class="card-body py-2">
+        <div class="d-flex flex-column gap-2" id="roomSelector">
+          <% rooms.forEach(room => { %>
+            <button class="btn btn-outline-secondary text-start p-3 border rounded-3 d-flex justify-content-between align-items-center w-100 room-btn" 
+                    data-room-id="<%= room.id %>"
+                    onclick="selectRoom(<%= room.id %>, this)">
+              <div>
+                <span class="fw-semibold text-dark d-block"><%= room.room_name %></span>
+                <span class="text-muted fs-8"><%= room.building %> | Floor <%= room.floor %></span>
+              </div>
+              <span class="badge rounded-pill <%= room.is_completed ? 'bg-success' : 'bg-secondary' %>">
+                <%= room.inspected_servers %> / <%= room.total_servers %>
+              </span>
+            </button>
+          <% }) %>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: SELECT RACK -->
+    <div class="card border-0 shadow-sm rounded-4 mb-3 d-none animate-fade-in" id="rackCard">
+      <div class="card-header bg-white border-0 pt-3 pb-1">
+        <h6 class="fw-bold text-primary uppercase fs-8 tracking-wider mb-0">ขั้นตอนที่ 2: เลือกตู้ Rack</h6>
+      </div>
+      <div class="card-body py-2">
+        <div class="row g-2" id="rackGrid">
+          <!-- Dynamic contents loaded via AJAX -->
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: SELECT SERVER -->
+    <div class="card border-0 shadow-sm rounded-4 mb-3 d-none animate-fade-in" id="serverCard">
+      <div class="card-header bg-white border-0 pt-3 pb-1">
+        <h6 class="fw-bold text-primary uppercase fs-8 tracking-wider mb-0">ขั้นตอนที่ 3: เลือกอุปกรณ์เพื่อทำการตรวจ</h6>
+      </div>
+      <div class="card-body py-2">
+        <div class="d-flex flex-column gap-2" id="serverList">
+          <!-- Dynamic contents loaded via AJAX -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Side: Checklist Form Details -->
+  <div class="col-12 col-lg-7">
+    <div class="card border-0 shadow-sm rounded-4 p-4 h-100" id="checklistFormCard">
+      <div id="noServerSelected" class="text-center py-5 my-5">
+        <div class="text-muted mb-3"><i class="bi bi-hdd fs-1"></i></div>
+        <h5 class="fw-bold text-muted">กรุณาเลือกอุปกรณ์ในรายการด้านซ้าย</h5>
+        <p class="text-muted small">ระบบจะโหลดรายการ Checklist คำถามเพื่อทำการตรวจแบบเรียลไทม์</p>
+      </div>
+
+      <div id="checklistFormContainer" class="d-none animate-fade-in">
+        <div class="d-flex justify-content-between align-items-start border-bottom pb-3 mb-3">
+          <div>
+            <span class="badge bg-primary-subtle text-primary mb-2" id="serverTypeBadge">Server Host</span>
+            <h4 class="fw-bold text-dark mb-1" id="selectedServerName">Dell-Server-01</h4>
+            <span class="text-muted small" id="selectedServerMeta">IP: 10.200.x.x | Slot: U10</span>
+          </div>
+          <span class="badge py-2 px-3 bg-secondary text-white" id="inspectedStatusBadge">PENDING</span>
+        </div>
+
+        <form id="checklistSubmissionForm" onsubmit="submitChecklist(event)">
+          <input type="hidden" id="formServerId" name="serverId">
+          
+          <!-- checklist question items -->
+          <div class="d-flex flex-column gap-4 mb-4" id="checklistItemsList">
+            <!-- Dynamic elements loaded via AJAX -->
+          </div>
+
+          <!-- Server level overall notes -->
+          <div class="border-top pt-3 mb-4">
+            <label for="serverRemark" class="form-label small fw-semibold">หมายเหตุ / ความเห็นโดยรวมของอุปกรณ์นี้</label>
+            <textarea class="form-control" id="serverRemark" rows="2" placeholder="เช่น สภาพทั่วไปปกติ หรือพบปัญหาความร้อน..."></textarea>
+          </div>
+
+          <!-- Submit Actions -->
+          <div class="d-grid">
+            <button type="submit" class="btn btn-primary py-2.5 rounded-3 fw-bold d-flex align-items-center justify-content-center gap-2">
+              <i class="bi bi-save-fill"></i> บันทึกผลการตรวจอุปกรณ์เครื่องนี้
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Cancel Session Form hidden submission -->
+<form id="cancelSessionForm" action="/inspections/cancel" method="POST" style="display: none;">
+  <input type="hidden" name="sessionId" value="<%= session.id %>">
+</form>
+
+<!-- Animations styling -->
+<style>
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out forwards;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.room-btn.active, .rack-btn.active, .server-btn.active {
+  border-color: var(--bs-primary) !important;
+  background-color: var(--bs-primary-bg-subtle) !important;
+}
+.btn-group-toggle .btn {
+  border-width: 2px;
+}
+</style>
+
+<script>
+const activeSessionId = <%= session.id %>;
+let selectedRoomId = null;
+let selectedRackId = null;
+let selectedServerId = null;
+
+// Room Selection Action
+function selectRoom(roomId, btn) {
+  selectedRoomId = roomId;
+  selectedRackId = null;
+  selectedServerId = null;
+
+  // Active styles
+  document.querySelectorAll('.room-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  // Hide dependent cards
+  document.getElementById('rackCard').classList.add('d-none');
+  document.getElementById('serverCard').classList.add('d-none');
+  document.getElementById('checklistFormContainer').classList.add('d-none');
+  document.getElementById('noServerSelected').classList.remove('d-none');
+
+  // Fetch Racks via AJAX
+  fetch(`/inspections/api/rooms/${roomId}/racks?sessionId=${activeSessionId}`)
+    .then(res => res.json())
+    .then(data => {
+      const rackGrid = document.getElementById('rackGrid');
+      rackGrid.innerHTML = '';
+
+      if (data.racks.length > 0) {
+        data.racks.forEach(rack => {
+          const badgeClass = rack.is_completed ? 'bg-success' : 'bg-secondary';
+          const btnClass = rack.is_completed ? 'btn-outline-success' : 'btn-outline-secondary';
+          
+          rackGrid.innerHTML += `
+            <div class="col-6 col-md-4">
+              <button class="btn ${btnClass} w-100 p-2.5 rounded-3 text-center rack-btn d-flex flex-column justify-content-center align-items-center gap-1"
+                      onclick="selectRack(${rack.id}, this)">
+                <i class="bi bi-hdd-rack fs-5"></i>
+                <span class="small fw-semibold text-truncate d-block w-100">${rack.rack_name}</span>
+                <span class="badge ${badgeClass} fs-9">${rack.inspected_servers}/${rack.total_servers} Checked</span>
+              </button>
+            </div>
+          `;
+        });
+        document.getElementById('rackCard').classList.remove('d-none');
+      } else {
+        Swal.fire({
+          icon: 'info',
+          title: 'ไม่พบตู้ Rack',
+          text: 'ห้องนี้ไม่มีข้อมูลตู้ Rack หรือเซิร์ฟเวอร์ที่ติดตั้งอยู่'
+        });
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      Swal.fire('Error', 'ไม่สามารถโหลดข้อมูลตู้ Rack ได้', 'error');
+    });
+}
+
+// Rack Selection Action
+function selectRack(rackId, btn) {
+  selectedRackId = rackId;
+  selectedServerId = null;
+
+  document.querySelectorAll('.rack-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  document.getElementById('serverCard').classList.add('d-none');
+  document.getElementById('checklistFormContainer').classList.add('d-none');
+  document.getElementById('noServerSelected').classList.remove('d-none');
+
+  // Fetch servers via AJAX
+  fetch(`/inspections/api/racks/${rackId}/servers?sessionId=${activeSessionId}`)
+    .then(res => res.json())
+    .then(data => {
+      const serverList = document.getElementById('serverList');
+      serverList.innerHTML = '';
+
+      if (data.servers.length > 0) {
+        data.servers.forEach(srv => {
+          let statusBadge = '';
+          let srvClass = '';
+          
+          if (srv.inspected) {
+            if (srv.status === 'fail') {
+              statusBadge = '<span class="badge bg-danger">FAIL</span>';
+              srvClass = 'border-danger-subtle bg-danger-subtle bg-opacity-10';
+            } else if (srv.status === 'warning') {
+              statusBadge = '<span class="badge bg-warning text-dark">WARNING</span>';
+              srvClass = 'border-warning-subtle bg-warning-subtle bg-opacity-10';
+            } else {
+              statusBadge = '<span class="badge bg-success">PASS</span>';
+              srvClass = 'border-success-subtle bg-success-subtle bg-opacity-10';
+            }
+          } else {
+            statusBadge = '<span class="badge bg-secondary">PENDING</span>';
+            srvClass = 'border-secondary-subtle';
+          }
+
+          serverList.innerHTML += `
+            <button class="btn ${srvClass} text-start p-2.5 rounded-3 d-flex justify-content-between align-items-center w-100 server-btn"
+                    onclick="selectServer(${srv.id}, '${srv.server_name}', '${srv.ip_address || 'None'}', '${srv.type_name}', 'U${srv.rack_position_u || 'None'}', this)">
+              <div>
+                <span class="fw-semibold text-dark small d-block">${srv.server_name}</span>
+                <span class="text-muted fs-9">Model: ${srv.model || '-'} | IP: ${srv.ip_address || '-'}</span>
+              </div>
+              ${statusBadge}
+            </button>
+          `;
+        });
+        document.getElementById('serverCard').classList.remove('d-none');
+      } else {
+        Swal.fire({
+          icon: 'info',
+          title: 'ไม่มีเครื่องเซิร์ฟเวอร์',
+          text: 'ไม่พบอุปกรณ์ลงทะเบียนในตู้นี้'
+        });
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      Swal.fire('Error', 'ไม่สามารถโหลดข้อมูลอุปกรณ์ได้', 'error');
+    });
+}
+
+// Server Selection Action
+function selectServer(serverId, srvName, ipAddress, typeName, uPosition, btn) {
+  selectedServerId = serverId;
+
+  document.querySelectorAll('.server-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  document.getElementById('formServerId').value = serverId;
+  document.getElementById('selectedServerName').innerText = srvName;
+  document.getElementById('selectedServerMeta').innerText = `IP: ${ipAddress} | Slot: ${uPosition}`;
+  document.getElementById('serverTypeBadge').innerText = typeName;
+
+  // Load checklist items
+  fetch(`/inspections/api/servers/${serverId}/checklist?sessionId=${activeSessionId}`)
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById('noServerSelected').classList.add('d-none');
+      document.getElementById('checklistFormContainer').classList.remove('d-none');
+
+      const itemsList = document.getElementById('checklistItemsList');
+      itemsList.innerHTML = '';
+
+      // Update inspected status badge
+      const statusBadge = document.getElementById('inspectedStatusBadge');
+      if (data.overall_status !== 'pending' && data.items.some(i => i.previous)) {
+        statusBadge.innerText = data.overall_status.toUpperCase();
+        statusBadge.className = `badge py-2 px-3 ${data.overall_status === 'fail' ? 'bg-danger' : (data.overall_status === 'warning' ? 'bg-warning text-dark' : 'bg-success')}`;
+      } else {
+        statusBadge.innerText = 'PENDING';
+        statusBadge.className = 'badge py-2 px-3 bg-secondary text-white';
+      }
+
+      document.getElementById('serverRemark').value = data.remark || '';
+
+      if (data.items.length > 0) {
+        data.items.forEach(item => {
+          const prevVal = item.previous ? item.previous.result_value : 'pass';
+          const prevBool = item.previous ? item.previous.boolean_value : null;
+          const prevNum = item.previous ? item.previous.numeric_value : '';
+          const prevTxt = item.previous ? item.previous.text_value : '';
+          const prevRemark = item.previous ? item.previous.remark : '';
+
+          let typeSpecificHtml = '';
+
+          // Conditional HTML rendering based on checklist item type
+          if (item.item_type === 'numeric') {
+            typeSpecificHtml = `
+              <div class="col-12 mt-2">
+                <label class="form-label small fw-semibold text-muted">ระบุค่าตรวจวัด (ตัวเลข เท่านั้น) *</label>
+                <input type="number" step="0.01" class="form-control form-control-sm" name="num_${item.id}" value="${prevNum}" required>
+                <div class="invalid-feedback">กรุณาระบุตัวเลขที่ถูกต้อง</div>
+              </div>
+            `;
+          } else if (item.item_type === 'text') {
+            typeSpecificHtml = `
+              <div class="col-12 mt-2">
+                <label class="form-label small fw-semibold text-muted">ระบุข้อความรายละเอียด *</label>
+                <input type="text" class="form-control form-control-sm" name="text_${item.id}" value="${prevTxt}" required>
+                <div class="invalid-feedback">กรุณาระบุรายละเอียดข้อความ</div>
+              </div>
+            `;
+          }
+
+          itemsList.innerHTML += `
+            <div class="checklist-item-wrapper border-bottom pb-3">
+              <div class="row g-2 align-items-center">
+                <div class="col-md-7">
+                  <h6 class="fw-bold mb-1 text-dark">${item.item_name}</h6>
+                  <p class="text-muted small mb-0 fs-8">${item.description || 'ไม่มีคำอธิบายเพิ่มเติม'}</p>
+                </div>
+                <div class="col-md-5 d-flex justify-content-end">
+                  <div class="btn-group btn-group-sm" role="group" aria-label="Result Options">
+                    <input type="radio" class="btn-check" name="result_${item.id}" id="pass_${item.id}" value="pass" ${prevVal === 'pass' ? 'checked' : ''} required>
+                    <label class="btn btn-outline-success px-3" for="pass_${item.id}"><i class="bi bi-check2"></i> PASS</label>
+
+                    <input type="radio" class="btn-check" name="result_${item.id}" id="fail_${item.id}" value="fail" ${prevVal === 'fail' ? 'checked' : ''}>
+                    <label class="btn btn-outline-danger px-3" for="fail_${item.id}"><i class="bi bi-x-lg"></i> FAIL</label>
+
+                    <input type="radio" class="btn-check" name="result_${item.id}" id="na_${item.id}" value="na" ${prevVal === 'na' ? 'checked' : ''}>
+                    <label class="btn btn-outline-secondary px-3" for="na_${item.id}">N/A</label>
+                  </div>
+                </div>
+                
+                ${typeSpecificHtml}
+
+                <div class="col-12 mt-2">
+                  <input type="text" class="form-control form-control-sm border-0 bg-light fs-8 py-1.5" name="remark_${item.id}" value="${prevRemark}" placeholder="ระบุบันทึกช่วยจำ/คำชี้แจง (ถ้ามี)...">
+                </div>
+              </div>
+              <input type="hidden" name="item_type_${item.id}" value="${item.item_type}">
+            </div>
+          `;
+        });
+      } else {
+        itemsList.innerHTML = '<div class="text-center text-muted small py-3">ไม่มีรายการข้อกำหนดสำหรับเทมเพลตเดินตรวจปัจจุบัน</div>';
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      Swal.fire('Error', 'ไม่สามารถโหลด Checklist ของเซิร์ฟเวอร์ได้', 'error');
+    });
+}
+
+// Submission Handler using AJAX
+function submitChecklist(event) {
+  event.preventDefault();
+
+  const form = document.getElementById('checklistSubmissionForm');
+  if (!form.checkValidity()) {
+    event.stopPropagation();
+    form.classList.add('was-validated');
+    Swal.fire({
+      icon: 'warning',
+      title: 'ข้อมูลไม่ครบถ้วน',
+      text: 'กรุณากรอกข้อมูลและเลือกสถานะให้ครบทุกข้อกำหนด'
+    });
+    return;
+  }
+
+  const results = [];
+  const itemWrappers = document.querySelectorAll('.checklist-item-wrapper');
+
+  itemWrappers.forEach(wrapper => {
+    // Find item ID
+    const radioInput = wrapper.querySelector('input[type="radio"]:checked');
+    const itemId = radioInput.name.split('_')[1];
+    const resultValue = radioInput.value;
+    const itemType = wrapper.querySelector(`input[name="item_type_${itemId}"]`).value;
+    
+    let numVal = null;
+    let txtVal = null;
+
+    if (itemType === 'numeric') {
+      numVal = wrapper.querySelector(`input[name="num_${itemId}"]`).value;
+    } else if (itemType === 'text') {
+      txtVal = wrapper.querySelector(`input[name="text_${itemId}"]`).value;
+    }
+
+    const remarkVal = wrapper.querySelector(`input[name="remark_${itemId}"]`).value;
+
+    results.push({
+      template_item_id: Number(itemId),
+      item_type: itemType,
+      result_value: resultValue,
+      numeric_value: numVal,
+      text_value: txtVal,
+      remark: remarkVal
+    });
+  });
+
+  const postData = {
+    sessionId: activeSessionId,
+    serverId: selectedServerId,
+    remark: document.getElementById('serverRemark').value,
+    results: results
+  };
+
+  Swal.fire({
+    title: 'กำลังบันทึกข้อมูล...',
+    allowOutsideClick: false,
+    didOpen: () => {
+      Swal.showLoading();
+    }
+  });
+
+  fetch('/inspections/api/save-server', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(postData)
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'บันทึกสำเร็จ',
+          text: `บันทึกผลการตรวจสอบอุปกรณ์นี้เรียบร้อย (ผลโดยรวม: ${data.overallStatus.toUpperCase()})`,
+          timer: 1500,
+          showConfirmButton: false
+        }).then(() => {
+          // Re-render servers list to reflect changes
+          const activeRackBtn = document.querySelector('.rack-btn.active');
+          if (activeRackBtn) {
+            activeRackBtn.click();
+          }
+          // Refresh room counts progress indicators
+          refreshRoomProgress();
+        });
+      } else {
+        Swal.fire('Error', data.error || 'บันทึกข้อมูลไม่สำเร็จ', 'error');
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      Swal.fire('Error', 'เซิร์ฟเวอร์ขัดข้องในการบันทึกข้อมูล', 'error');
+    });
+}
+
+// Reload Room buttons progress count dynamically
+function refreshRoomProgress() {
+  fetch(`/inspections/walk`) // Load EJS view dynamically or build a quick room count API
+    // To keep it simple, we can fetch page content, extract the room selector progress counts and update them in place!
+    .then(res => res.text())
+    .then(htmlStr => {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlStr, 'text/html');
+      
+      const newRoomSelector = doc.getElementById('roomSelector');
+      if (newRoomSelector) {
+        newRoomSelector.querySelectorAll('.room-btn').forEach(newBtn => {
+          const roomId = newBtn.getAttribute('data-room-id');
+          const oldBtn = document.querySelector(`.room-btn[data-room-id="${roomId}"]`);
+          if (oldBtn) {
+            // Update badge text
+            const newBadge = newBtn.querySelector('.badge');
+            const oldBadge = oldBtn.querySelector('.badge');
+            if (newBadge && oldBadge) {
+              oldBadge.innerText = newBadge.innerText;
+              oldBadge.className = newBadge.className;
+            }
+          }
+        });
+      }
+    });
+}
+
+// Cancel Session confirmation popup
+function confirmCancelSession() {
+  Swal.fire({
+    title: 'ยกเลิกรอบตรวจนี้?',
+    text: 'คุณแน่ใจหรือไม่ว่าต้องการยกเลิกรอบตรวจนี้? ข้อมูลการเดินตรวจทั้งหมดในรอบนี้จะถูกลบและยกเลิกทั้งหมด',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'ยืนยัน ยกเลิกรอบตรวจ',
+    cancelButtonText: 'ย้อนกลับ'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      document.getElementById('cancelSessionForm').submit();
+    }
+  });
+}
+
+// SweetAlert confirmation when submitting the complete session
+document.getElementById('completeSessionForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  Swal.fire({
+    title: 'ส่งมอบรอบตรวจเช็ค?',
+    text: 'คุณต้องการส่งมอบรายงานการเดินตรวจและเสร็จสิ้นรอบตรวจเช็คนี้ใช่หรือไม่?',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#28a745',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'ใช่, ส่งมอบรอบตรวจ',
+    cancelButtonText: 'ตรวจเช็คต่อ'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      this.submit();
+    }
+  });
+});
+</script>
+
+<%- include('../layouts/footer') %>

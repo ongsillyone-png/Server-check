@@ -12,7 +12,7 @@
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link d-flex align-items-center gap-2 rounded px-3 py-2 text-muted" style="cursor: not-allowed;" href="#" onclick="alert('ระบบตรวจเช็ค (Inspection) ยังไม่เปิดให้บริการในเฟสนี้'); return false;">
+        <a class="nav-link d-flex align-items-center gap-2 rounded px-3 py-2 <%= typeof currentPage !== 'undefined' && currentPage === 'inspections' ? 'active bg-primary text-white' : 'text-dark hover-bg-light' %>" href="/inspections/walk">
           <i class="bi bi-clipboard2-check"></i>
           <span>Walkthrough Inspect</span>
         </a>

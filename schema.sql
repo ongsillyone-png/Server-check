@@ -8,9 +8,9 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- Drop Tables if they exist
 -- --------------------------------------------------------
 DROP TABLE IF EXISTS `inspection_photos`;
-DROP TABLE IF EXISTS `inspection_item_details`;
 DROP TABLE IF EXISTS `inspection_results`;
-DROP TABLE IF EXISTS `inspections`;
+DROP TABLE IF EXISTS `inspection_details`;
+DROP TABLE IF EXISTS `inspection_sessions`;
 DROP TABLE IF EXISTS `inspection_template_items`;
 DROP TABLE IF EXISTS `inspection_templates`;
 DROP TABLE IF EXISTS `device_metrics_log`;
@@ -37,7 +37,10 @@ CREATE TABLE `roles` (
   `role_code` VARCHAR(30) NOT NULL UNIQUE,
   `description` VARCHAR(255) NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_by` BIGINT UNSIGNED NULL,
+  `updated_by` BIGINT UNSIGNED NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -53,6 +56,9 @@ CREATE TABLE `users` (
   `is_active` TINYINT(1) NOT NULL DEFAULT 1,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_by` BIGINT UNSIGNED NULL,
+  `updated_by` BIGINT UNSIGNED NULL,
   CONSTRAINT `fk_users_roles` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -66,7 +72,10 @@ CREATE TABLE `rooms` (
   `building` VARCHAR(100) NOT NULL,
   `description` TEXT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_by` BIGINT UNSIGNED NULL,
+  `updated_by` BIGINT UNSIGNED NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -80,6 +89,9 @@ CREATE TABLE `racks` (
   `description` TEXT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_by` BIGINT UNSIGNED NULL,
+  `updated_by` BIGINT UNSIGNED NULL,
   CONSTRAINT `fk_racks_rooms` FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -91,7 +103,10 @@ CREATE TABLE `asset_types` (
   `type_name` VARCHAR(100) NOT NULL UNIQUE,
   `description` VARCHAR(255) NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_by` BIGINT UNSIGNED NULL,
+  `updated_by` BIGINT UNSIGNED NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -111,6 +126,9 @@ CREATE TABLE `physical_servers` (
   `status` ENUM('active', 'inactive', 'maintenance') NOT NULL DEFAULT 'active',
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_by` BIGINT UNSIGNED NULL,
+  `updated_by` BIGINT UNSIGNED NULL,
   CONSTRAINT `fk_physical_servers_racks` FOREIGN KEY (`rack_id`) REFERENCES `racks` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_physical_servers_asset_types` FOREIGN KEY (`asset_type_id`) REFERENCES `asset_types` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -128,6 +146,9 @@ CREATE TABLE `virtual_machines` (
   `status` ENUM('running', 'stopped', 'suspended') NOT NULL DEFAULT 'running',
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_by` BIGINT UNSIGNED NULL,
+  `updated_by` BIGINT UNSIGNED NULL,
   CONSTRAINT `fk_virtual_machines_physical_servers` FOREIGN KEY (`physical_server_id`) REFERENCES `physical_servers` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -148,6 +169,9 @@ CREATE TABLE `device_monitoring_configs` (
   `check_interval_seconds` INT UNSIGNED NOT NULL DEFAULT 300,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_by` BIGINT UNSIGNED NULL,
+  `updated_by` BIGINT UNSIGNED NULL,
   CONSTRAINT `fk_monitoring_configs_physical_servers` FOREIGN KEY (`physical_server_id`) REFERENCES `physical_servers` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -161,6 +185,11 @@ CREATE TABLE `device_health_status` (
   `last_checked_at` TIMESTAMP NULL DEFAULT NULL,
   `response_time_ms` INT UNSIGNED NULL,
   `error_message` TEXT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_by` BIGINT UNSIGNED NULL,
+  `updated_by` BIGINT UNSIGNED NULL,
   CONSTRAINT `fk_health_status_physical_servers` FOREIGN KEY (`physical_server_id`) REFERENCES `physical_servers` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -176,6 +205,11 @@ CREATE TABLE `device_metrics_log` (
   `network_in_bps` BIGINT UNSIGNED NULL,
   `network_out_bps` BIGINT UNSIGNED NULL,
   `logged_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_by` BIGINT UNSIGNED NULL,
+  `updated_by` BIGINT UNSIGNED NULL,
   CONSTRAINT `fk_metrics_log_physical_servers` FOREIGN KEY (`physical_server_id`) REFERENCES `physical_servers` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -187,7 +221,10 @@ CREATE TABLE `inspection_templates` (
   `template_name` VARCHAR(100) NOT NULL,
   `is_active` TINYINT(1) NOT NULL DEFAULT 1,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_by` BIGINT UNSIGNED NULL,
+  `updated_by` BIGINT UNSIGNED NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -203,20 +240,45 @@ CREATE TABLE `inspection_template_items` (
   `is_active` TINYINT(1) NOT NULL DEFAULT 1,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_by` BIGINT UNSIGNED NULL,
+  `updated_by` BIGINT UNSIGNED NULL,
   CONSTRAINT `fk_inspection_template_items_templates` FOREIGN KEY (`template_id`) REFERENCES `inspection_templates` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- Table `inspections`
+-- Table `inspection_sessions`
 -- --------------------------------------------------------
-CREATE TABLE `inspections` (
+CREATE TABLE `inspection_sessions` (
   `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   `inspector_id` BIGINT UNSIGNED NOT NULL,
   `status` ENUM('in_progress', 'completed', 'canceled') NOT NULL DEFAULT 'in_progress',
   `started_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `completed_at` TIMESTAMP NULL DEFAULT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT `fk_inspections_users` FOREIGN KEY (`inspector_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_by` BIGINT UNSIGNED NULL,
+  `updated_by` BIGINT UNSIGNED NULL,
+  CONSTRAINT `fk_sessions_users` FOREIGN KEY (`inspector_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- Table `inspection_details`
+-- --------------------------------------------------------
+CREATE TABLE `inspection_details` (
+  `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `session_id` BIGINT UNSIGNED NOT NULL,
+  `physical_server_id` BIGINT UNSIGNED NOT NULL,
+  `status` ENUM('pass', 'warning', 'fail') NOT NULL DEFAULT 'pass',
+  `remark` TEXT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_by` BIGINT UNSIGNED NULL,
+  `updated_by` BIGINT UNSIGNED NULL,
+  CONSTRAINT `fk_details_sessions` FOREIGN KEY (`session_id`) REFERENCES `inspection_sessions` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_details_servers` FOREIGN KEY (`physical_server_id`) REFERENCES `physical_servers` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -224,28 +286,20 @@ CREATE TABLE `inspections` (
 -- --------------------------------------------------------
 CREATE TABLE `inspection_results` (
   `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  `inspection_id` BIGINT UNSIGNED NOT NULL,
-  `physical_server_id` BIGINT UNSIGNED NOT NULL,
-  `status` ENUM('pass', 'warning', 'fail') NOT NULL,
+  `detail_id` BIGINT UNSIGNED NOT NULL,
+  `template_item_id` BIGINT UNSIGNED NOT NULL,
+  `result_value` ENUM('pass', 'fail', 'na') NOT NULL DEFAULT 'pass',
+  `boolean_value` TINYINT(1) NULL,
+  `numeric_value` DECIMAL(10,2) NULL,
+  `text_value` TEXT NULL,
   `remark` TEXT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT `fk_inspection_results_inspections` FOREIGN KEY (`inspection_id`) REFERENCES `inspections` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `fk_inspection_results_physical_servers` FOREIGN KEY (`physical_server_id`) REFERENCES `physical_servers` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
--- Table `inspection_item_details`
--- --------------------------------------------------------
-CREATE TABLE `inspection_item_details` (
-  `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  `inspection_result_id` BIGINT UNSIGNED NOT NULL,
-  `inspection_item_id` BIGINT UNSIGNED NOT NULL,
-  `boolean_value` TINYINT(1) NULL,
-  `numeric_value` DECIMAL(5, 2) NULL,
-  `text_value` TEXT NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT `fk_item_details_results` FOREIGN KEY (`inspection_result_id`) REFERENCES `inspection_results` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `fk_item_details_items` FOREIGN KEY (`inspection_item_id`) REFERENCES `inspection_template_items` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_by` BIGINT UNSIGNED NULL,
+  `updated_by` BIGINT UNSIGNED NULL,
+  CONSTRAINT `fk_results_details` FOREIGN KEY (`detail_id`) REFERENCES `inspection_details` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_results_template_items` FOREIGN KEY (`template_item_id`) REFERENCES `inspection_template_items` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -253,12 +307,16 @@ CREATE TABLE `inspection_item_details` (
 -- --------------------------------------------------------
 CREATE TABLE `inspection_photos` (
   `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  `inspection_result_id` BIGINT UNSIGNED NOT NULL,
-  `inspection_item_detail_id` BIGINT UNSIGNED NULL,
+  `detail_id` BIGINT UNSIGNED NOT NULL,
+  `result_id` BIGINT UNSIGNED NULL,
   `photo_path` VARCHAR(512) NOT NULL,
-  `uploaded_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT `fk_photos_results` FOREIGN KEY (`inspection_result_id`) REFERENCES `inspection_results` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `fk_photos_item_details` FOREIGN KEY (`inspection_item_detail_id`) REFERENCES `inspection_item_details` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_by` BIGINT UNSIGNED NULL,
+  `updated_by` BIGINT UNSIGNED NULL,
+  CONSTRAINT `fk_photos_details` FOREIGN KEY (`detail_id`) REFERENCES `inspection_details` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_photos_results` FOREIGN KEY (`result_id`) REFERENCES `inspection_results` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -270,7 +328,10 @@ CREATE TABLE `settings` (
   `setting_value` TEXT NOT NULL,
   `description` VARCHAR(255) NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_by` BIGINT UNSIGNED NULL,
+  `updated_by` BIGINT UNSIGNED NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -281,9 +342,9 @@ CREATE INDEX `idx_physical_servers_rack_id` ON `physical_servers` (`rack_id`);
 CREATE INDEX `idx_physical_servers_asset_type_id` ON `physical_servers` (`asset_type_id`);
 CREATE INDEX `idx_vms_physical_server_id` ON `virtual_machines` (`physical_server_id`);
 CREATE INDEX `idx_inspection_template_items_template_id` ON `inspection_template_items` (`template_id`);
-CREATE INDEX `idx_inspections_inspector_status` ON `inspections` (`inspector_id`, `status`);
-CREATE INDEX `idx_inspection_results_server` ON `inspection_results` (`physical_server_id`, `status`);
-CREATE INDEX `idx_item_details_composite` ON `inspection_item_details` (`inspection_result_id`, `inspection_item_id`);
+CREATE INDEX `idx_sessions_status` ON `inspection_sessions` (`status`);
+CREATE INDEX `idx_details_session` ON `inspection_details` (`session_id`);
+CREATE INDEX `idx_results_detail` ON `inspection_results` (`detail_id`);
 
 
 -- ========================================================
@@ -383,57 +444,57 @@ INSERT INTO `inspection_template_items` (`id`, `template_id`, `item_name`, `desc
 (8, 1, 'Physical Damage Status', 'Ensure there are no signs of dents, rust, or physical intrusion on the chassis.', 'boolean', 8, 1),
 (9, 1, 'Remark', 'Write down any anomalies observed or manual actions taken.', 'text', 9, 1);
 
--- Inspections (Walkthrough Transactions)
--- Completed Inspection 1 (Completed 1 day ago)
-INSERT INTO `inspections` (`id`, `inspector_id`, `status`, `started_at`, `completed_at`) VALUES
-(1, 2, 'completed', DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 23 HOUR));
+-- Inspection Sessions (Walkthrough Transactions)
+-- Completed Session 1 (Completed 1 day ago)
+INSERT INTO `inspection_sessions` (`id`, `inspector_id`, `status`, `started_at`, `completed_at`, `created_by`, `updated_by`) VALUES
+(1, 2, 'completed', DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 23 HOUR), 2, 2);
 
--- In-progress Inspection 2 (Currently ongoing)
-INSERT INTO `inspections` (`id`, `inspector_id`, `status`, `started_at`, `completed_at`) VALUES
-(2, 2, 'in_progress', DATE_SUB(NOW(), INTERVAL 30 MINUTE), NULL);
+-- In-progress Session 2 (Currently ongoing)
+INSERT INTO `inspection_sessions` (`id`, `inspector_id`, `status`, `started_at`, `completed_at`, `created_by`, `updated_by`) VALUES
+(2, 2, 'in_progress', DATE_SUB(NOW(), INTERVAL 30 MINUTE), NULL, 2, 2);
 
--- Inspection Results (For Completed Inspection 1 - checking 3 devices)
-INSERT INTO `inspection_results` (`id`, `inspection_id`, `physical_server_id`, `status`, `remark`) VALUES
-(1, 1, 1, 'pass', 'Server database primary check complete. All green.'),
-(2, 1, 2, 'pass', 'App server working normally.'),
-(3, 1, 3, 'warning', 'Core switch rack A-02 is reporting warning due to dust buildup on exhaust filter.');
+-- Inspection Details (For Completed Session 1 - checking 3 devices)
+INSERT INTO `inspection_details` (`id`, `session_id`, `physical_server_id`, `status`, `remark`, `created_by`, `updated_by`) VALUES
+(1, 1, 1, 'pass', 'Server database primary check complete. All green.', 2, 2),
+(2, 1, 2, 'pass', 'App server working normally.', 2, 2),
+(3, 1, 3, 'warning', 'Core switch rack A-02 is reporting warning due to dust buildup on exhaust filter.', 2, 2);
 
 -- Detailed item results for HIS-DB-01 (All passed, Temp 21.5C)
-INSERT INTO `inspection_item_details` (`id`, `inspection_result_id`, `inspection_item_id`, `boolean_value`, `numeric_value`, `text_value`) VALUES
-(1, 1, 1, 1, NULL, NULL), -- Power LED: Normal (1)
-(2, 1, 2, 1, NULL, NULL), -- Alarm LED: No Alert (1)
-(3, 1, 3, 1, NULL, NULL), -- Network Cable: OK (1)
-(4, 1, 4, 1, NULL, NULL), -- Power Cable: OK (1)
-(5, 1, 5, 1, NULL, NULL), -- Dust Level: Clean (1)
-(6, 1, 6, 1, NULL, NULL), -- Fan Status: OK (1)
-(7, 1, 7, NULL, 21.50, NULL), -- Temp: 21.5C
-(8, 1, 8, 1, NULL, NULL), -- Physical Damage: None (1)
-(9, 1, 9, NULL, NULL, 'Everything looks perfect.');
+INSERT INTO `inspection_results` (`detail_id`, `template_item_id`, `result_value`, `boolean_value`, `numeric_value`, `text_value`, `remark`, `created_by`, `updated_by`) VALUES
+(1, 1, 'pass', 1, NULL, NULL, NULL, 2, 2), -- Power LED
+(1, 2, 'pass', 1, NULL, NULL, NULL, 2, 2), -- Alarm LED
+(1, 3, 'pass', 1, NULL, NULL, NULL, 2, 2), -- Network
+(1, 4, 'pass', 1, NULL, NULL, NULL, 2, 2), -- Power Cable
+(1, 5, 'pass', 1, NULL, NULL, NULL, 2, 2), -- Dust
+(1, 6, 'pass', 1, NULL, NULL, NULL, 2, 2), -- Fan
+(1, 7, 'pass', NULL, 21.50, NULL, NULL, 2, 2), -- Temp
+(1, 8, 'pass', 1, NULL, NULL, NULL, 2, 2), -- Damage
+(1, 9, 'pass', NULL, NULL, 'Everything looks perfect.', NULL, 2, 2); -- Remark Text
 
 -- Detailed item results for HIS-APP-01 (All passed, Temp 22.0C)
-INSERT INTO `inspection_item_details` (`id`, `inspection_result_id`, `inspection_item_id`, `boolean_value`, `numeric_value`, `text_value`) VALUES
-(10, 2, 1, 1, NULL, NULL),
-(11, 2, 2, 1, NULL, NULL),
-(12, 2, 3, 1, NULL, NULL),
-(13, 2, 4, 1, NULL, NULL),
-(14, 2, 5, 1, NULL, NULL),
-(15, 2, 6, 1, NULL, NULL),
-(16, 2, 7, NULL, 22.00, NULL),
-(17, 2, 8, 1, NULL, NULL),
-(18, 2, 9, NULL, NULL, 'IIS Application server checking completed.');
+INSERT INTO `inspection_results` (`detail_id`, `template_item_id`, `result_value`, `boolean_value`, `numeric_value`, `text_value`, `remark`, `created_by`, `updated_by`) VALUES
+(2, 1, 'pass', 1, NULL, NULL, NULL, 2, 2),
+(2, 2, 'pass', 1, NULL, NULL, NULL, 2, 2),
+(2, 3, 'pass', 1, NULL, NULL, NULL, 2, 2),
+(2, 4, 'pass', 1, NULL, NULL, NULL, 2, 2),
+(2, 5, 'pass', 1, NULL, NULL, NULL, 2, 2),
+(2, 6, 'pass', 1, NULL, NULL, NULL, 2, 2),
+(2, 7, 'pass', NULL, 22.00, NULL, NULL, 2, 2),
+(2, 8, 'pass', 1, NULL, NULL, NULL, 2, 2),
+(2, 9, 'pass', NULL, NULL, 'IIS Application server checking completed.', NULL, 2, 2);
 
 -- Detailed item results for Core-Switch-01 (Warning on Dust, Temp 24.5C)
-INSERT INTO `inspection_item_details` (`id`, `inspection_result_id`, `inspection_item_id`, `boolean_value`, `numeric_value`, `text_value`) VALUES
-(19, 3, 1, 1, NULL, NULL),
-(20, 3, 2, 1, NULL, NULL),
-(21, 3, 3, 1, NULL, NULL),
-(22, 3, 4, 1, NULL, NULL),
-(23, 3, 5, 0, NULL, 'Dust accumulation is visible on rear fan intake filter.'), -- Dust Level: Dirty (0)
-(24, 3, 6, 1, NULL, NULL),
-(25, 3, 7, NULL, 24.50, NULL),
-(26, 3, 8, 1, NULL, NULL),
-(27, 3, 9, NULL, NULL, 'Filter needs cleaning at next maintenance window.');
+INSERT INTO `inspection_results` (`detail_id`, `template_item_id`, `result_value`, `boolean_value`, `numeric_value`, `text_value`, `remark`, `created_by`, `updated_by`) VALUES
+(3, 1, 'pass', 1, NULL, NULL, NULL, 2, 2),
+(3, 2, 'pass', 1, NULL, NULL, NULL, 2, 2),
+(3, 3, 'pass', 1, NULL, NULL, NULL, 2, 2),
+(3, 4, 'pass', 1, NULL, NULL, NULL, 2, 2),
+(3, 5, 'fail', 0, NULL, 'Dust accumulation is visible on rear fan intake filter.', NULL, 2, 2),
+(3, 6, 'pass', 1, NULL, NULL, NULL, 2, 2),
+(3, 7, 'pass', NULL, 24.50, NULL, NULL, 2, 2),
+(3, 8, 'pass', 1, NULL, NULL, NULL, 2, 2),
+(3, 9, 'pass', NULL, NULL, 'Filter needs cleaning at next maintenance window.', NULL, 2, 2);
 
 -- Photos attached to checks (Example: attachment for dirty dust filter on Core-Switch-01)
-INSERT INTO `inspection_photos` (`id`, `inspection_result_id`, `inspection_item_detail_id`, `photo_path`) VALUES
-(1, 3, 23, '/uploads/inspections/1/core-switch-dust.jpg');
+INSERT INTO `inspection_photos` (`id`, `detail_id`, `result_id`, `photo_path`, `created_by`, `updated_by`) VALUES
+(1, 3, NULL, '/uploads/inspections/1/core-switch-dust.jpg', 2, 2);
