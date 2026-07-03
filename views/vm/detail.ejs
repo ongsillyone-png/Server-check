@@ -1,0 +1,41 @@
+<%- include('../layouts/header') %>
+<%- include('../layouts/sidebar') %>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <div>
+    <h1 class="h2 fw-bold text-dark">Virtual Machine Details</h1>
+    <p class="text-muted small">ข้อมูลและสถานะของเซิร์ฟเวอร์เสมือน</p>
+  </div>
+  <a href="/servers/1" class="btn btn-outline-secondary">ย้อนกลับไปยัง Host Server</a>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 p-4 max-w-600">
+  <div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+      <h3 class="fw-bold mb-1 text-primary">VM-HIS-Database</h3>
+      <span class="badge bg-success">Running</span>
+    </div>
+    <i class="bi bi-cpu text-muted fs-1"></i>
+  </div>
+
+  <div class="list-group list-group-flush mb-4">
+    <div class="list-group-item px-0 py-3 d-flex justify-content-between">
+      <span class="text-muted">Host Server (เครื่องกายภาพ)</span>
+      <a href="/servers/1" class="fw-semibold">HIS-DB-01</a>
+    </div>
+    <div class="list-group-item px-0 py-3 d-flex justify-content-between">
+      <span class="text-muted">IP Address</span>
+      <span class="fw-semibold">10.200.1.20</span>
+    </div>
+    <div class="list-group-item px-0 py-3 d-flex justify-content-between">
+      <span class="text-muted">ระบบปฏิบัติการ (OS)</span>
+      <span class="fw-semibold">Red Hat Enterprise Linux 8.5</span>
+    </div>
+    <div class="list-group-item px-0 py-3 d-flex justify-content-between">
+      <span class="text-muted">รายละเอียดการทำงาน</span>
+      <span class="text-end text-muted small" style="max-width: 60%;">Main database instance running Oracle 19c</span>
+    </div>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>

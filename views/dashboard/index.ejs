@@ -1,0 +1,130 @@
+<%- include('../layouts/header') %>
+<%- include('../layouts/sidebar') %>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <div>
+    <h1 class="h2 fw-bold text-dark">Dashboard</h1>
+    <p class="text-muted small">ระบบติดตามและวิเคราะห์สุขภาพห้อง Server โรงพยาบาล</p>
+  </div>
+  <div class="btn-toolbar mb-2 mb-md-0">
+    <div class="btn-group me-2">
+      <a href="/inspections/walk" class="btn btn-sm btn-primary d-flex align-items-center gap-1">
+        <i class="bi bi-plus-lg"></i> เริ่มเดินตรวจ
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Mock Status Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="card border-0 shadow-sm rounded-4 h-100 p-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="bg-primary bg-opacity-10 text-primary rounded-3 p-3">
+          <i class="bi bi-door-closed fs-3"></i>
+        </div>
+        <div>
+          <h6 class="text-muted mb-0 small">ห้อง Server ทั้งหมด</h6>
+          <h3 class="fw-bold mb-0">2</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="card border-0 shadow-sm rounded-4 h-100 p-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="bg-info bg-opacity-10 text-info rounded-3 p-3">
+          <i class="bi bi-hdd-rack fs-3"></i>
+        </div>
+        <div>
+          <h6 class="text-muted mb-0 small">ตู้ Rack ในระบบ</h6>
+          <h3 class="fw-bold mb-0">3</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="card border-0 shadow-sm rounded-4 h-100 p-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="bg-success bg-opacity-10 text-success rounded-3 p-3">
+          <i class="bi bi-pc-display-horizontal fs-3"></i>
+        </div>
+        <div>
+          <h6 class="text-muted mb-0 small">Physical Server</h6>
+          <h3 class="fw-bold mb-0">5</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="card border-0 shadow-sm rounded-4 h-100 p-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="bg-warning bg-opacity-10 text-warning rounded-3 p-3">
+          <i class="bi bi-cpu fs-3"></i>
+        </div>
+        <div>
+          <h6 class="text-muted mb-0 small">Virtual Machines</h6>
+          <h3 class="fw-bold mb-0">5</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-12 col-lg-8">
+    <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+      <h5 class="fw-bold mb-3">สถานะการตรวจเช็คล่าสุด</h5>
+      <div class="table-responsive">
+        <table class="table align-middle table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>วันที่ตรวจสอบ</th>
+              <th>ผู้ตรวจสอบ</th>
+              <th>ผลการตรวจ</th>
+              <th>สถานะรอบตรวจ</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Dummy Data Placeholder -->
+            <tr>
+              <td>02 กรกฎาคม 2026</td>
+              <td>John Doe</td>
+              <td><span class="badge bg-success-subtle text-success">Pass (3/3 Servers)</span></td>
+              <td><span class="badge bg-success">เสร็จสมบูรณ์</span></td>
+              <td><a href="/inspections/1" class="btn btn-sm btn-outline-secondary">ดูรายละเอียด</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-lg-4">
+    <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+      <h5 class="fw-bold mb-3">ดัชนีชี้วัดหลัก (KPIs)</h5>
+      <div class="d-flex flex-column gap-3">
+        <div>
+          <div class="d-flex justify-content-between mb-1 small">
+            <span class="text-muted">อัตราความสำเร็จรอบการเดินตรวจ</span>
+            <span class="fw-bold">100%</span>
+          </div>
+          <div class="progress" style="height: 6px;">
+            <div class="progress-bar bg-success" role="progressbar" style="width: 100%"></div>
+          </div>
+        </div>
+        <div>
+          <div class="d-flex justify-content-between mb-1 small">
+            <span class="text-muted">อัตราสุขภาพฮาร์ดแวร์ภายนอก</span>
+            <span class="fw-bold">92%</span>
+          </div>
+          <div class="progress" style="height: 6px;">
+            <div class="progress-bar bg-warning" role="progressbar" style="width: 92%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>

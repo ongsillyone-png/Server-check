@@ -1,0 +1,89 @@
+/* Custom styles for Server Check project */
+
+/* Premium typography options */
+body {
+  font-family: 'Sarabun', sans-serif;
+  color: #1e293b;
+}
+
+/* Sidebar Custom overrides */
+.sidebar {
+  box-shadow: inset -1px 0 0 rgba(0, 0, 0, .05);
+}
+
+.sidebar .nav-link {
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.sidebar .nav-link.active {
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.15);
+}
+
+.sidebar .nav-link:not(.active):hover {
+  background-color: #f1f5f9;
+}
+
+/* Custom cards for sleek look */
+.card {
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.02);
+  transition: box-shadow 0.25s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+/* Font helpers */
+.fs-7 {
+  font-size: 0.85rem !important;
+}
+
+.fs-8 {
+  font-size: 0.75rem !important;
+}
+
+.max-w-600 {
+  max-width: 600px;
+}
+
+.max-w-700 {
+  max-width: 700px;
+}
+
+/* Tracking/Spacing extensions */
+.tracking-tight {
+  letter-spacing: -0.025em;
+}
+
+.tracking-wider {
+  letter-spacing: 0.05em;
+}
+
+/* Glassmorphism styling helpers */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Step wizard indicator styling */
+.step-item {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+}
+
+.step-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background-color: #e2e8f0;
+  z-index: -1;
+}

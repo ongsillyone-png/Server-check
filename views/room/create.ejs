@@ -1,0 +1,36 @@
+<%- include('../layouts/header') %>
+<%- include('../layouts/sidebar') %>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <div>
+    <h1 class="h2 fw-bold text-dark">Add New Room</h1>
+    <p class="text-muted small">บันทึกข้อมูลอาคารและที่ตั้งห้อง Server ใหม่</p>
+  </div>
+  <a href="/rooms" class="btn btn-outline-secondary">ย้อนกลับ</a>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 p-4 max-w-600">
+  <form action="/api/rooms" method="POST">
+    <div class="mb-3">
+      <label for="room_name" class="form-label fw-semibold">ชื่อห้อง Server</label>
+      <input type="text" class="form-control" id="room_name" name="room_name" placeholder="ตัวอย่าง: Room A" required>
+    </div>
+    <div class="row mb-3">
+      <div class="col">
+        <label for="floor" class="form-label fw-semibold">ชั้น</label>
+        <input type="text" class="form-control" id="floor" name="floor" placeholder="ตัวอย่าง: ชั้น 4" required>
+      </div>
+      <div class="col">
+        <label for="building" class="form-label fw-semibold">อาคาร</label>
+        <input type="text" class="form-control" id="building" name="building" placeholder="ตัวอย่าง: ตึกไอที" required>
+      </div>
+    </div>
+    <div class="mb-4">
+      <label for="description" class="form-label fw-semibold">คำอธิบายรายละเอียด</label>
+      <textarea class="form-control" id="description" name="description" rows="3" placeholder="ระบุวัตถุประสงค์การใช้งานห้อง..."></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary px-4">บันทึกข้อมูล</button>
+  </form>
+</div>
+
+<%- include('../layouts/footer') %>

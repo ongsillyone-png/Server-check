@@ -1,0 +1,77 @@
+<%- include('../layouts/header') %>
+<%- include('../layouts/sidebar') %>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <div>
+    <h1 class="h2 fw-bold text-dark">Add New Physical Server / Device</h1>
+    <p class="text-muted small">บันทึกข้อมูลอุปกรณ์ใหม่ลงตู้ Rack ในระบบ</p>
+  </div>
+  <a href="/servers" class="btn btn-outline-secondary">ย้อนกลับ</a>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 p-4 max-w-700">
+  <form action="/api/servers" method="POST">
+    <div class="row mb-3">
+      <div class="col">
+        <label for="server_name" class="form-label fw-semibold">ชื่ออุปกรณ์</label>
+        <input type="text" class="form-control" id="server_name" name="server_name" placeholder="ตัวอย่าง: DB-01" required>
+      </div>
+      <div class="col">
+        <label for="device_type" class="form-label fw-semibold">ประเภทอุปกรณ์</label>
+        <select class="form-select" id="device_type" name="device_type" required>
+          <option value="server">Server</option>
+          <option value="switch">Switch</option>
+          <option value="router">Router</option>
+          <option value="firewall">Firewall</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="row mb-3">
+      <div class="col">
+        <label for="rack_id" class="form-label fw-semibold">ติดตั้งในตู้ Rack</label>
+        <select class="form-select" id="rack_id" name="rack_id" required>
+          <option value="">-- เลือกตู้ Rack --</option>
+          <option value="1">Rack A-01 (Room A)</option>
+          <option value="2">Rack A-02 (Room A)</option>
+          <option value="3">Rack B-01 (Room B)</option>
+        </select>
+      </div>
+      <div class="col">
+        <label for="rack_position_u" class="form-label fw-semibold">ตำแหน่งสล็อตติดตั้ง (U)</label>
+        <input type="number" class="form-control" id="rack_position_u" name="rack_position_u" min="1" max="42" placeholder="สล็อต เช่น 10">
+      </div>
+    </div>
+
+    <div class="row mb-3">
+      <div class="col">
+        <label for="ip_address" class="form-label fw-semibold">IP Address</label>
+        <input type="text" class="form-control" id="ip_address" name="ip_address" placeholder="10.200.x.x">
+      </div>
+      <div class="col">
+        <label for="model" class="form-label fw-semibold">ยี่ห้อ / รุ่น</label>
+        <input type="text" class="form-control" id="model" name="model" placeholder="เช่น Dell PowerEdge R750">
+      </div>
+    </div>
+
+    <div class="row mb-3">
+      <div class="col">
+        <label for="serial_number" class="form-label fw-semibold">Serial Number</label>
+        <input type="text" class="form-control" id="serial_number" name="serial_number" placeholder="S/N ของผู้ผลิต">
+      </div>
+      <div class="col">
+        <label for="asset_number" class="form-label fw-semibold">หมายเลขครุภัณฑ์ (Asset ID)</label>
+        <input type="text" class="form-control" id="asset_number" name="asset_number" placeholder="รหัสพัสดุของโรงพยาบาล">
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <label for="description" class="form-label fw-semibold">รายละเอียดและการใช้งาน</label>
+      <textarea class="form-control" id="description" name="description" rows="3" placeholder="หน้าที่หรือข้อมูลเพิ่มเติ่มของเครื่องนี้..."></textarea>
+    </div>
+    
+    <button type="submit" class="btn btn-primary px-4">บันทึกข้อมูลอุปกรณ์</button>
+  </form>
+</div>
+
+<%- include('../layouts/footer') %>

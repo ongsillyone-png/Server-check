@@ -1,0 +1,133 @@
+<%- include('../layouts/header') %>
+<%- include('../layouts/sidebar') %>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <div>
+    <h1 class="h2 fw-bold text-dark">Walkthrough Routine Inspection</h1>
+    <p class="text-muted small">แบบบันทึกผลการเดินตรวจเช็คห้องเครื่องคอมพิวเตอร์รายวัน</p>
+  </div>
+</div>
+
+<!-- Steps Progress Bar -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card border-0 shadow-sm rounded-4 p-3">
+      <div class="d-flex justify-content-around text-center position-relative">
+        <div class="step-item text-primary fw-bold">
+          <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-1" style="width: 32px; height: 32px;">1</div>
+          <div class="small">Room (ห้อง)</div>
+        </div>
+        <div class="step-item text-muted">
+          <div class="bg-secondary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-1" style="width: 32px; height: 32px;">2</div>
+          <div class="small">Rack (ตู้แร็ค)</div>
+        </div>
+        <div class="step-item text-muted">
+          <div class="bg-secondary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-1" style="width: 32px; height: 32px;">3</div>
+          <div class="small">Server/Device</div>
+        </div>
+        <div class="step-item text-muted">
+          <div class="bg-secondary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-1" style="width: 32px; height: 32px;">4</div>
+          <div class="small">Checklist & Photo</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-4">
+    <!-- Quick asset navigation checklist -->
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+      <h5 class="fw-bold mb-3">แผงผังการเดินตรวจ</h5>
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item px-0 py-2.5">
+          <strong class="text-primary"><i class="bi bi-door-closed-fill"></i> Room A</strong>
+          <ul class="list-group list-group-flush ps-3 mt-1 small">
+            <li class="list-group-item border-0 py-1 text-muted"><i class="bi bi-hdd-rack"></i> Rack A-01 (HIS-DB-01, HIS-APP-01)</li>
+            <li class="list-group-item border-0 py-1 text-muted"><i class="bi bi-hdd-rack"></i> Rack A-02 (Core-Switch-01, Firewall)</li>
+          </ul>
+        </li>
+        <li class="list-group-item px-0 py-2.5 text-muted">
+          <strong class="text-muted"><i class="bi bi-door-closed"></i> Room B</strong>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="col-md-8">
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+      <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+        <h5 class="fw-bold mb-0 text-primary">ตรวจเช็คอุปกรณ์: HIS-DB-01 (U10)</h5>
+        <span class="badge bg-secondary bg-opacity-10 text-secondary">Step 4/4</span>
+      </div>
+
+      <!-- Checklist Input Forms (Mockup scaffold for Walkthrough) -->
+      <form action="/api/inspections/1/submit-server" method="POST" enctype="multipart/form-data">
+        <div class="mb-3">
+          <label class="form-label fw-bold">1. Power LED Status</label>
+          <div class="d-flex gap-4">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="power_led" id="power_ok" value="1" checked>
+              <label class="form-check-label text-success fw-semibold" for="power_ok"><i class="bi bi-check-circle-fill"></i> Normal (ไฟสถานะปกติ)</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="power_led" id="power_ng" value="0">
+              <label class="form-check-label text-danger fw-semibold" for="power_ng"><i class="bi bi-x-circle-fill"></i> Faulty/Off (ไฟสถานะมีปัญหา/ดับ)</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-3 border-top pt-3">
+          <label class="form-label fw-bold">2. Alarm LED Status</label>
+          <div class="d-flex gap-4">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="alarm_led" id="alarm_ok" value="1" checked>
+              <label class="form-check-label text-success fw-semibold" for="alarm_ok"><i class="bi bi-check-circle-fill"></i> No Alert (ไม่มีไฟเตือนสีส้ม/แดง)</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="alarm_led" id="alarm_ng" value="0">
+              <label class="form-check-label text-danger fw-semibold" for="alarm_ng"><i class="bi bi-x-circle-fill"></i> Active Alert (มีไฟเตือนแสดงผล)</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-3 border-top pt-3">
+          <div class="row">
+            <div class="col-md-6">
+              <label for="temperature" class="form-label fw-bold">3. อุณหภูมิหน้าเครื่อง (Temperature)</label>
+              <div class="input-group">
+                <input type="number" class="form-control" id="temperature" name="temperature" step="0.1" value="22.5" placeholder="ตัวเลข">
+                <span class="input-group-text">°C</span>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label for="dust" class="form-label fw-bold">4. ระดับฝุ่นละออง (Dust)</label>
+              <select class="form-select" id="dust" name="dust">
+                <option value="1" selected>Clean (ไม่มีฝุ่น / ปกติ)</option>
+                <option value="0">Dirty (มีฝุ่นสะสม / ต้องทำความสะอาด)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-3 border-top pt-3">
+          <label for="photos" class="form-label fw-bold">5. แนบรูปถ่ายจุดตรวจสอบ (กรณีพบปัญหาหรือตามระเบียบ)</label>
+          <input type="file" class="form-control" id="photos" name="photos" accept="image/*">
+          <div class="form-text small">รองรับเฉพาะภาพถ่ายนามสกุล JPEG, JPG, PNG ขนาดไม่เกิน 5MB</div>
+        </div>
+
+        <div class="mb-4 border-top pt-3">
+          <label for="remark" class="form-label fw-bold">6. บันทึกเพิ่มเติม / ข้อสังเกตเพิ่มเติม (Remark)</label>
+          <textarea class="form-control" id="remark" name="remark" rows="2" placeholder="กรอกข้อความระบุหมายเหตุ..."></textarea>
+        </div>
+
+        <div class="d-flex justify-content-between border-top pt-3">
+          <button type="button" class="btn btn-outline-secondary px-4">ย้อนกลับ</button>
+          <button type="submit" class="btn btn-success px-4">บันทึกผล & ไปอุปกรณ์ถัดไป <i class="bi bi-arrow-right"></i></button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>

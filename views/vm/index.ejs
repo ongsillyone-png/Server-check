@@ -1,0 +1,349 @@
+<%- include('../layouts/header') %>
+<%- include('../layouts/sidebar') %>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <div>
+    <h1 class="h2 fw-bold text-dark">Virtual Machines</h1>
+    <p class="text-muted small">ระบบบริหารจัดการและติดตามเซิร์ฟเวอร์เสมือน (VMs)</p>
+  </div>
+  <div class="btn-toolbar mb-2 mb-md-0 gap-2">
+    <button class="btn btn-sm btn-primary d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#addModal">
+      <i class="bi bi-plus-lg"></i> เพิ่ม Virtual Machine
+    </button>
+    <button class="btn btn-sm btn-outline-success d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#importModal">
+      <i class="bi bi-file-earmark-arrow-up"></i> นำเข้า CSV
+    </button>
+    <a href="/vms/export?search=<%= search %>" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1">
+      <i class="bi bi-file-earmark-arrow-down"></i> ส่งออก CSV
+    </a>
+  </div>
+</div>
+
+<!-- Alerts -->
+<% if (success) { %>
+  <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i><%= success %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<% } %>
+<% if (error) { %>
+  <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i><%= error %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<% } %>
+
+<!-- Search bar -->
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+  <div class="card-body">
+    <form method="GET" action="/vms" class="row g-2 align-items-center">
+      <div class="col-md-9 col-lg-10">
+        <div class="input-group">
+          <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+          <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="ค้นหาด้วยชื่อ VM, IP Address หรือ Host Server..." value="<%= search %>">
+        </div>
+      </div>
+      <div class="col-md-3 col-lg-2 d-grid">
+        <button type="submit" class="btn btn-dark">ค้นหา</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Main Table -->
+<div class="card border-0 shadow-sm rounded-4 p-4">
+  <div class="table-responsive">
+    <table class="table align-middle table-hover">
+      <thead class="table-light">
+        <tr>
+          <th>ชื่อ VM</th>
+          <th>Host Server (Physical)</th>
+          <th>IP Address</th>
+          <th>ระบบปฏิบัติการ (OS)</th>
+          <th>คำอธิบาย</th>
+          <th>สถานะ</th>
+          <th>จัดการ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (vms.length > 0) { %>
+          <% vms.forEach(vm => { %>
+            <tr>
+              <td><span class="fw-semibold text-primary"><%= vm.vm_name %></span></td>
+              <td><%= vm.physical_server_name %></td>
+              <td><code><%= vm.ip_address || '-' %></code></td>
+              <td><%= vm.os_type || '-' %></td>
+              <td class="text-muted small"><%= vm.description || '-' %></td>
+              <td>
+                <% if(vm.status === 'running') { %>
+                  <span class="badge bg-success">Running</span>
+                <% } else if(vm.status === 'suspended') { %>
+                  <span class="badge bg-warning text-dark">Suspended</span>
+                <% } else { %>
+                  <span class="badge bg-danger">Stopped</span>
+                <% } %>
+              </td>
+              <td>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-sm btn-outline-warning" 
+                          data-bs-toggle="modal" 
+                          data-bs-target="#editModal" 
+                          data-id="<%= vm.id %>"
+                          data-physical_server_id="<%= vm.physical_server_id %>"
+                          data-vm_name="<%= vm.vm_name %>"
+                          data-ip_address="<%= vm.ip_address %>"
+                          data-os_type="<%= vm.os_type %>"
+                          data-description="<%= vm.description %>"
+                          data-status="<%= vm.status %>"
+                          onclick="populateEditModal(this)">
+                    <i class="bi bi-pencil"></i> แก้ไข
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" 
+                          data-bs-toggle="modal" 
+                          data-bs-target="#deleteModal" 
+                          data-id="<%= vm.id %>"
+                          data-name="<%= vm.vm_name %>"
+                          onclick="confirmDelete(this)">
+                    <i class="bi bi-trash"></i> ลบ
+                  </button>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        <% } else { %>
+          <tr>
+            <td colspan="7" class="text-center text-muted py-4">ไม่พบข้อมูล Virtual Machine ในระบบ</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <% if (pagination.totalPages > 1) { %>
+    <nav aria-label="Page navigation" class="mt-4">
+      <ul class="pagination justify-content-center">
+        <li class="page-item <%= pagination.page <= 1 ? 'disabled' : '' %>">
+          <a class="page-link" href="?search=<%= encodeURIComponent(search) %>&page=<%= pagination.page - 1 %>">ย้อนกลับ</a>
+        </li>
+        <% for(let i=1; i<=pagination.totalPages; i++) { %>
+          <li class="page-item <%= pagination.page === i ? 'active' : '' %>">
+            <a class="page-link" href="?search=<%= encodeURIComponent(search) %>&page=<%= i %>"><%= i %></a>
+          </li>
+        <% } %>
+        <li class="page-item <%= pagination.page >= pagination.totalPages ? 'disabled' : '' %>">
+          <a class="page-link" href="?search=<%= encodeURIComponent(search) %>&page=<%= pagination.page + 1 %>">ถัดไป</a>
+        </li>
+      </ul>
+    </nav>
+  <% } %>
+</div>
+
+<!-- Add Modal -->
+<div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header border-bottom-0 pb-0">
+        <h5 class="modal-title fw-bold" id="addModalLabel">เพิ่ม Virtual Machine</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="/vms" method="POST" class="needs-validation" novalidate>
+        <div class="modal-body py-3">
+          <div class="mb-3">
+            <label for="physical_server_id" class="form-label small fw-semibold">Host Physical Server *</label>
+            <select class="form-select" id="physical_server_id" name="physical_server_id" required>
+              <option value="">-- เลือก Host Server --</option>
+              <% hostServers.forEach(server => { %>
+                <option value="<%= server.id %>"><%= server.server_name %> (IP: <%= server.ip_address || 'None' %>)</option>
+              <% }) %>
+            </select>
+            <div class="invalid-feedback">กรุณาเลือก Host Physical Server</div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="vm_name" class="form-label small fw-semibold">ชื่อ VM *</label>
+            <input type="text" class="form-control" id="vm_name" name="vm_name" placeholder="เช่น VM-HIS-Database" required>
+            <div class="invalid-feedback">กรุณาระบุชื่อ VM</div>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col">
+              <label for="ip_address" class="form-label small fw-semibold">IP Address</label>
+              <input type="text" class="form-control" id="ip_address" name="ip_address" placeholder="10.200.x.x">
+            </div>
+            <div class="col">
+              <label for="os_type" class="form-label small fw-semibold">ระบบปฏิบัติการ</label>
+              <input type="text" class="form-control" id="os_type" name="os_type" placeholder="เช่น Ubuntu / RHEL">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="status" class="form-label small fw-semibold">สถานะการทำงาน *</label>
+            <select class="form-select" id="status" name="status" required>
+              <option value="running" selected>Running</option>
+              <option value="stopped">Stopped</option>
+              <option value="suspended">Suspended</option>
+            </select>
+          </div>
+
+          <div class="mb-2">
+            <label for="description" class="form-label small fw-semibold">รายละเอียด</label>
+            <textarea class="form-control" id="description" name="description" rows="2" placeholder="จุดประสงค์หรือระบบงาน..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer border-top-0 pt-0">
+          <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="submit" class="btn btn-primary px-4">บันทึกข้อมูล</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header border-bottom-0 pb-0">
+        <h5 class="modal-title fw-bold" id="editModalLabel">แก้ไข Virtual Machine</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="editForm" method="POST" class="needs-validation" novalidate>
+        <div class="modal-body py-3">
+          <div class="mb-3">
+            <label for="edit_physical_server_id" class="form-label small fw-semibold">Host Physical Server *</label>
+            <select class="form-select" id="edit_physical_server_id" name="physical_server_id" required>
+              <% hostServers.forEach(server => { %>
+                <option value="<%= server.id %>"><%= server.server_name %></option>
+              <% }) %>
+            </select>
+            <div class="invalid-feedback">กรุณาเลือก Host Physical Server</div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="edit_vm_name" class="form-label small fw-semibold">ชื่อ VM *</label>
+            <input type="text" class="form-control" id="edit_vm_name" name="vm_name" required>
+            <div class="invalid-feedback">กรุณาระบุชื่อ VM</div>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col">
+              <label for="edit_ip_address" class="form-label small fw-semibold">IP Address</label>
+              <input type="text" class="form-control" id="edit_ip_address" name="ip_address">
+            </div>
+            <div class="col">
+              <label for="edit_os_type" class="form-label small fw-semibold">ระบบปฏิบัติการ</label>
+              <input type="text" class="form-control" id="edit_os_type" name="os_type">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="edit_status" class="form-label small fw-semibold">สถานะการทำงาน *</label>
+            <select class="form-select" id="edit_status" name="status" required>
+              <option value="running">Running</option>
+              <option value="stopped">Stopped</option>
+              <option value="suspended">Suspended</option>
+            </select>
+          </div>
+
+          <div class="mb-2">
+            <label for="edit_description" class="form-label small fw-semibold">รายละเอียด</label>
+            <textarea class="form-control" id="edit_description" name="description" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer border-top-0 pt-0">
+          <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="submit" class="btn btn-warning px-4">บันทึกการแก้ไข</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header border-bottom-0 pb-0">
+        <h5 class="modal-title fw-bold" id="deleteModalLabel">ยืนยันการลบ?</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="deleteForm" method="POST">
+        <div class="modal-body py-3">
+          <p class="text-muted small mb-0">คุณแน่ใจหรือไม่ว่าต้องการลบ VM <strong id="deleteItemName" class="text-dark"></strong>? การลบนี้ไม่สามารถกู้คืนข้อมูลได้</p>
+        </div>
+        <div class="modal-footer border-top-0 pt-0">
+          <button type="button" class="btn btn-light px-3" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="submit" class="btn btn-danger px-3">ลบข้อมูล</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Import Modal -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header border-bottom-0 pb-0">
+        <h5 class="modal-title fw-bold" id="importModalLabel">นำเข้าข้อมูลด้วยไฟล์ CSV</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="/vms/import" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+        <div class="modal-body py-3">
+          <div class="mb-3">
+            <label for="csvFile" class="form-label small fw-semibold">เลือกไฟล์ CSV *</label>
+            <input class="form-control" type="file" id="csvFile" name="file" accept=".csv" required>
+            <div class="invalid-feedback">กรุณาเลือกไฟล์ CSV ที่ต้องการนำเข้า</div>
+          </div>
+          <div class="p-3 bg-light rounded-3 border">
+            <h6 class="fw-bold fs-7 mb-2">โครงสร้างหัวตารางที่ถูกต้องของไฟล์ CSV (Headers):</h6>
+            <code class="small d-block text-dark">physical_server_id,vm_name,ip_address,os_type,description,status</code>
+            <span class="d-block text-muted fs-8 mt-2">* หมายเหตุ: physical_server_id, vm_name ห้ามเว้นว่าง (physical_server_id ต้องมีอยู่จริง)</span>
+          </div>
+        </div>
+        <div class="modal-footer border-top-0 pt-0">
+          <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="submit" class="btn btn-success px-4">เริ่มนำเข้าข้อมูล</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict'
+  var forms = document.querySelectorAll('.needs-validation')
+  Array.prototype.slice.call(forms)
+    .forEach(function (form) {
+      form.addEventListener('submit', function (event) {
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+        form.classList.add('was-validated')
+      }, false)
+    })
+})()
+
+function populateEditModal(btn) {
+  const id = btn.getAttribute('data-id');
+  document.getElementById('editForm').action = '/vms/' + id + '/update';
+  document.getElementById('edit_physical_server_id').value = btn.getAttribute('data-physical_server_id');
+  document.getElementById('edit_vm_name').value = btn.getAttribute('data-vm_name');
+  document.getElementById('edit_ip_address').value = btn.getAttribute('data-ip_address') || '';
+  document.getElementById('edit_os_type').value = btn.getAttribute('data-os_type') || '';
+  document.getElementById('edit_description').value = btn.getAttribute('data-description') || '';
+  document.getElementById('edit_status').value = btn.getAttribute('data-status') || 'running';
+}
+
+function confirmDelete(btn) {
+  const id = btn.getAttribute('data-id');
+  const name = btn.getAttribute('data-name');
+  document.getElementById('deleteForm').action = '/vms/' + id + '/delete';
+  document.getElementById('deleteItemName').innerText = name;
+}
+</script>
+
+<%- include('../layouts/footer') %>

@@ -1,0 +1,41 @@
+<%- include('../layouts/header') %>
+<%- include('../layouts/sidebar') %>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <div>
+    <h1 class="h2 fw-bold text-dark">Reports & History</h1>
+    <p class="text-muted small">ระบบออกรายงานและประเมินผลประสิทธิภาพความเสถียรภาพ</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-6 col-lg-5">
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+      <h5 class="fw-bold mb-3">กรองข้อมูลเพื่ออกรายงาน</h5>
+      
+      <form action="/reports/summary" method="GET" target="_blank">
+        <div class="mb-3">
+          <label for="start_date" class="form-label small fw-semibold">ตั้งแต่วันที่</label>
+          <input type="date" class="form-control" id="start_date" name="start_date" required>
+        </div>
+        <div class="mb-3">
+          <label for="end_date" class="form-label small fw-semibold">ถึงวันที่</label>
+          <input type="date" class="form-control" id="end_date" name="end_date" required>
+        </div>
+        <div class="mb-3">
+          <label for="room_id" class="form-label small fw-semibold">เลือกห้อง Server</label>
+          <select class="form-select" id="room_id" name="room_id">
+            <option value="all">ทุกห้อง (All Rooms)</option>
+            <option value="1">Main Server Room A</option>
+            <option value="2">Backup Server Room B</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary w-100 py-2.5 fw-semibold d-flex align-items-center justify-content-center gap-1">
+          <i class="bi bi-printer"></i> ออกรายงานเพื่อพิมพ์ (Print Mode)
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>

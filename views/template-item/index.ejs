@@ -1,0 +1,360 @@
+<%- include('../layouts/header') %>
+<%- include('../layouts/sidebar') %>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <div>
+    <h1 class="h2 fw-bold text-dark">Template Items Management</h1>
+    <p class="text-muted small">ระบบจัดการและเรียงลำดับหัวข้อ Checklist ในแต่ละเทมเพลต</p>
+  </div>
+  <div class="btn-toolbar mb-2 mb-md-0 gap-2">
+    <button class="btn btn-sm btn-primary d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#addModal">
+      <i class="bi bi-plus-lg"></i> เพิ่มข้อกำหนด Checklist
+    </button>
+    <button class="btn btn-sm btn-outline-success d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#importModal">
+      <i class="bi bi-file-earmark-arrow-up"></i> นำเข้า CSV
+    </button>
+    <a href="/template-items/export?search=<%= search %>" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1">
+      <i class="bi bi-file-earmark-arrow-down"></i> ส่งออก CSV
+    </a>
+  </div>
+</div>
+
+<!-- Alerts -->
+<% if (success) { %>
+  <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i><%= success %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<% } %>
+<% if (error) { %>
+  <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i><%= error %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<% } %>
+
+<!-- Search bar -->
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+  <div class="card-body">
+    <form method="GET" action="/template-items" class="row g-2 align-items-center">
+      <div class="col-md-9 col-lg-10">
+        <div class="input-group">
+          <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+          <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="ค้นหาข้อกำหนด หรือชื่อเทมเพลต..." value="<%= search %>">
+        </div>
+      </div>
+      <div class="col-md-3 col-lg-2 d-grid">
+        <button type="submit" class="btn btn-dark">ค้นหา</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Main Table -->
+<div class="card border-0 shadow-sm rounded-4 p-4">
+  <div class="table-responsive">
+    <table class="table align-middle table-hover">
+      <thead class="table-light">
+        <tr>
+          <th>ID</th>
+          <th>ชื่อข้อกำหนด (Checklist Item)</th>
+          <th>เทมเพลตแม่</th>
+          <th>ประเภทข้อมูล</th>
+          <th>ลำดับการจัดเรียง</th>
+          <th>สถานะ</th>
+          <th>จัดการ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (templateItems.length > 0) { %>
+          <% templateItems.forEach(item => { %>
+            <tr>
+              <td>#<%= item.id %></td>
+              <td>
+                <span class="fw-semibold text-primary"><%= item.item_name %></span>
+                <span class="d-block text-muted fs-8"><%= item.description || '-' %></span>
+              </td>
+              <td><%= item.template_name %></td>
+              <td><span class="badge bg-light text-dark border"><%= item.item_type %></span></td>
+              <td><span class="badge bg-secondary"><%= item.sort_order %></span></td>
+              <td>
+                <% if(item.is_active === 1) { %>
+                  <span class="badge bg-success">Active</span>
+                <% } else { %>
+                  <span class="badge bg-danger">Inactive</span>
+                <% } %>
+              </td>
+              <td>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-sm btn-outline-warning" 
+                          data-bs-toggle="modal" 
+                          data-bs-target="#editModal" 
+                          data-id="<%= item.id %>"
+                          data-template_id="<%= item.template_id %>"
+                          data-item_name="<%= item.item_name %>"
+                          data-description="<%= item.description %>"
+                          data-item_type="<%= item.item_type %>"
+                          data-sort_order="<%= item.sort_order %>"
+                          data-is_active="<%= item.is_active %>"
+                          onclick="populateEditModal(this)">
+                    <i class="bi bi-pencil"></i> แก้ไข
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" 
+                          data-bs-toggle="modal" 
+                          data-bs-target="#deleteModal" 
+                          data-id="<%= item.id %>"
+                          data-name="<%= item.item_name %>"
+                          onclick="confirmDelete(this)">
+                    <i class="bi bi-trash"></i> ลบ
+                  </button>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        <% } else { %>
+          <tr>
+            <td colspan="7" class="text-center text-muted py-4">ไม่พบข้อมูลหัวข้อ Checklist ในระบบ</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <% if (pagination.totalPages > 1) { %>
+    <nav aria-label="Page navigation" class="mt-4">
+      <ul class="pagination justify-content-center">
+        <li class="page-item <%= pagination.page <= 1 ? 'disabled' : '' %>">
+          <a class="page-link" href="?search=<%= encodeURIComponent(search) %>&page=<%= pagination.page - 1 %>">ย้อนกลับ</a>
+        </li>
+        <% for(let i=1; i<=pagination.totalPages; i++) { %>
+          <li class="page-item <%= pagination.page === i ? 'active' : '' %>">
+            <a class="page-link" href="?search=<%= encodeURIComponent(search) %>&page=<%= i %>"><%= i %></a>
+          </li>
+        <% } %>
+        <li class="page-item <%= pagination.page >= pagination.totalPages ? 'disabled' : '' %>">
+          <a class="page-link" href="?search=<%= encodeURIComponent(search) %>&page=<%= pagination.page + 1 %>">ถัดไป</a>
+        </li>
+      </ul>
+    </nav>
+  <% } %>
+</div>
+
+<!-- Add Modal -->
+<div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header border-bottom-0 pb-0">
+        <h5 class="modal-title fw-bold" id="addModalLabel">เพิ่มข้อกำหนด Checklist</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="/template-items" method="POST" class="needs-validation" novalidate>
+        <div class="modal-body py-3">
+          <div class="mb-3">
+            <label for="template_id" class="form-label small fw-semibold">เทมเพลตหลัก *</label>
+            <select class="form-select" id="template_id" name="template_id" required>
+              <option value="">-- เลือกเทมเพลตแม่ --</option>
+              <% templates.forEach(tpl => { %>
+                <option value="<%= tpl.id %>"><%= tpl.template_name %></option>
+              <% }) %>
+            </select>
+            <div class="invalid-feedback">กรุณาเลือกเทมเพลตแม่</div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="item_name" class="form-label small fw-semibold">ชื่อข้อกำหนด Checklist *</label>
+            <input type="text" class="form-control" id="item_name" name="item_name" placeholder="เช่น ตรวจเช็คสถานะ Power LED" required>
+            <div class="invalid-feedback">กรุณาระบุชื่อข้อกำหนด</div>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label for="item_type" class="form-label small fw-semibold">ประเภทข้อมูลผลลัพธ์ *</label>
+              <select class="form-select" id="item_type" name="item_type" required>
+                <option value="boolean" selected>Boolean (Pass / NG)</option>
+                <option value="numeric">Numeric (ตัวเลขตรวจวัด)</option>
+                <option value="text">Text (ข้อความ/หมายเหตุ)</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label for="sort_order" class="form-label small fw-semibold">ลำดับการเรียง *</label>
+              <input type="number" class="form-control" id="sort_order" name="sort_order" value="0" required>
+            </div>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label for="is_active" class="form-label small fw-semibold">สถานะเปิดใช้ *</label>
+              <select class="form-select" id="is_active" name="is_active" required>
+                <option value="1" selected>Active</option>
+                <option value="0">Inactive</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mb-2">
+            <label for="description" class="form-label small fw-semibold">คำอธิบายเพิ่มเติม</label>
+            <textarea class="form-control" id="description" name="description" rows="2" placeholder="คำชี้แจงในการตรวจสอบ..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer border-top-0 pt-0">
+          <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="submit" class="btn btn-primary px-4">บันทึกข้อมูล</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header border-bottom-0 pb-0">
+        <h5 class="modal-title fw-bold" id="editModalLabel">แก้ไขข้อกำหนด</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="editForm" method="POST" class="needs-validation" novalidate>
+        <div class="modal-body py-3">
+          <div class="mb-3">
+            <label for="edit_template_id" class="form-label small fw-semibold">เทมเพลตหลัก *</label>
+            <select class="form-select" id="edit_template_id" name="template_id" required>
+              <% templates.forEach(tpl => { %>
+                <option value="<%= tpl.id %>"><%= tpl.template_name %></option>
+              <% }) %>
+            </select>
+            <div class="invalid-feedback">กรุณาเลือกเทมเพลตแม่</div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="edit_item_name" class="form-label small fw-semibold">ชื่อข้อกำหนด Checklist *</label>
+            <input type="text" class="form-control" id="edit_item_name" name="item_name" required>
+            <div class="invalid-feedback">กรุณาระบุชื่อข้อกำหนด</div>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label for="edit_item_type" class="form-label small fw-semibold">ประเภทข้อมูลผลลัพธ์ *</label>
+              <select class="form-select" id="edit_item_type" name="item_type" required>
+                <option value="boolean">Boolean</option>
+                <option value="numeric">Numeric</option>
+                <option value="text">Text</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label for="edit_sort_order" class="form-label small fw-semibold">ลำดับการเรียง *</label>
+              <input type="number" class="form-control" id="edit_sort_order" name="sort_order" required>
+            </div>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label for="edit_is_active" class="form-label small fw-semibold">สถานะเปิดใช้ *</label>
+              <select class="form-select" id="edit_is_active" name="is_active" required>
+                <option value="1">Active</option>
+                <option value="0">Inactive</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mb-2">
+            <label for="edit_description" class="form-label small fw-semibold">คำอธิบายเพิ่มเติม</label>
+            <textarea class="form-control" id="edit_description" name="description" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer border-top-0 pt-0">
+          <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="submit" class="btn btn-warning px-4">บันทึกการแก้ไข</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header border-bottom-0 pb-0">
+        <h5 class="modal-title fw-bold" id="deleteModalLabel">ยืนยันการลบ?</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="deleteForm" method="POST">
+        <div class="modal-body py-3">
+          <p class="text-muted small mb-0">คุณแน่ใจหรือไม่ว่าต้องการลบข้อกำหนดนี้ <strong id="deleteItemName" class="text-dark"></strong>? การลบนี้ไม่สามารถกู้คืนข้อมูลได้</p>
+        </div>
+        <div class="modal-footer border-top-0 pt-0">
+          <button type="button" class="btn btn-light px-3" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="submit" class="btn btn-danger px-3">ลบข้อมูล</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Import Modal -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header border-bottom-0 pb-0">
+        <h5 class="modal-title fw-bold" id="importModalLabel">นำเข้าข้อมูลด้วยไฟล์ CSV</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="/template-items/import" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+        <div class="modal-body py-3">
+          <div class="mb-3">
+            <label for="csvFile" class="form-label small fw-semibold">เลือกไฟล์ CSV *</label>
+            <input class="form-control" type="file" id="csvFile" name="file" accept=".csv" required>
+            <div class="invalid-feedback">กรุณาเลือกไฟล์ CSV ที่ต้องการนำเข้า</div>
+          </div>
+          <div class="p-3 bg-light rounded-3 border">
+            <h6 class="fw-bold fs-7 mb-2">โครงสร้างหัวตารางที่ถูกต้องของไฟล์ CSV (Headers):</h6>
+            <code class="small d-block text-dark">template_id,item_name,description,item_type,sort_order,is_active</code>
+            <span class="d-block text-muted fs-8 mt-2">* หมายเหตุ: template_id, item_name ห้ามเว้นว่าง (item_type: boolean, numeric, text)</span>
+          </div>
+        </div>
+        <div class="modal-footer border-top-0 pt-0">
+          <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="submit" class="btn btn-success px-4">เริ่มนำเข้าข้อมูล</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict'
+  var forms = document.querySelectorAll('.needs-validation')
+  Array.prototype.slice.call(forms)
+    .forEach(function (form) {
+      form.addEventListener('submit', function (event) {
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+        form.classList.add('was-validated')
+      }, false)
+    })
+})()
+
+function populateEditModal(btn) {
+  const id = btn.getAttribute('data-id');
+  document.getElementById('editForm').action = '/template-items/' + id + '/update';
+  document.getElementById('edit_template_id').value = btn.getAttribute('data-template_id');
+  document.getElementById('edit_item_name').value = btn.getAttribute('data-item_name');
+  document.getElementById('edit_description').value = btn.getAttribute('data-description') || '';
+  document.getElementById('edit_item_type').value = btn.getAttribute('data-item_type');
+  document.getElementById('edit_sort_order').value = btn.getAttribute('data-sort_order');
+  document.getElementById('edit_is_active').value = btn.getAttribute('data-is_active');
+}
+
+function confirmDelete(btn) {
+  const id = btn.getAttribute('data-id');
+  const name = btn.getAttribute('data-name');
+  document.getElementById('deleteForm').action = '/template-items/' + id + '/delete';
+  document.getElementById('deleteItemName').innerText = name;
+}
+</script>
+
+<%- include('../layouts/footer') %>

@@ -1,0 +1,81 @@
+<%- include('../layouts/header') %>
+<%- include('../layouts/sidebar') %>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <div>
+    <h1 class="h2 fw-bold text-dark">Rack Details</h1>
+    <p class="text-muted small">เซิร์ฟเวอร์กายภาพและอุปกรณ์เครือข่ายภายในตู้</p>
+  </div>
+  <a href="/racks" class="btn btn-outline-secondary">ย้อนกลับ</a>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-primary bg-opacity-5">
+  <div class="row align-items-center">
+    <div class="col-md-8">
+      <h4 class="fw-bold text-primary mb-1">Rack A-01 (42U)</h4>
+      <p class="text-muted mb-0"><i class="bi bi-door-closed"></i> Located in: Main Server Room A</p>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Layout View of the physical rack slots -->
+  <div class="col-md-4">
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+      <h5 class="fw-bold mb-3 text-center">Rack Visualization</h5>
+      <div class="d-flex flex-column border rounded p-2 bg-light gap-1" style="max-height: 500px; overflow-y: auto;">
+        <!-- Mock visual U Slots -->
+        <% for(let i=42; i>=1; i--) { %>
+          <% if(i === 12) { %>
+            <div class="bg-success text-white text-center py-1 rounded small border fw-bold">U12: HIS-APP-01</div>
+          <% } else if(i === 10) { %>
+            <div class="bg-primary text-white text-center py-1 rounded small border fw-bold">U10: HIS-DB-01</div>
+          <% } else { %>
+            <div class="text-muted text-center py-1 small rounded border bg-white" style="font-size: 0.75rem;">U<%= i %>: Empty Slot</div>
+          <% } %>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table View of the servers inside this Rack -->
+  <div class="col-md-8">
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+      <h5 class="fw-bold mb-3">อุปกรณ์ภายในตู้ Rack</h5>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>ชื่ออุปกรณ์</th>
+              <th>ประเภท</th>
+              <th>IP Address</th>
+              <th>U Position</th>
+              <th>สถานะ</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><a href="/servers/1" class="fw-semibold">HIS-DB-01</a></td>
+              <td><span class="badge bg-primary-subtle text-primary">server</span></td>
+              <td>10.200.1.10</td>
+              <td>Slot U10</td>
+              <td><span class="badge bg-success">Active</span></td>
+              <td><a href="/servers/1" class="btn btn-sm btn-outline-secondary">ดูเครื่อง</a></td>
+            </tr>
+            <tr>
+              <td><a href="/servers/2" class="fw-semibold">HIS-APP-01</a></td>
+              <td><span class="badge bg-primary-subtle text-primary">server</span></td>
+              <td>10.200.1.11</td>
+              <td>Slot U12</td>
+              <td><span class="badge bg-success">Active</span></td>
+              <td><a href="/servers/2" class="btn btn-sm btn-outline-secondary">ดูเครื่อง</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>

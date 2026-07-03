@@ -1,0 +1,96 @@
+<%- include('../layouts/header') %>
+<%- include('../layouts/sidebar') %>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <div>
+    <h1 class="h2 fw-bold text-dark">Physical Server Details</h1>
+    <p class="text-muted small">รายละเอียดฮาร์ดแวร์และเซิร์ฟเวอร์เสมือน (Virtual Machines) ที่รันภายในเครื่อง</p>
+  </div>
+  <a href="/servers" class="btn btn-outline-secondary">ย้อนกลับ</a>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+  <div class="row">
+    <div class="col-md-8 border-end">
+      <h3 class="fw-bold mb-1 text-primary">HIS-DB-01</h3>
+      <p class="text-muted small mb-3">Dell PowerEdge R750 (Serial: DELL-SN-12345)</p>
+      
+      <div class="row g-2 mb-3">
+        <div class="col-6">
+          <span class="text-muted small d-block">IP Address</span>
+          <span class="fw-semibold">10.200.1.10</span>
+        </div>
+        <div class="col-6">
+          <span class="text-muted small d-block">Asset Number</span>
+          <span class="fw-semibold">ASSET-IT-0001</span>
+        </div>
+        <div class="col-6 mt-2">
+          <span class="text-muted small d-block">Location</span>
+          <span class="fw-semibold">Rack A-01 (U10) - Room A</span>
+        </div>
+        <div class="col-6 mt-2">
+          <span class="text-muted small d-block">Hardware Type</span>
+          <span class="badge bg-secondary">server</span>
+        </div>
+      </div>
+      
+      <p class="mb-0 text-muted small"><strong class="text-dark">Description:</strong> Primary Hospital Information System Database Server</p>
+    </div>
+    
+    <div class="col-md-4 ps-md-4 mt-3 mt-md-0">
+      <h5 class="fw-bold mb-3">สถานะการเฝ้าระวัง (Monitoring)</h5>
+      <div class="p-3 bg-light rounded-3 border">
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted small">สถานะออนไลน์</span>
+          <span class="badge bg-success">Online (UP)</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted small">วิธีการตรวจสอบ</span>
+          <span class="fw-semibold small">Agent Configured</span>
+        </div>
+        <div class="d-flex justify-content-between">
+          <span class="text-muted small">อัปเดตล่าสุด</span>
+          <span class="fw-semibold small">เมื่อสักครู่</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 p-4">
+  <h5 class="fw-bold mb-3">Virtual Machines (โฮสต์อยู่ภายในเซิร์ฟเวอร์นี้)</h5>
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>ชื่อ VM</th>
+          <th>IP Address</th>
+          <th>ระบบปฏิบัติการ</th>
+          <th>วัตถุประสงค์</th>
+          <th>สถานะ</th>
+          <th>จัดการ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><a href="/vms/1" class="fw-semibold">VM-HIS-Database</a></td>
+          <td>10.200.1.20</td>
+          <td>Red Hat Enterprise Linux 8.5</td>
+          <td class="text-muted small">Main database instance running Oracle 19c</td>
+          <td><span class="badge bg-success">Running</span></td>
+          <td><a href="/vms/1" class="btn btn-sm btn-outline-secondary">ดูข้อมูล</a></td>
+        </tr>
+        <tr>
+          <td><a href="/vms/2" class="fw-semibold">VM-HIS-ReadReplica</a></td>
+          <td>10.200.1.21</td>
+          <td>Red Hat Enterprise Linux 8.5</td>
+          <td class="text-muted small">Read-only replica database for analytical reports</td>
+          <td><span class="badge bg-success">Running</span></td>
+          <td><a href="/vms/2" class="btn btn-sm btn-outline-secondary">ดูข้อมูล</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>

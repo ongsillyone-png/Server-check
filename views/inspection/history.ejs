@@ -1,0 +1,40 @@
+<%- include('../layouts/header') %>
+<%- include('../layouts/sidebar') %>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <div>
+    <h1 class="h2 fw-bold text-dark">Inspection History</h1>
+    <p class="text-muted small">ประวัติและข้อมูลบันทึกการเดินตรวจเช็คย้อนหลังทั้งหมด</p>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 p-4">
+  <div class="table-responsive">
+    <table class="table align-middle table-hover">
+      <thead class="table-light">
+        <tr>
+          <th>ID</th>
+          <th>รอบการเดินตรวจ</th>
+          <th>ผู้เดินตรวจ</th>
+          <th>เวลาเริ่ม</th>
+          <th>เวลาสิ้นสุด</th>
+          <th>สถานะ</th>
+          <th>จัดการ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>#1</td>
+          <td><span class="fw-semibold">Daily Inspection V1</span></td>
+          <td>John Doe</td>
+          <td>02 กรกฎาคม 2026, 09:00 น.</td>
+          <td>02 กรกฎาคม 2026, 10:00 น.</td>
+          <td><span class="badge bg-success">เสร็จสมบูรณ์</span></td>
+          <td><a href="/inspections/1" class="btn btn-sm btn-outline-secondary">ดูรายงานผล</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>

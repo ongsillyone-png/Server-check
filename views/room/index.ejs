@@ -1,0 +1,309 @@
+<%- include('../layouts/header') %>
+<%- include('../layouts/sidebar') %>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <div>
+    <h1 class="h2 fw-bold text-dark">Rooms Management</h1>
+    <p class="text-muted small">ระบบบริหารจัดการที่ตั้งและรายละเอียดห้อง Server</p>
+  </div>
+  <div class="btn-toolbar mb-2 mb-md-0 gap-2">
+    <button class="btn btn-sm btn-primary d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#addModal">
+      <i class="bi bi-plus-lg"></i> เพิ่มห้อง Server
+    </button>
+    <button class="btn btn-sm btn-outline-success d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#importModal">
+      <i class="bi bi-file-earmark-arrow-up"></i> นำเข้า CSV
+    </button>
+    <a href="/rooms/export?search=<%= search %>" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1">
+      <i class="bi bi-file-earmark-arrow-down"></i> ส่งออก CSV
+    </a>
+  </div>
+</div>
+
+<!-- Alerts -->
+<% if (success) { %>
+  <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i><%= success %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<% } %>
+<% if (error) { %>
+  <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i><%= error %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<% } %>
+
+<!-- Search bar -->
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+  <div class="card-body">
+    <form method="GET" action="/rooms" class="row g-2 align-items-center">
+      <div class="col-md-9 col-lg-10">
+        <div class="input-group">
+          <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+          <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="ค้นหาด้วยชื่อห้อง, ชั้น หรือ อาคาร..." value="<%= search %>">
+        </div>
+      </div>
+      <div class="col-md-3 col-lg-2 d-grid">
+        <button type="submit" class="btn btn-dark">ค้นหา</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Main Rooms Table -->
+<div class="card border-0 shadow-sm rounded-4 p-4">
+  <div class="table-responsive">
+    <table class="table align-middle table-hover">
+      <thead class="table-light">
+        <tr>
+          <th>ID</th>
+          <th>ชื่อห้อง Server</th>
+          <th>ชั้น</th>
+          <th>อาคาร</th>
+          <th>รายละเอียด</th>
+          <th>วันที่บันทึก</th>
+          <th>จัดการ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (rooms.length > 0) { %>
+          <% rooms.forEach(room => { %>
+            <tr>
+              <td>#<%= room.id %></td>
+              <td><span class="fw-semibold text-primary"><%= room.room_name %></span></td>
+              <td><%= room.floor %></td>
+              <td><%= room.building %></td>
+              <td class="text-muted small"><%= room.description || '-' %></td>
+              <td class="small text-muted"><%= formatThaiDate(room.created_at, false) %></td>
+              <td>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-sm btn-outline-warning" 
+                          data-bs-toggle="modal" 
+                          data-bs-target="#editModal" 
+                          data-id="<%= room.id %>"
+                          data-room_name="<%= room.room_name %>"
+                          data-floor="<%= room.floor %>"
+                          data-building="<%= room.building %>"
+                          data-description="<%= room.description %>"
+                          onclick="populateEditModal(this)">
+                    <i class="bi bi-pencil"></i> แก้ไข
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" 
+                          data-bs-toggle="modal" 
+                          data-bs-target="#deleteModal" 
+                          data-id="<%= room.id %>"
+                          data-name="<%= room.room_name %>"
+                          onclick="confirmDelete(this)">
+                    <i class="bi bi-trash"></i> ลบ
+                  </button>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        <% } else { %>
+          <tr>
+            <td colspan="7" class="text-center text-muted py-4">ไม่พบข้อมูลห้อง Server ในระบบ</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <% if (pagination.totalPages > 1) { %>
+    <nav aria-label="Page navigation" class="mt-4">
+      <ul class="pagination justify-content-center">
+        <li class="page-item <%= pagination.page <= 1 ? 'disabled' : '' %>">
+          <a class="page-link" href="?search=<%= encodeURIComponent(search) %>&page=<%= pagination.page - 1 %>">ย้อนกลับ</a>
+        </li>
+        <% for(let i=1; i<=pagination.totalPages; i++) { %>
+          <li class="page-item <%= pagination.page === i ? 'active' : '' %>">
+            <a class="page-link" href="?search=<%= encodeURIComponent(search) %>&page=<%= i %>"><%= i %></a>
+          </li>
+        <% } %>
+        <li class="page-item <%= pagination.page >= pagination.totalPages ? 'disabled' : '' %>">
+          <a class="page-link" href="?search=<%= encodeURIComponent(search) %>&page=<%= pagination.page + 1 %>">ถัดไป</a>
+        </li>
+      </ul>
+    </nav>
+  <% } %>
+</div>
+
+<!-- ==========================================
+     Add Modal
+     ========================================== -->
+<div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header border-bottom-0 pb-0">
+        <h5 class="modal-title fw-bold" id="addModalLabel">เพิ่มห้อง Server</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="/rooms" method="POST" class="needs-validation" novalidate>
+        <div class="modal-body py-3">
+          <div class="mb-3">
+            <label for="room_name" class="form-label small fw-semibold">ชื่อห้อง Server *</label>
+            <input type="text" class="form-control" id="room_name" name="room_name" placeholder="เช่น Room A" required>
+            <div class="invalid-feedback">กรุณาระบุชื่อห้อง Server</div>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col">
+              <label for="floor" class="form-label small fw-semibold">ชั้น *</label>
+              <input type="text" class="form-control" id="floor" name="floor" placeholder="เช่น ชั้น 4" required>
+              <div class="invalid-feedback">กรุณาระบุชั้น</div>
+            </div>
+            <div class="col">
+              <label for="building" class="form-label small fw-semibold">อาคาร *</label>
+              <input type="text" class="form-control" id="building" name="building" placeholder="เช่น IT Building" required>
+              <div class="invalid-feedback">กรุณาระบุชื่ออาคาร</div>
+            </div>
+          </div>
+          <div class="mb-2">
+            <label for="description" class="form-label small fw-semibold">รายละเอียด</label>
+            <textarea class="form-control" id="description" name="description" rows="2" placeholder="คำอธิบายสั้นๆ"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer border-top-0 pt-0">
+          <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="submit" class="btn btn-primary px-4">บันทึกข้อมูล</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================
+     Edit Modal
+     ========================================== -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header border-bottom-0 pb-0">
+        <h5 class="modal-title fw-bold" id="editModalLabel">แก้ไขห้อง Server</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="editForm" method="POST" class="needs-validation" novalidate>
+        <div class="modal-body py-3">
+          <div class="mb-3">
+            <label for="edit_room_name" class="form-label small fw-semibold">ชื่อห้อง Server *</label>
+            <input type="text" class="form-control" id="edit_room_name" name="room_name" required>
+            <div class="invalid-feedback">กรุณาระบุชื่อห้อง Server</div>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col">
+              <label for="edit_floor" class="form-label small fw-semibold">ชั้น *</label>
+              <input type="text" class="form-control" id="edit_floor" name="floor" required>
+              <div class="invalid-feedback">กรุณาระบุชั้น</div>
+            </div>
+            <div class="col">
+              <label for="edit_building" class="form-label small fw-semibold">อาคาร *</label>
+              <input type="text" class="form-control" id="edit_building" name="building" required>
+              <div class="invalid-feedback">กรุณาระบุอาคาร</div>
+            </div>
+          </div>
+          <div class="mb-2">
+            <label for="edit_description" class="form-label small fw-semibold">รายละเอียด</label>
+            <textarea class="form-control" id="edit_description" name="description" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer border-top-0 pt-0">
+          <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="submit" class="btn btn-warning px-4">บันทึกการแก้ไข</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================
+     Delete Confirmation Modal
+     ========================================== -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header border-bottom-0 pb-0">
+        <h5 class="modal-title fw-bold" id="deleteModalLabel">ยืนยันการลบ?</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="deleteForm" method="POST">
+        <div class="modal-body py-3">
+          <p class="text-muted small mb-0">คุณแน่ใจหรือไม่ว่าต้องการลบห้อง Server <strong id="deleteItemName" class="text-dark"></strong>? การลบนี้ไม่สามารถกู้คืนข้อมูลได้</p>
+        </div>
+        <div class="modal-footer border-top-0 pt-0">
+          <button type="button" class="btn btn-light px-3" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="submit" class="btn btn-danger px-3">ลบข้อมูล</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================
+     Import CSV Modal
+     ========================================== -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header border-bottom-0 pb-0">
+        <h5 class="modal-title fw-bold" id="importModalLabel">นำเข้าข้อมูลด้วยไฟล์ CSV</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="/rooms/import" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+        <div class="modal-body py-3">
+          <div class="mb-3">
+            <label for="csvFile" class="form-label small fw-semibold">เลือกไฟล์ CSV *</label>
+            <input class="form-control" type="file" id="csvFile" name="file" accept=".csv" required>
+            <div class="invalid-feedback">กรุณาเลือกไฟล์ CSV ที่ต้องการนำเข้า</div>
+          </div>
+          <div class="p-3 bg-light rounded-3 border">
+            <h6 class="fw-bold fs-7 mb-2">โครงสร้างหัวตารางที่ถูกต้องของไฟล์ CSV (Headers):</h6>
+            <code class="small d-block text-dark">room_name,floor,building,description</code>
+            <span class="d-block text-muted fs-8 mt-2">* หมายเหตุ: ฟิลด์ room_name, floor, building ห้ามเว้นว่าง</span>
+          </div>
+        </div>
+        <div class="modal-footer border-top-0 pt-0">
+          <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="submit" class="btn btn-success px-4">เริ่มนำเข้าข้อมูล</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+// client-side validation handler
+(function () {
+  'use strict'
+  var forms = document.querySelectorAll('.needs-validation')
+  Array.prototype.slice.call(forms)
+    .forEach(function (form) {
+      form.addEventListener('submit', function (event) {
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+        form.classList.add('was-validated')
+      }, false)
+    })
+})()
+
+// Edit Modal population script
+function populateEditModal(btn) {
+  const id = btn.getAttribute('data-id');
+  document.getElementById('editForm').action = '/rooms/' + id + '/update';
+  document.getElementById('edit_room_name').value = btn.getAttribute('data-room_name');
+  document.getElementById('edit_floor').value = btn.getAttribute('data-floor');
+  document.getElementById('edit_building').value = btn.getAttribute('data-building');
+  document.getElementById('edit_description').value = btn.getAttribute('data-description');
+}
+
+// Delete Modal action script
+function confirmDelete(btn) {
+  const id = btn.getAttribute('data-id');
+  const name = btn.getAttribute('data-name');
+  document.getElementById('deleteForm').action = '/rooms/' + id + '/delete';
+  document.getElementById('deleteItemName').innerText = name;
+}
+</script>
+
+<%- include('../layouts/footer') %>

@@ -1,0 +1,55 @@
+<%- include('../layouts/header') %>
+<%- include('../layouts/sidebar') %>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <div>
+    <h1 class="h2 fw-bold text-dark">Inspection Result Details</h1>
+    <p class="text-muted small">รายละเอียดผลบันทึกการตรวจเช็ครายอุปกรณ์และภาพหลักฐาน</p>
+  </div>
+  <a href="/inspections/history" class="btn btn-outline-secondary">ย้อนกลับ</a>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-primary bg-opacity-5">
+  <div class="row">
+    <div class="col-md-6">
+      <span class="text-muted small d-block">รหัสการตรวจเช็ค</span>
+      <h5 class="fw-bold text-primary">Inspection Round #1</h5>
+    </div>
+    <div class="col-md-6 text-md-end">
+      <span class="text-muted small d-block">ผู้ตรวจสอบ</span>
+      <h6 class="fw-bold">John Doe (<span class="text-success">Inspector</span>)</h6>
+    </div>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+  <h5 class="fw-bold mb-3">สรุปสถานะอุปกรณ์ที่ตรวจเช็ค</h5>
+  
+  <div class="list-group list-group-flush">
+    <!-- Server 1 check result details -->
+    <div class="list-group-item px-0 py-3">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h6 class="fw-bold mb-0">HIS-DB-01 (Database Server)</h6>
+        <span class="badge bg-success">PASS</span>
+      </div>
+      <p class="text-muted small mb-0"><strong>ผลการตรวจแยกข้อ:</strong> Power LED = OK, Alarm = OK, Cables = OK, Dust = Clean, Temp = 21.5°C</p>
+    </div>
+
+    <!-- Server 2 check result details -->
+    <div class="list-group-item px-0 py-3">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h6 class="fw-bold mb-0">Core-Switch-01 (Network Switch)</h6>
+        <span class="badge bg-warning text-dark">WARNING</span>
+      </div>
+      <p class="text-muted small mb-2"><strong>ผลการตรวจแยกข้อ:</strong> Power LED = OK, Alarm = OK, Cables = OK, Dust = Dirty (พบลมระบายความร้อนฝุ่นเยอะ), Temp = 24.5°C</p>
+      
+      <!-- Uploaded inspection photos reference -->
+      <div class="d-flex gap-2 align-items-center">
+        <span class="text-muted small"><i class="bi bi-image"></i> รูปถ่ายบันทึกปัญหา:</span>
+        <a href="/uploads/inspections/1/core-switch-dust.jpg" target="_blank" class="small text-decoration-none">core-switch-dust.jpg (คลิกเพื่อดูภาพ)</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>
