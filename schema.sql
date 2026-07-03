@@ -296,11 +296,11 @@ INSERT INTO `roles` (`id`, `role_name`, `role_code`, `description`) VALUES
 (2, 'Inspector Technician', 'INSPECTOR', 'Walkthrough inspection rights'),
 (3, 'Executive Viewer', 'VIEWER', 'Read-only access to dashboard and reports');
 
--- Users (bcrypt hashes: admin123, inspector123, viewer123)
+-- Users (SHA256 hashes: admin123, inspector123, viewer123)
 INSERT INTO `users` (`id`, `username`, `password_hash`, `role_id`, `name`, `email`, `is_active`) VALUES
-(1, 'admin', '$2b$10$vK6n2/XN4R.u/aFkpxZ/ee94pYlHkZp.z.WJtI3pD1Kx6e9mI97K6', 1, 'System Administrator', 'admin@hospital.go.th', 1),
-(2, 'inspector1', '$2b$10$Y1s1j78.z5v9sXU.C6pSGeR2o1aHq1iJtT8aL3f9jQ6x6y/w3eM4y', 2, 'John Doe (Inspector)', 'john.doe@hospital.go.th', 1),
-(3, 'viewer1', '$2b$10$Eozm61R0gVqf0oK.q/H77uL7xO1v5fU4x.pZ/i5Gv6x3zT5a3N5yK', 3, 'Jane Smith (Director)', 'jane.smith@hospital.go.th', 1);
+(1, 'admin', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 1, 'System Administrator', 'admin@hospital.go.th', 1),
+(2, 'inspector1', 'd899f47283d49dce931d95081a21c20051d0f70109fd9ae6d6774601274190da', 2, 'John Doe (Inspector)', 'john.doe@hospital.go.th', 1),
+(3, 'viewer1', '65375049b9e4d7cad6c9ba286fdeb9394b28135a3e84136404cfccfdcc438894', 3, 'Jane Smith (Director)', 'jane.smith@hospital.go.th', 1);
 
 -- Settings
 INSERT INTO `settings` (`id`, `setting_key`, `setting_value`, `description`) VALUES

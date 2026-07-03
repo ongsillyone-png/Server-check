@@ -37,7 +37,7 @@ class AuthController {
       if (hashedInput === user.password_hash) {
         // Set user details in session
         req.session.user = {
-          id: user.id,
+          id: Number(user.id),
           username: user.username,
           role: user.role_name, // e.g. "System Administrator"
           name: user.name,

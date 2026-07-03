@@ -161,6 +161,8 @@ http://localhost:3000
 ```
 
 ---
+ีuser:admin
+pass:admin123
 
 # ความต้องการของระบบ
 
