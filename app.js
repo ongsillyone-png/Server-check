@@ -44,6 +44,10 @@ app.use(errorHandler); // 500 error handler
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server Check Application is running in ${process.env.NODE_ENV || 'development'} mode on http://localhost:${PORT}`);
+  
+  // Initialize Node Cron Job Scheduler
+  const { initScheduler } = require('./config/scheduler');
+  initScheduler();
 });
 
 module.exports = app;

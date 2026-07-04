@@ -35,6 +35,14 @@
       <div class="collapse navbar-collapse" id="headerNavbar">
         <ul class="navbar-nav ms-auto align-items-lg-center gap-2 mt-2 mt-lg-0">
           <% if (typeof user !== 'undefined' && user) { %>
+            <!-- Notification Bell Icon -->
+            <li class="nav-item me-1 position-relative" style="z-index: 1050;">
+              <a class="nav-link text-white bg-secondary bg-opacity-25 rounded px-2.5 py-1.5 d-flex align-items-center" href="/notifications" title="แจ้งเตือน">
+                <i class="bi bi-bell-fill"></i>
+                <span id="unreadCountBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none; font-size: 0.65rem; margin-top: 5px; margin-left: -5px;">0</span>
+              </a>
+            </li>
+
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 text-white bg-secondary bg-opacity-25 rounded px-3 py-1.5" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="bi bi-person-circle"></i>
@@ -59,6 +67,35 @@
       </div>
     </div>
   </header>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchUnreadNotificationCount();
+      // Poll unread count every 30 seconds
+      setInterval(fetchUnreadNotificationCount, 30000);
+    });
+
+    function fetchUnreadNotificationCount() {
+      fetch('/notifications/api/unread-count')
+        .then(res => {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.json();
+        })
+        .then(data => {
+          const badge = document.getElementById('unreadCountBadge');
+          if (badge) {
+            const count = Number(data.unreadCount || 0);
+            if (count > 0) {
+              badge.innerText = count > 99 ? '99+' : count;
+              badge.style.display = 'block';
+            } else {
+              badge.style.display = 'none';
+            }
+          }
+        })
+        .catch(err => console.warn('Error fetching unread notification count:', err.message));
+    }
+  </script>
 
   <!-- Sidebar Layout Wrapper -->
   <div class="container-fluid">

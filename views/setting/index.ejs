@@ -33,6 +33,45 @@
   </div>
 <% } %>
 
+<!-- LINE Notify Settings Card -->
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+  <div class="card-body p-4">
+    <h5 class="fw-bold text-dark mb-3"><i class="bi bi-line text-success me-2"></i>ตั้งค่าระบบแจ้งเตือนทาง LINE (MOPH Line Notify)</h5>
+    <form action="/settings/notifications" method="POST" id="lineNotifyForm">
+      <div class="row g-3">
+        <!-- Client Key -->
+        <div class="col-12 col-md-6 col-lg-4">
+          <label for="line_client_key" class="form-label small fw-semibold text-muted">MOPH Notify Client Key</label>
+          <input type="text" class="form-control font-monospace" id="line_client_key" name="line_client_key" value="<%= notifySettings.clientKey %>" required>
+        </div>
+        <!-- Secret Key -->
+        <div class="col-12 col-md-6 col-lg-4">
+          <label for="line_secret_key" class="form-label small fw-semibold text-muted">MOPH Notify Secret Key</label>
+          <input type="text" class="form-control font-monospace" id="line_secret_key" name="line_secret_key" value="<%= notifySettings.secretKey %>" required>
+        </div>
+        <!-- Notification Time -->
+        <div class="col-6 col-md-3 col-lg-2">
+          <label for="notification_time" class="form-label small fw-semibold text-muted">เวลาสรุปประจำวัน</label>
+          <input type="time" class="form-control" id="notification_time" name="notification_time" value="<%= notifySettings.notificationTime %>" required>
+        </div>
+        <!-- Enabled Toggle -->
+        <div class="col-6 col-md-3 col-lg-2">
+          <label for="is_notification_enabled" class="form-label small fw-semibold text-muted">สถานะการเตือน</label>
+          <select class="form-select" id="is_notification_enabled" name="is_notification_enabled">
+            <option value="1" <%= notifySettings.isEnabled ? 'selected' : '' %>>เปิดใช้งาน</option>
+            <option value="0" <%= !notifySettings.isEnabled ? 'selected' : '' %>>ปิดใช้งาน</option>
+          </select>
+        </div>
+        <!-- Action Buttons -->
+        <div class="col-12 d-flex gap-2 justify-content-end mt-2">
+          <button type="button" onclick="testLineConnection()" class="btn btn-outline-success fw-semibold"><i class="bi bi-send-fill me-1.5"></i>ทดสอบส่งข้อความ LINE</button>
+          <button type="submit" class="btn btn-primary px-4 fw-semibold"><i class="bi bi-save me-1.5"></i>บันทึกการตั้งค่า</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Search bar -->
 <div class="card border-0 shadow-sm rounded-4 mb-4">
   <div class="card-body">
@@ -272,6 +311,63 @@ function confirmDelete(btn) {
   const name = btn.getAttribute('data-name');
   document.getElementById('deleteForm').action = '/settings/' + id + '/delete';
   document.getElementById('deleteItemName').innerText = name;
+}
+
+function testLineConnection() {
+  const clientKey = document.getElementById('line_client_key').value.trim();
+  const secretKey = document.getElementById('line_secret_key').value.trim();
+  
+  if (!clientKey || !secretKey) {
+    Swal.fire({
+      title: 'ข้อมูลไม่ครบถ้วน',
+      text: 'กรุณากรอก Client Key และ Secret Key ของ MOPH Notify ก่อนกดทดสอบ',
+      icon: 'warning'
+    });
+    return;
+  }
+
+  Swal.fire({
+    title: 'กำลังทดสอบ...',
+    text: 'ระบบกำลังส่งข้อความทดลองไปยัง LINE ของคุณ',
+    allowOutsideClick: false,
+    didOpen: () => {
+      Swal.showLoading();
+    }
+  });
+
+  fetch('/settings/notifications/test', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      line_client_key: clientKey,
+      line_secret_key: secretKey
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      Swal.fire({
+        title: 'สำเร็จ!',
+        text: 'ส่งข้อความทดสอบเข้า LINE เรียบร้อยแล้ว กรุณาตรวจสอบห้องแชทของคุณ',
+        icon: 'success'
+      });
+    } else {
+      Swal.fire({
+        title: 'ล้มเหลว',
+        text: 'ไม่สามารถเชื่อมต่อได้: ' + (data.error || 'Unknown error'),
+        icon: 'error'
+      });
+    }
+  })
+  .catch(err => {
+    Swal.fire({
+      title: 'ผิดพลาด',
+      text: 'เกิดปัญหาเครือข่าย: ' + err.message,
+      icon: 'error'
+    });
+  });
 }
 </script>
 

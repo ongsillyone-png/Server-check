@@ -293,9 +293,6 @@ class InspectionService {
     }
   }
 
-  /**
-   * Complete inspection walkthrough session
-   */
   static async completeSession(sessionId, userId) {
     // Optional check: make sure at least one server has been inspected
     const inspected = await InspectionDetailRepository.findInspectedServersBySession(sessionId);
@@ -304,6 +301,36 @@ class InspectionService {
     }
 
     await InspectionSessionRepository.completeSession(sessionId, userId);
+
+    // After successfully completing the session, check for FAIL items to trigger LINE notifications
+    try {
+      const details = await InspectionDetailRepository.findDetailsWithMetadataBySession(sessionId);
+      const session = await InspectionSessionRepository.getSessionDetailsForReport(sessionId);
+      
+      const NotificationService = require('./notification.service');
+
+      for (const d of details) {
+        if (d.overall_status === 'fail') {
+          const results = await InspectionResultRepository.findResultsWithPhotosByDetail(d.detail_id);
+          for (const r of results) {
+            if (r.result_value === 'fail') {
+              // Trigger LINE alert and save database notification
+              await NotificationService.sendImmediateFailAlert(
+                d.server_name,
+                d.room_name,
+                d.rack_name,
+                r.item_name,
+                r.remark,
+                session ? session.inspector_name : 'Inspector',
+                sessionId
+              );
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error triggering LINE notifications during completeSession:', err.message);
+    }
   }
 
   /**

@@ -10,12 +10,16 @@ class SettingController {
 
       const result = await SettingService.getPagedSettings(search, page, limit);
 
+      const NotificationService = require('../services/notification.service');
+      const notifySettings = await NotificationService.getNotificationSettings();
+
       res.render('setting/index', {
         title: 'System Settings - Server Check',
-        currentPage: 'templates', // Using existing categories, or customize
+        currentPage: 'settings',
         settings: result.data,
         pagination: result.pagination,
         search,
+        notifySettings,
         success: req.query.success || null,
         error: req.query.error || null
       });
@@ -77,6 +81,61 @@ class SettingController {
       res.redirect(`/settings?success=Successfully imported ${count} settings.`);
     } catch (err) {
       res.redirect(`/settings?error=${encodeURIComponent(err.message)}`);
+    }
+  }
+
+  /**
+   * Save LINE notification keys, time, and switch status to database
+   * POST /settings/notifications
+   */
+  static async updateNotificationSettings(req, res, next) {
+    try {
+      const SettingRepository = require('../repositories/setting.repository');
+      const { line_client_key, line_secret_key, notification_time, is_notification_enabled } = req.body;
+
+      const updates = {
+        line_client_key: line_client_key || '',
+        line_secret_key: line_secret_key || '',
+        notification_time: notification_time || '18:00',
+        is_notification_enabled: is_notification_enabled === '1' ? '1' : '0'
+      };
+
+      for (const [key, val] of Object.entries(updates)) {
+        const setting = await SettingRepository.findByKey(key);
+        if (setting) {
+          await SettingRepository.update(setting.id, {
+            setting_key: key,
+            setting_value: val,
+            description: setting.description
+          });
+        }
+      }
+
+      res.redirect('/settings?success=อัปเดตการตั้งค่าการแจ้งเตือน LINE เรียบร้อยแล้ว');
+    } catch (err) {
+      res.redirect(`/settings?error=${encodeURIComponent(err.message)}`);
+    }
+  }
+
+  /**
+   * Trigger a test notification via MOPH LINE API
+   * POST /settings/notifications/test
+   */
+  static async testNotification(req, res, next) {
+    try {
+      const { line_client_key, line_secret_key } = req.body;
+      const { sendMophNotifyText } = require('../helpers/line.helper');
+
+      const testMsg = `🔔 [ทดสอบการเชื่อมต่อ LINE]\n\n` +
+        `ระบบ Server Check เดินตรวจเช็คระบบโรงพยาบาลได้ทำการทดสอบการแจ้งเตือนความผิดปกติสำเร็จแล้ว\n` +
+        `🗓️ วันทดสอบ: ${new Date().toLocaleDateString('th-TH')}\n` +
+        `🕒 เวลา: ${new Date().toLocaleTimeString('th-TH')}\n` +
+        `✅ สถานะ: การเชื่อมต่อสมบูรณ์!`;
+
+      const result = await sendMophNotifyText(testMsg, line_client_key, line_secret_key);
+      res.json({ success: true, response: result });
+    } catch (err) {
+      res.json({ success: false, error: err.message });
     }
   }
 }
