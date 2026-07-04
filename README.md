@@ -1,211 +1,107 @@
-# 🖥️ Server-check
+# Server Check System
 
-## ระบบตรวจสอบและบริหารจัดการอุปกรณ์ Server ภายในองค์กร
-
-Server-check เป็นระบบบริหารจัดการอุปกรณ์ Server, Virtual Machine, Rack และทรัพย์สินด้าน IT ผ่านเว็บเบราว์เซอร์ เพื่อช่วยให้หน่วยงานสามารถจัดเก็บข้อมูล ตรวจสอบสภาพอุปกรณ์ วางแผนบำรุงรักษา และติดตามประวัติการตรวจสอบได้อย่างเป็นระบบ
-
----
-
-# คุณสมบัติของระบบ
-
-- 📊 Dashboard แสดงภาพรวมของระบบ
-- 🖥️ จัดการข้อมูล Physical Server
-- 💻 จัดการข้อมูล Virtual Machine (VM)
-- 🗄️ จัดการ Rack
-- 📦 จัดการประเภทอุปกรณ์ (Asset Type)
-- 📋 จัดการแบบฟอร์มตรวจสอบ (Inspection Template)
-- ✅ บันทึกผลการตรวจสอบ
-- 👤 จัดการผู้ใช้งาน
-- 🔐 จัดการสิทธิ์การใช้งาน (Role & Permission)
-- ⚙️ ตั้งค่าระบบ
-- 📁 นำเข้าและส่งออกข้อมูล CSV
-- 🔍 ค้นหาข้อมูล
-- 📱 รองรับการใช้งานผ่านอุปกรณ์หลายขนาด
-- 🔒 ระบบ Login และ Session
+ระบบบันทึกผลการเดินตรวจเช็คห้องเครื่องคอมพิวเตอร์ สำหรับโรงพยาบาล
+พัฒนาด้วย Node.js + Express + MariaDB + Bootstrap 5
 
 ---
 
-# เทคโนโลยีที่ใช้
+## ภาพรวม (Overview)
 
-| รายการ | เทคโนโลยี |
-|---------|------------|
-| Backend | Node.js |
-| Framework | Express.js 5 |
-| Database | MariaDB 11.x |
-| Template Engine | EJS |
-| UI Framework | Bootstrap 5 |
-| Admin Template | AdminLTE 4 |
-| Language | JavaScript |
+Server Check System เป็นระบบ Web Application สำหรับบันทึก ติดตาม และรายงานผลการตรวจเช็คเครื่องแม่ข่าย (Physical Server) ประจำวันในห้อง Data Center ของโรงพยาบาล รองรับการเดินตรวจจากมือถือผ่านเบราว์เซอร์ได้โดยตรง
 
 ---
 
-# โครงสร้างโปรเจกต์
+## Features
 
-```
-Server-check
-│
-├── config/
-├── controllers/
-├── helpers/
-├── middlewares/
-├── models/
-├── repositories/
-├── routes/
-├── services/
-├── views/
-├── public/
-│   ├── css/
-│   ├── js/
-│   ├── img/
-│   └── uploads/
-│
-├── app.js
-├── package.json
-├── package-lock.json
-├── schema.sql
-├── .env.example
-└── README.md
-```
+| หมวด | รายละเอียด |
+|---|---|
+| 🔐 Authentication | Login / Logout / Session / Role-based Access |
+| 🏠 Dashboard | สรุปจำนวน Server, Rack, Room, VM พร้อมกราฟ Apache ECharts |
+| 🚶 Walkthrough Inspection | เดินตรวจตามรอบ Room → Rack → Server → Checklist |
+| 📋 Inspection History | ประวัติย้อนหลัง ค้นหา กรอง Export |
+| 📊 Reports | รายงานรายวัน รายเดือน รายปี สรุปตาม Server/Rack/Room |
+| 📈 Analytics KPI | แดชบอร์ดผู้บริหาร, KPI รายเดือน/ไตรมาส/ปี |
+| 🔔 Notifications | แจ้งเตือนทาง LINE (MOPH Notify), Notification Center |
+| ⏰ Scheduler | Node-cron สรุปการตรวจประจำวัน |
+| 📱 Responsive | รองรับ Desktop, Tablet, Mobile (Sidebar Offcanvas) |
+| 🛡️ Security | Helmet, Rate Limiting, Input Sanitization |
 
 ---
 
-# วิธีติดตั้ง
+## Tech Stack
 
-## 1. Clone โปรเจกต์
+- **Runtime**: Node.js 18+
+- **Framework**: Express.js 4
+- **Template Engine**: EJS
+- **Database**: MariaDB 10.6+
+- **CSS Framework**: Bootstrap 5.3
+- **Charts**: Apache ECharts
+- **Icons**: Bootstrap Icons
+- **Scheduler**: node-cron
+- **Security**: helmet, express-rate-limit
+
+---
+
+## Quick Start
 
 ```bash
+# 1. Clone repository
 git clone https://github.com/ongsillyone-png/Server-check.git
-```
+cd Server-check
 
----
-
-## 2. ติดตั้ง Package
-
-```bash
+# 2. Install dependencies
 npm install
-```
 
----
-
-## 3. สร้างไฟล์ .env
-
-Windows
-
-```cmd
-copy .env.example .env
-```
-
-Linux
-
-```bash
+# 3. Setup environment
 cp .env.example .env
-```
+# แก้ไขค่า DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, SESSION_SECRET
 
-จากนั้นแก้ไขค่าภายในไฟล์ `.env`
+# 4. Import database schema
+mysql -u root -p < schema.sql
 
----
-
-## 4. สร้างฐานข้อมูล
-
-สร้างฐานข้อมูล MariaDB
-
-แล้ว Import ไฟล์
-
-```
-schema.sql
-```
-
----
-
-## 5. ตั้งค่าการเชื่อมต่อฐานข้อมูล
-
-ตัวอย่าง
-
-```env
-PORT=3000
-NODE_ENV=development
-
-DB_HOST=localhost
-DB_PORT=3306
-DB_NAME=server_check
-DB_USER=root
-DB_PASS=password
-
-SESSION_SECRET=your_secret_key
-```
-
----
-
-## 6. เริ่มต้นใช้งาน
-
-โหมดพัฒนา
-
-```bash
+# 5. Start development server
 npm run dev
 ```
 
-หรือ
+เปิด browser ไปที่ `http://localhost:3000`
 
-```bash
-node app.js
+---
+
+## Default Credentials
+
+| Username | Password | Role |
+|---|---|---|
+| admin | admin1234 | admin |
+
+> ⚠️ **เปลี่ยนรหัสผ่านทันทีหลัง Deploy จริง**
+
+---
+
+## Directory Structure
+
+```
+Server-check/
+├── app.js                # Express app entrypoint
+├── config/               # Database, session, scheduler, logger
+├── controllers/          # Business logic routing layer
+├── helpers/              # Utility functions (date format etc.)
+├── middlewares/          # Auth, error, security, validation
+├── models/               # (Reserved)
+├── public/               # Static assets (CSS, JS, images)
+├── repositories/         # SQL query layer (Repository pattern)
+├── routes/               # Express route definitions
+├── services/             # Business logic services
+├── views/                # EJS templates
+│   ├── layouts/          # Header, Sidebar, Footer partials
+│   ├── errors/           # 403, 404, 500 error pages
+│   └── ...               # Feature-specific views
+├── logs/                 # Access & error logs (gitignored)
+├── schema.sql            # Full database schema
+└── .env.example          # Environment variable template
 ```
 
 ---
 
-# เข้าใช้งานระบบ
+## License
 
-เปิดเว็บ
-
-```
-http://localhost:3000
-```
-
----
-ีuser:admin
-pass:admin123
-
-# ความต้องการของระบบ
-
-- Node.js 22 LTS
-- MariaDB 11.x
-- npm
-
----
-
-# แผนการพัฒนาในอนาคต
-
-- Dashboard วิเคราะห์ข้อมูล
-- ระบบแจ้งเตือน
-- QR Code สำหรับอุปกรณ์
-- ระบบ PM (Preventive Maintenance)
-- Audit Log
-- ระบบ Backup / Restore
-- ระบบรายงาน
-- REST API
-- รองรับหลายหน่วยงาน (Multi Organization)
-
----
-
-# ผู้พัฒนา
-
-ong-napho
-website
-https://ssdpcu.com
-
-GitHub
-
-https://github.com/ongsillyone-png
-
----
-
-# หมายเหตุ
-
-โปรเจกต์นี้พัฒนาขึ้นเพื่อศึกษา วิจัย และเป็นตัวอย่างการพัฒนาระบบบริหารจัดการอุปกรณ์ด้าน IT ภายในองค์กร
-
-ระบบยังอยู่ระหว่างการพัฒนา อาจมีการเปลี่ยนแปลงรายละเอียดหรือเพิ่มความสามารถในเวอร์ชันถัดไป
-
-
-
----
-
-⭐ หากโปรเจกต์นี้มีประโยชน์ สามารถกด **Star** บน GitHub เพื่อเป็นกำลังใจให้ผู้พัฒนาได้ครับ
+ISC © 2026 Hospital IT Department

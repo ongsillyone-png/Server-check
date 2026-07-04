@@ -3,25 +3,51 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>404 - Page Not Found</title>
-  <!-- Bootstrap 5 CSS -->
+  <title>404 - ไม่พบหน้านี้ | Server Check</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
     body {
-      background-color: #f8f9fa;
-      height: 100vh;
+      font-family: 'Sarabun', sans-serif;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
+      color: #fff;
+    }
+    .error-code {
+      font-size: 8rem;
+      font-weight: 700;
+      line-height: 1;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .card-dark {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      backdrop-filter: blur(12px);
     }
   </style>
 </head>
-<body class="text-center">
-  <div class="container">
-    <h1 class="display-1 fw-bold text-secondary">404</h1>
-    <h3 class="fw-bold mb-3">ไม่พบหน้าที่ค้นหา (Page Not Found)</h3>
-    <p class="text-muted mb-4">ขออภัย หน้าที่คุณต้องการเข้าใช้งานไม่มีอยู่ในระบบ หรือ URL อาจถูกลบไปแล้ว</p>
-    <a href="/dashboard" class="btn btn-primary px-4 py-2">กลับไปยัง Dashboard</a>
+<body>
+  <div class="container text-center px-4">
+    <div class="card-dark p-5 mx-auto" style="max-width: 540px;">
+      <div class="error-code mb-2">404</div>
+      <i class="bi bi-search fs-1 text-primary mb-3 d-block"></i>
+      <h1 class="h3 fw-bold mb-2">ไม่พบหน้าที่ค้นหา</h1>
+      <p class="text-white-50 mb-1">หน้าที่คุณต้องการไม่มีอยู่ในระบบ</p>
+      <% if (typeof path !== 'undefined') { %>
+      <p class="text-white-25 small mb-4"><code class="text-warning"><%= path %></code></p>
+      <% } %>
+      <a href="/dashboard" class="btn btn-primary px-5 py-2 rounded-pill fw-semibold">
+        <i class="bi bi-house-fill me-2"></i>กลับหน้าหลัก
+      </a>
+    </div>
   </div>
 </body>
 </html>

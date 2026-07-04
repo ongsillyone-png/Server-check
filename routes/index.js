@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { loginRateLimiter } = require('../middlewares/security.middleware');
 
 const authRoutes = require('./auth.routes');
 const dashboardRoutes = require('./dashboard.routes');
@@ -24,7 +25,7 @@ router.get('/', (req, res) => {
 });
 
 // Register route modules
-router.use('/auth', authRoutes);
+router.use('/auth', loginRateLimiter, authRoutes);
 router.use('/dashboard', dashboardRoutes);
 router.use('/rooms', roomRoutes);
 router.use('/racks', rackRoutes);
