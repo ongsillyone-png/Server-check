@@ -1,20 +1,25 @@
-/* Custom styles for Server Check project */
+/* ============================================================
+   Server Check - Responsive Stylesheet (Phase 8)
+   Mobile First | Touch Friendly | Sidebar Collapse
+   ============================================================ */
 
-/* Premium typography options */
+/* === BASE TYPOGRAPHY === */
 body {
   font-family: 'Sarabun', sans-serif;
   color: #1e293b;
 }
 
-/* Sidebar Custom overrides */
+/* === SIDEBAR CORE === */
 .sidebar {
   box-shadow: inset -1px 0 0 rgba(0, 0, 0, .05);
+  transition: transform 0.3s ease-in-out;
 }
 
 .sidebar .nav-link {
   font-weight: 500;
   font-size: 0.95rem;
   transition: all 0.2s ease-in-out;
+  min-height: 44px; /* Touch-friendly minimum tap area */
 }
 
 .sidebar .nav-link.active {
@@ -25,7 +30,7 @@ body {
   background-color: #f1f5f9;
 }
 
-/* Custom cards for sleek look */
+/* === CARD STYLES === */
 .card {
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.02);
@@ -36,33 +41,17 @@ body {
   box-shadow: 0 4px 20px rgba(0,0,0,0.08);
 }
 
-/* Font helpers */
-.fs-7 {
-  font-size: 0.85rem !important;
-}
+/* === FONT HELPERS === */
+.fs-7 { font-size: 0.85rem !important; }
+.fs-8 { font-size: 0.75rem !important; }
 
-.fs-8 {
-  font-size: 0.75rem !important;
-}
+/* === SPACING HELPERS === */
+.max-w-600 { max-width: 600px; }
+.max-w-700 { max-width: 700px; }
+.tracking-tight { letter-spacing: -0.025em; }
+.tracking-wider { letter-spacing: 0.05em; }
 
-.max-w-600 {
-  max-width: 600px;
-}
-
-.max-w-700 {
-  max-width: 700px;
-}
-
-/* Tracking/Spacing extensions */
-.tracking-tight {
-  letter-spacing: -0.025em;
-}
-
-.tracking-wider {
-  letter-spacing: 0.05em;
-}
-
-/* Glassmorphism styling helpers */
+/* === GLASSMORPHISM === */
 .glass-panel {
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(10px);
@@ -70,13 +59,12 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Step wizard indicator styling */
+/* === STEP WIZARD === */
 .step-item {
   position: relative;
   z-index: 2;
   flex: 1;
 }
-
 .step-item:not(:last-child)::after {
   content: '';
   position: absolute;
@@ -86,4 +74,242 @@ body {
   height: 2px;
   background-color: #e2e8f0;
   z-index: -1;
+}
+
+/* ============================================================
+   MOBILE RESPONSIVE - SIDEBAR OFFCANVAS BEHAVIOR
+   ============================================================ */
+
+/* Mobile Sidebar Overlay Backdrop */
+#sidebarOverlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1040;
+  backdrop-filter: blur(1px);
+}
+#sidebarOverlay.active {
+  display: block;
+}
+
+/* On mobile: sidebar is fixed offcanvas panel */
+@media (max-width: 767.98px) {
+  #sidebarMenu {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 280px;
+    z-index: 1045;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    overflow-y: auto;
+    padding-top: 60px !important;
+    min-height: 100vh !important;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.12);
+  }
+
+  #sidebarMenu.sidebar-open {
+    transform: translateX(0);
+  }
+
+  /* Main content occupies full width on mobile */
+  main.col-md-9 {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 0 0 100% !important;
+    margin-left: 0 !important;
+    padding: 1rem !important;
+  }
+
+  /* Large touch-friendly buttons on mobile */
+  .btn {
+    min-height: 44px;
+    font-size: 1rem;
+  }
+
+  /* Table scrollable on mobile */
+  .table-responsive {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Card padding reduction on mobile */
+  .card {
+    border-radius: 8px;
+  }
+
+  /* Hide text labels in small action buttons */
+  .btn-icon-sm .btn-label {
+    display: none;
+  }
+}
+
+/* ============================================================
+   TABLET RESPONSIVE (768px - 991px)
+   ============================================================ */
+@media (min-width: 768px) and (max-width: 991.98px) {
+  #sidebarMenu {
+    width: 220px;
+    min-height: 100vh;
+  }
+
+  /* Hide sidebar section headings on tablet to save space */
+  .sidebar .sidebar-heading span {
+    font-size: 0.65rem;
+  }
+
+  /* Sidebar nav links smaller on tablet */
+  .sidebar .nav-link {
+    font-size: 0.875rem;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  .sidebar .nav-link span {
+    font-size: 0.825rem;
+  }
+
+  main.col-md-9 {
+    padding: 1.25rem !important;
+  }
+}
+
+/* ============================================================
+   MOBILE NAVBAR TOGGLE BUTTON STYLING
+   ============================================================ */
+#sidebarToggleBtn {
+  display: none;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1.35rem;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  line-height: 1;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+#sidebarToggleBtn:hover {
+  background: rgba(255,255,255,0.15);
+}
+
+@media (max-width: 767.98px) {
+  #sidebarToggleBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* On mobile, hide the Bootstrap default toggler - use custom one */
+  .navbar-toggler {
+    display: none !important;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE TABLE IMPROVEMENTS
+   ============================================================ */
+@media (max-width: 575.98px) {
+  /* Make table font smaller on very small screens */
+  .table th,
+  .table td {
+    font-size: 0.82rem;
+    padding: 0.5rem 0.4rem;
+  }
+
+  /* Hide less-critical columns on very small screens */
+  .table .d-none-xs {
+    display: none !important;
+  }
+
+  /* Button groups stack vertically */
+  .btn-group-action {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+}
+
+/* ============================================================
+   INSPECTION WALK - MOBILE OPTIMIZED CARDS
+   ============================================================ */
+@media (max-width: 767.98px) {
+  /* Server card for inspection: make tappable full-row */
+  .server-inspect-card {
+    padding: 1rem;
+    min-height: 72px;
+    border-radius: 10px;
+  }
+
+  /* Room/Rack navigation: large touch area */
+  .room-nav-card,
+  .rack-nav-card {
+    min-height: 80px;
+    font-size: 1rem;
+  }
+
+  /* Status radio buttons larger on mobile */
+  .status-radio-group .form-check-input {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .status-radio-group .form-check-label {
+    font-size: 1rem;
+    padding-left: 0.4rem;
+  }
+
+  /* Checklist items bigger tap zone */
+  .checklist-item {
+    padding: 0.75rem;
+    min-height: 56px;
+  }
+
+  /* Full width submit button */
+  .inspection-submit-btn {
+    width: 100%;
+    min-height: 52px;
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+}
+
+/* ============================================================
+   PRINT HELPERS (already in report pages - centralized here)
+   ============================================================ */
+@media print {
+  #sidebarMenu,
+  header.navbar,
+  footer.footer,
+  .no-print {
+    display: none !important;
+  }
+
+  main {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}
+
+/* ============================================================
+   UTILITY: Large Touch Buttons
+   ============================================================ */
+.btn-touch {
+  min-height: 48px;
+  min-width: 48px;
+  font-size: 1rem;
+  border-radius: 10px;
+}
+
+.btn-touch-lg {
+  min-height: 56px;
+  font-size: 1.1rem;
+  border-radius: 12px;
+  font-weight: 600;
 }

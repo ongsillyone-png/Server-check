@@ -4,7 +4,7 @@
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
   <div>
     <h1 class="h2 fw-bold text-dark">Walkthrough Routine Inspection</h1>
-    <p class="text-muted small">แบบบันทึกผลการเดินตรวจเช็คห้องเครื่องคอมพิวเตอร์รายวัน</p>
+    <p class="text-muted small mb-0">แบบบันทึกผลการเดินตรวจเช็คห้องเครื่องคอมพิวเตอร์รายวัน</p>
   </div>
 </div>
 
@@ -35,7 +35,8 @@
 </div>
 
 <div class="row g-4">
-  <div class="col-md-4">
+  <!-- Left panel: Navigation tree (collapses to top on mobile) -->
+  <div class="col-12 col-md-4">
     <!-- Quick asset navigation checklist -->
     <div class="card border-0 shadow-sm rounded-4 p-4">
       <h5 class="fw-bold mb-3">แผงผังการเดินตรวจ</h5>
@@ -52,9 +53,8 @@
         </li>
       </ul>
     </div>
-  </div>
-
-  <div class="col-md-8">
+  <!-- Right panel: Inspection form -->
+  <div class="col-12 col-md-8">
     <div class="card border-0 shadow-sm rounded-4 p-4">
       <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
         <h5 class="fw-bold mb-0 text-primary">ตรวจเช็คอุปกรณ์: HIS-DB-01 (U10)</h5>
@@ -121,9 +121,9 @@
           <textarea class="form-control" id="remark" name="remark" rows="2" placeholder="กรอกข้อความระบุหมายเหตุ..."></textarea>
         </div>
 
-        <div class="d-flex justify-content-between border-top pt-3">
-          <button type="button" class="btn btn-outline-secondary px-4">ย้อนกลับ</button>
-          <button type="submit" class="btn btn-success px-4">บันทึกผล & ไปอุปกรณ์ถัดไป <i class="bi bi-arrow-right"></i></button>
+        <div class="d-flex gap-2 border-top pt-3 flex-wrap">
+          <button type="button" class="btn btn-outline-secondary px-4 btn-touch flex-fill flex-md-grow-0">ย้อนกลับ</button>
+          <button type="submit" class="btn btn-success px-4 btn-touch flex-fill inspection-submit-btn">บันทึกผล &amp; ไปอุปกรณ์ถัดไป <i class="bi bi-arrow-right"></i></button>
         </div>
       </form>
     </div>

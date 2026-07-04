@@ -28,6 +28,11 @@
         <span class="badge bg-secondary fs-8">HOSPITAL v1.0</span>
       </a>
       
+      <!-- Mobile Sidebar Toggle Button (visible on mobile only) -->
+      <button id="sidebarToggleBtn" type="button" aria-label="Toggle Sidebar" onclick="toggleSidebar()">
+        <i class="bi bi-list fs-4"></i>
+      </button>
+
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#headerNavbar" aria-controls="headerNavbar" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -96,6 +101,9 @@
         .catch(err => console.warn('Error fetching unread notification count:', err.message));
     }
   </script>
+
+  <!-- Mobile Sidebar Overlay Backdrop -->
+  <div id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
   <!-- Sidebar Layout Wrapper -->
   <div class="container-fluid">
