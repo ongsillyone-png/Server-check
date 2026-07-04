@@ -159,6 +159,161 @@ class InspectionSessionRepository {
     `;
     return await BaseRepository.query(sql);
   }
+
+  /**
+   * Find inspection sessions matching filters with pagination
+   */
+  static async findSessionsWithFilters({ startDate, endDate, roomId, rackId, serverId, inspectorId, limit, offset }) {
+    let sql = `
+      SELECT s.id as session_id,
+             s.started_at,
+             s.completed_at,
+             s.status as session_status,
+             u.name as inspector_name,
+             COUNT(d.id) as total_inspected,
+             SUM(CASE WHEN d.status = 'pass' THEN 1 ELSE 0 END) as pass_count,
+             SUM(CASE WHEN d.status = 'warning' THEN 1 ELSE 0 END) as warning_count,
+             SUM(CASE WHEN d.status = 'fail' THEN 1 ELSE 0 END) as fail_count
+      FROM inspection_sessions s
+      JOIN users u ON s.inspector_id = u.id
+      LEFT JOIN inspection_details d ON d.session_id = s.id AND d.deleted_at IS NULL
+      WHERE s.deleted_at IS NULL AND s.status != 'canceled'
+    `;
+    const params = [];
+
+    if (startDate) {
+      sql += ' AND s.started_at >= ?';
+      params.push(`${startDate} 00:00:00`);
+    }
+    if (endDate) {
+      sql += ' AND s.started_at <= ?';
+      params.push(`${endDate} 23:59:59`);
+    }
+    if (inspectorId) {
+      sql += ' AND s.inspector_id = ?';
+      params.push(Number(inspectorId));
+    }
+    if (roomId) {
+      sql += ` AND s.id IN (
+        SELECT DISTINCT d2.session_id 
+        FROM inspection_details d2
+        JOIN physical_servers ps ON d2.physical_server_id = ps.id
+        JOIN racks rk ON ps.rack_id = rk.id
+        WHERE rk.room_id = ? AND d2.deleted_at IS NULL AND ps.deleted_at IS NULL AND rk.deleted_at IS NULL
+      )`;
+      params.push(Number(roomId));
+    }
+    if (rackId) {
+      sql += ` AND s.id IN (
+        SELECT DISTINCT d2.session_id 
+        FROM inspection_details d2
+        JOIN physical_servers ps ON d2.physical_server_id = ps.id
+        WHERE ps.rack_id = ? AND d2.deleted_at IS NULL AND ps.deleted_at IS NULL
+      )`;
+      params.push(Number(rackId));
+    }
+    if (serverId) {
+      sql += ` AND s.id IN (
+        SELECT DISTINCT d2.session_id 
+        FROM inspection_details d2
+        WHERE d2.physical_server_id = ? AND d2.deleted_at IS NULL
+      )`;
+      params.push(Number(serverId));
+    }
+
+    sql += ' GROUP BY s.id, s.started_at, s.completed_at, s.status, u.name';
+    sql += ' ORDER BY s.id DESC';
+
+    if (limit !== undefined && offset !== undefined) {
+      sql += ' LIMIT ? OFFSET ?';
+      params.push(Number(limit), Number(offset));
+    }
+
+    return await BaseRepository.query(sql, params);
+  }
+
+  /**
+   * Count total inspection sessions matching filters
+   */
+  static async countSessionsWithFilters({ startDate, endDate, roomId, rackId, serverId, inspectorId }) {
+    let sql = `
+      SELECT COUNT(DISTINCT s.id) as count
+      FROM inspection_sessions s
+      WHERE s.deleted_at IS NULL AND s.status != 'canceled'
+    `;
+    const params = [];
+
+    if (startDate) {
+      sql += ' AND s.started_at >= ?';
+      params.push(`${startDate} 00:00:00`);
+    }
+    if (endDate) {
+      sql += ' AND s.started_at <= ?';
+      params.push(`${endDate} 23:59:59`);
+    }
+    if (inspectorId) {
+      sql += ' AND s.inspector_id = ?';
+      params.push(Number(inspectorId));
+    }
+    if (roomId) {
+      sql += ` AND s.id IN (
+        SELECT DISTINCT d2.session_id 
+        FROM inspection_details d2
+        JOIN physical_servers ps ON d2.physical_server_id = ps.id
+        JOIN racks rk ON ps.rack_id = rk.id
+        WHERE rk.room_id = ? AND d2.deleted_at IS NULL AND ps.deleted_at IS NULL AND rk.deleted_at IS NULL
+      )`;
+      params.push(Number(roomId));
+    }
+    if (rackId) {
+      sql += ` AND s.id IN (
+        SELECT DISTINCT d2.session_id 
+        FROM inspection_details d2
+        JOIN physical_servers ps ON d2.physical_server_id = ps.id
+        WHERE ps.rack_id = ? AND d2.deleted_at IS NULL AND ps.deleted_at IS NULL
+      )`;
+      params.push(Number(rackId));
+    }
+    if (serverId) {
+      sql += ` AND s.id IN (
+        SELECT DISTINCT d2.session_id 
+        FROM inspection_details d2
+        WHERE d2.physical_server_id = ? AND d2.deleted_at IS NULL
+      )`;
+      params.push(Number(serverId));
+    }
+
+    const rows = await BaseRepository.query(sql, params);
+    return Number(rows[0].count);
+  }
+
+  /**
+   * Get detail summary for report view
+   */
+  static async getSessionDetailsForReport(sessionId) {
+    const sql = `
+      SELECT s.id as session_id,
+             s.started_at,
+             s.completed_at,
+             s.status as session_status,
+             u.name as inspector_name,
+             u.id as inspector_id,
+             r.role_name as inspector_role,
+             COUNT(d.id) as total_inspected,
+             SUM(CASE WHEN d.status = 'pass' THEN 1 ELSE 0 END) as pass_count,
+             SUM(CASE WHEN d.status = 'warning' THEN 1 ELSE 0 END) as warning_count,
+             SUM(CASE WHEN d.status = 'fail' THEN 1 ELSE 0 END) as fail_count
+      FROM inspection_sessions s
+      JOIN users u ON s.inspector_id = u.id
+      JOIN roles r ON u.role_id = r.id
+      LEFT JOIN inspection_details d ON d.session_id = s.id AND d.deleted_at IS NULL
+      WHERE s.id = ? AND s.deleted_at IS NULL
+      GROUP BY s.id, s.started_at, s.completed_at, s.status, u.name, u.id, r.role_name
+      LIMIT 1
+    `;
+    const rows = await BaseRepository.query(sql, [sessionId]);
+    return rows.length > 0 ? rows[0] : null;
+  }
 }
 
 module.exports = InspectionSessionRepository;

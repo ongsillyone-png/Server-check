@@ -55,6 +55,36 @@ class InspectionDetailRepository {
     `;
     return await BaseRepository.query(sql, [sessionId]);
   }
+
+  /**
+   * Get detailed server inspection status details (with room, rack, server metadata) for a session
+   */
+  static async findDetailsWithMetadataBySession(sessionId) {
+    const sql = `
+      SELECT d.id as detail_id,
+             d.status as overall_status,
+             d.remark as server_remark,
+             d.created_at as inspected_at,
+             ps.id as server_id,
+             ps.server_name,
+             ps.ip_address,
+             ps.model,
+             ps.rack_position_u,
+             rk.id as rack_id,
+             rk.rack_name,
+             rm.id as room_id,
+             rm.room_name,
+             rm.building,
+             rm.floor
+      FROM inspection_details d
+      JOIN physical_servers ps ON d.physical_server_id = ps.id
+      JOIN racks rk ON ps.rack_id = rk.id
+      JOIN rooms rm ON rk.room_id = rm.id
+      WHERE d.session_id = ? AND d.deleted_at IS NULL AND ps.deleted_at IS NULL
+      ORDER BY rm.room_name ASC, rk.rack_name ASC, ps.rack_position_u DESC
+    `;
+    return await BaseRepository.query(sql, [sessionId]);
+  }
 }
 
 module.exports = InspectionDetailRepository;

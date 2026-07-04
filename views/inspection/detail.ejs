@@ -3,53 +3,310 @@
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
   <div>
-    <h1 class="h2 fw-bold text-dark">Inspection Result Details</h1>
-    <p class="text-muted small">รายละเอียดผลบันทึกการตรวจเช็ครายอุปกรณ์และภาพหลักฐาน</p>
+    <h1 class="h2 fw-bold text-dark"><i class="bi bi-file-earmark-text text-primary me-2"></i>รายละเอียดรายงานการตรวจเช็ค</h1>
+    <p class="text-muted small mb-0">รหัสรอบตรวจ: #<%= session.session_id %> | ตรวจเช็คเมื่อ: <%= formatThaiDate(session.started_at, true) %></p>
   </div>
-  <a href="/inspections/history" class="btn btn-outline-secondary">ย้อนกลับ</a>
+  <div class="btn-toolbar mb-2 mb-md-0 gap-2">
+    <!-- Back to History List -->
+    <a href="/inspections/history" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1.5 px-3 py-2 fw-semibold rounded-3">
+      <i class="bi bi-arrow-left"></i> ย้อนกลับ
+    </a>
+
+    <!-- Reopen completed session for edit (Only if session is completed) -->
+    <% if (session.session_status === 'completed') { %>
+      <form id="reopenSessionForm" action="/inspections/reopen" method="POST" class="d-inline">
+        <input type="hidden" name="sessionId" value="<%= session.session_id %>">
+        <button type="submit" class="btn btn-sm btn-warning d-flex align-items-center gap-1.5 px-3 py-2 fw-bold rounded-3 shadow-sm text-dark">
+          <i class="bi bi-pencil-square"></i> เปิดเพื่อแก้ไขข้อมูล
+        </button>
+      </form>
+    <% } %>
+  </div>
 </div>
 
-<div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-primary bg-opacity-5">
-  <div class="row">
-    <div class="col-md-6">
-      <span class="text-muted small d-block">รหัสการตรวจเช็ค</span>
-      <h5 class="fw-bold text-primary">Inspection Round #1</h5>
+<!-- OVERVIEW STATS CARDS -->
+<div class="row g-3 mb-4">
+  <div class="col-12 col-md-4">
+    <div class="card border-0 shadow-sm rounded-4 p-3 bg-light border-start border-primary border-4 h-100">
+      <h6 class="text-muted small mb-1 fw-bold uppercase">ข้อมูลผู้บันทึกตรวจ</h6>
+      <h5 class="fw-bold mb-0 text-dark"><%= session.inspector_name %></h5>
+      <span class="badge bg-primary-subtle text-primary border border-primary-subtle align-self-start mt-2 rounded-pill"><%= session.inspector_role %></span>
     </div>
-    <div class="col-md-6 text-md-end">
-      <span class="text-muted small d-block">ผู้ตรวจสอบ</span>
-      <h6 class="fw-bold">John Doe (<span class="text-success">Inspector</span>)</h6>
+  </div>
+  <div class="col-12 col-md-4">
+    <div class="card border-0 shadow-sm rounded-4 p-3 bg-light border-start border-success border-4 h-100">
+      <h6 class="text-muted small mb-1 fw-bold uppercase">สรุปผลการเดินตรวจรอบนี้</h6>
+      <div class="d-flex gap-2 mt-2 flex-wrap">
+        <span class="badge bg-success px-2.5 py-1.5 rounded-3"><i class="bi bi-check-circle-fill me-1"></i>ปกติ (Pass): <%= session.pass_count || 0 %> เครื่อง</span>
+        <span class="badge bg-warning text-dark px-2.5 py-1.5 rounded-3"><i class="bi bi-exclamation-triangle-fill me-1"></i>เฝ้าระวัง: <%= session.warning_count || 0 %> เครื่อง</span>
+        <span class="badge bg-danger px-2.5 py-1.5 rounded-3"><i class="bi bi-x-circle-fill me-1"></i>ผิดปกติ (Fail): <%= session.fail_count || 0 %> เครื่อง</span>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-4">
+    <div class="card border-0 shadow-sm rounded-4 p-3 bg-light border-start border-info border-4 h-100">
+      <h6 class="text-muted small mb-1 fw-bold uppercase">เวลาที่ใช้บันทึกรอบตรวจ</h6>
+      <% 
+        let durationStr = '-';
+        if (session.started_at && session.completed_at) {
+          const diffMs = new Date(session.completed_at) - new Date(session.started_at);
+          const diffMins = Math.floor(diffMs / 60000);
+          const diffSecs = Math.floor((diffMs % 60000) / 1000);
+          durationStr = `${diffMins} นาที ${diffSecs} วินาที`;
+        } else if (session.session_status === 'in_progress') {
+          durationStr = 'กำลังดำเนินการตรวจเช็ค...';
+        }
+      %>
+      <h5 class="fw-bold mb-0 text-dark"><%= durationStr %></h5>
+      <span class="text-muted small mt-2 d-block"><%= formatThaiDate(session.started_at, true) %> ถึง <%= session.completed_at ? formatThaiDate(session.completed_at, true) : 'ยังไม่เสร็จสิ้น' %></span>
     </div>
   </div>
 </div>
 
-<div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
-  <h5 class="fw-bold mb-3">สรุปสถานะอุปกรณ์ที่ตรวจเช็ค</h5>
-  
-  <div class="list-group list-group-flush">
-    <!-- Server 1 check result details -->
-    <div class="list-group-item px-0 py-3">
-      <div class="d-flex justify-content-between align-items-center mb-2">
-        <h6 class="fw-bold mb-0">HIS-DB-01 (Database Server)</h6>
-        <span class="badge bg-success">PASS</span>
-      </div>
-      <p class="text-muted small mb-0"><strong>ผลการตรวจแยกข้อ:</strong> Power LED = OK, Alarm = OK, Cables = OK, Dust = Clean, Temp = 21.5°C</p>
-    </div>
+<div class="row g-4 mb-4">
+  <!-- LEFT PANEL: TIMELINE -->
+  <div class="col-12 col-lg-4">
+    <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+      <h5 class="fw-bold text-dark mb-4 border-bottom pb-2"><i class="bi bi-clock-history text-primary me-2"></i>เส้นเวลารอบการตรวจ (Timeline)</h5>
+      <div class="timeline">
+        <!-- Start Session Item -->
+        <div class="timeline-item d-flex gap-3 pb-4">
+          <div class="timeline-marker text-success"><i class="bi bi-play-circle-fill fs-4"></i></div>
+          <div class="timeline-content">
+            <h6 class="fw-bold text-dark mb-0">เริ่มสร้างรอบการตรวจ</h6>
+            <p class="text-muted small mb-0"><%= formatThaiDate(session.started_at, true) %></p>
+            <span class="text-muted small fs-9">โดย <%= session.inspector_name %></span>
+          </div>
+        </div>
 
-    <!-- Server 2 check result details -->
-    <div class="list-group-item px-0 py-3">
-      <div class="d-flex justify-content-between align-items-center mb-2">
-        <h6 class="fw-bold mb-0">Core-Switch-01 (Network Switch)</h6>
-        <span class="badge bg-warning text-dark">WARNING</span>
+        <!-- Inspected Devices Timeline Log -->
+        <% 
+          let allDevices = [];
+          rooms.forEach(rm => {
+            rm.racks.forEach(rk => {
+              rk.servers.forEach(srv => {
+                allDevices.push(srv);
+              });
+            });
+          });
+          // Sort devices chronologically by inspected_at time
+          allDevices.sort((a,b) => new Date(a.inspected_at) - new Date(b.inspected_at));
+        %>
+        
+        <% allDevices.forEach(srv => { %>
+          <div class="timeline-item d-flex gap-3 pb-4">
+            <div class="timeline-marker <%= srv.overall_status === 'fail' ? 'text-danger' : (srv.overall_status === 'warning' ? 'text-warning' : 'text-secondary') %>">
+              <i class="bi bi-hdd-fill fs-5"></i>
+            </div>
+            <div class="timeline-content">
+              <h6 class="fw-bold text-dark mb-0"><%= srv.server_name %></h6>
+              <span class="text-muted fs-8"><%= formatThaiDate(srv.inspected_at, true) %></span>
+              <span class="badge <%= srv.overall_status === 'fail' ? 'bg-danger' : (srv.overall_status === 'warning' ? 'bg-warning text-dark' : 'bg-success') %> d-block align-self-start mt-1.5" style="max-width: fit-content; font-size: 0.75rem;">
+                <%= srv.overall_status === 'fail' ? 'ผิดปกติ' : (srv.overall_status === 'warning' ? 'เฝ้าระวัง' : 'ปกติ') %>
+              </span>
+            </div>
+          </div>
+        <% }) %>
+
+        <!-- End Session Item -->
+        <div class="timeline-item d-flex gap-3">
+          <div class="timeline-marker text-primary"><i class="bi bi-check-circle-fill fs-4"></i></div>
+          <div class="timeline-content">
+            <h6 class="fw-bold text-dark mb-0">ส่งมอบและเสร็จสิ้นรอบตรวจ</h6>
+            <% if (session.completed_at) { %>
+              <p class="text-muted small mb-0"><%= formatThaiDate(session.completed_at, true) %></p>
+            <% } else { %>
+              <p class="text-warning small mb-0 fw-semibold">รอยื่นส่งงาน (รอบการตรวจยังไม่ถูกปิด)</p>
+            <% } %>
+          </div>
+        </div>
       </div>
-      <p class="text-muted small mb-2"><strong>ผลการตรวจแยกข้อ:</strong> Power LED = OK, Alarm = OK, Cables = OK, Dust = Dirty (พบลมระบายความร้อนฝุ่นเยอะ), Temp = 24.5°C</p>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL: CHECKLIST DETAILS (ACCORDION ROOM/RACK/SERVER GROUPS) -->
+  <div class="col-12 col-lg-8">
+    <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+      <h5 class="fw-bold text-dark mb-4 border-bottom pb-2"><i class="bi bi-card-checklist text-primary me-2"></i>รายละเอียดการตรวจรายอุปกรณ์</h5>
       
-      <!-- Uploaded inspection photos reference -->
-      <div class="d-flex gap-2 align-items-center">
-        <span class="text-muted small"><i class="bi bi-image"></i> รูปถ่ายบันทึกปัญหา:</span>
-        <a href="/uploads/inspections/1/core-switch-dust.jpg" target="_blank" class="small text-decoration-none">core-switch-dust.jpg (คลิกเพื่อดูภาพ)</a>
+      <div class="accordion accordion-flush" id="reportAccordion">
+        <% if (rooms && rooms.length > 0) { %>
+          <% rooms.forEach((room, roomIdx) => { %>
+            <!-- ROOM CONTAINER -->
+            <div class="room-group mb-3 border rounded-3 p-3 bg-white">
+              <h5 class="fw-bold text-primary mb-3"><i class="bi bi-door-closed-fill"></i> <%= room.room_name %> <span class="text-muted fs-8 fw-normal">| <%= room.building %>, ชั้น <%= room.floor %></span></h5>
+              
+              <% room.racks.forEach((rack, rackIdx) => { %>
+                <!-- RACK CONTAINER -->
+                <div class="rack-group mb-3 ms-2 border-start ps-3 py-1">
+                  <h6 class="fw-bold text-dark mb-2"><i class="bi bi-hdd-rack text-muted me-1"></i>ตู้แร็ค: <%= rack.rack_name %></h6>
+                  
+                  <!-- SERVERS ACCORDIONS -->
+                  <% rack.servers.forEach((srv, srvIdx) => { %>
+                    <div class="accordion-item border rounded-3 mb-2 shadow-sm">
+                      <h2 class="accordion-header" id="heading-<%= srv.detail_id %>">
+                        <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-<%= srv.detail_id %>" aria-expanded="false" aria-controls="collapse-<%= srv.detail_id %>">
+                          <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                            <div>
+                              <strong class="text-dark d-block"><%= srv.server_name %></strong>
+                              <span class="text-muted fs-8">Model: <%= srv.model || '-' %> | IP: <%= srv.ip_address || '-' %> | Slot: U<%= srv.rack_position_u || '-' %></span>
+                            </div>
+                            <span class="badge <%= srv.overall_status === 'fail' ? 'bg-danger' : (srv.overall_status === 'warning' ? 'bg-warning text-dark' : 'bg-success') %>">
+                              <%= srv.overall_status === 'fail' ? 'ผิดปกติ / FAIL' : (srv.overall_status === 'warning' ? 'เฝ้าระวัง' : 'ปกติ / PASS') %>
+                            </span>
+                          </div>
+                        </button>
+                      </h2>
+                      <div id="collapse-<%= srv.detail_id %>" class="accordion-collapse collapse" aria-labelledby="heading-<%= srv.detail_id %>" data-bs-parent="#reportAccordion">
+                        <div class="accordion-body bg-light bg-opacity-25 border-top">
+                          <!-- Server remark -->
+                          <div class="alert alert-secondary border-0 bg-light py-2 px-3 mb-3 text-dark small">
+                            <strong><i class="bi bi-chat-right-text me-1.5"></i>ความเห็นโดยรวมของอุปกรณ์:</strong> <%= srv.server_remark || 'ไม่มีบันทึกข้อมูลหมายเหตุ' %>
+                          </div>
+
+                          <!-- Checklist details table -->
+                          <div class="table-responsive">
+                            <table class="table table-sm align-middle table-bordered bg-white small mb-0">
+                              <thead class="table-light">
+                                <tr>
+                                  <th style="width: 45%;">หัวข้อตรวจสอบ</th>
+                                  <th class="text-center" style="width: 20%;">ผลการตรวจ</th>
+                                  <th style="width: 35%;">ค่าตรวจวัด / คำอธิบายประกอบข้อตรวจ</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <% srv.results.forEach(res => { %>
+                                  <tr>
+                                    <td>
+                                      <div class="fw-bold"><%= res.item_name %></div>
+                                    </td>
+                                    <td class="text-center">
+                                      <% if (res.result_value === 'pass') { %>
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check-circle-fill me-1"></i>ผ่าน (PASS)</span>
+                                      <% } else if (res.result_value === 'fail') { %>
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-x-circle-fill me-1"></i>ไม่ผ่าน (FAIL)</span>
+                                      <% } else if (res.result_value === 'na') { %>
+                                        <span class="badge bg-secondary-subtle text-muted border border-secondary-subtle">ไม่มี / N/A</span>
+                                      <% } %>
+                                    </td>
+                                    <td>
+                                      <!-- Result values -->
+                                      <% if (res.item_type === 'numeric') { %>
+                                        <div class="fw-semibold text-primary mb-1">ค่าอุณหภูมิ/ความชื้น: <%= res.numeric_value !== null ? `${res.numeric_value} °C` : '-' %></div>
+                                      <% } else if (res.item_type === 'text') { %>
+                                        <div class="fw-semibold text-secondary mb-1">รายละเอียด: <%= res.text_value || '-' %></div>
+                                      <% } %>
+                                      
+                                      <!-- Checklist item remark -->
+                                      <% if (res.remark) { %>
+                                        <div class="text-muted small"><i class="bi bi-chat-dots me-1"></i>บันทึกข้อ: <%= res.remark %></div>
+                                      <% } %>
+
+                                      <!-- Picture uploads for FAIL results -->
+                                      <% if (res.photo_path) { %>
+                                        <div class="mt-2 pt-2 border-top">
+                                          <div class="small text-danger fw-semibold mb-1"><i class="bi bi-image"></i> รูปถ่ายหลักฐานปัญหา:</div>
+                                          <a href="<%= res.photo_path %>" target="_blank" class="d-inline-block hover-scale border rounded-2 p-1 overflow-hidden bg-white shadow-sm" style="width: 100px; height: 100px;">
+                                            <img src="<%= res.photo_path %>" alt="หลักฐาน" class="w-100 h-100 object-fit-cover">
+                                          </a>
+                                        </div>
+                                      <% } %>
+                                    </td>
+                                  </tr>
+                                <% }) %>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  <% }) %>
+                </div>
+              <% }) %>
+            </div>
+          <% }) %>
+        <% } else { %>
+          <div class="text-center py-5 text-muted">ไม่พบข้อมูลผลการเดินตรวจบันทึกเครื่องอุปกรณ์ในระบบ</div>
+        <% } %>
       </div>
     </div>
   </div>
 </div>
+
+<style>
+/* Visual Timeline Style */
+.timeline {
+  position: relative;
+  padding-left: 1.5rem;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 8px;
+  width: 2px;
+  background-color: var(--bs-light-border-subtle, #dee2e6);
+}
+.timeline-item {
+  position: relative;
+}
+.timeline-marker {
+  position: absolute;
+  left: -1.5rem;
+  background-color: #fff;
+  z-index: 2;
+  padding: 2px;
+}
+.timeline-content {
+  padding-left: 0.5rem;
+}
+.fs-8 {
+  font-size: 0.8rem !important;
+}
+.fs-9 {
+  font-size: 0.72rem !important;
+}
+.hover-scale {
+  transition: transform 0.2s ease-in-out;
+}
+.hover-scale:hover {
+  transform: scale(1.08);
+}
+.accordion-button::after {
+  font-size: 0.8rem;
+}
+.object-fit-cover {
+  object-fit: cover !important;
+}
+</style>
+
+<script>
+  // Confirm reopen completed session popup using SweetAlert2
+  const reopenForm = document.getElementById('reopenSessionForm');
+  if (reopenForm) {
+    reopenForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      Swal.fire({
+        title: 'ยืนยันการเปิดแก้ไขข้อมูล?',
+        text: 'คุณต้องการเปิดรอบการตรวจนี้ขึ้นมาเพื่อทำการแก้ไข/บันทึกผลการเดินตรวจเพิ่มเติมใช่หรือไม่? (สถานะรอบการตรวจจะกลับไปเป็น "กำลังตรวจ")',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ffc107',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'ใช่, เปิดเพื่อแก้ไข',
+        cancelButtonText: 'ยกเลิก',
+        customClass: {
+          confirmButton: 'text-dark fw-bold'
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.submit();
+        }
+      });
+    });
+  }
+</script>
 
 <%- include('../layouts/footer') %>

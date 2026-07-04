@@ -156,6 +156,21 @@ let selectedRoomId = null;
 let selectedRackId = null;
 let selectedServerId = null;
 
+// Toggle photo upload container depending on radio value selection
+function togglePhotoUpload(itemId, val) {
+  const photoContainer = document.querySelector(`.photo-upload-container_${itemId}`);
+  if (photoContainer) {
+    if (val === 'fail') {
+      photoContainer.classList.remove('d-none');
+    } else {
+      photoContainer.classList.add('d-none');
+      // Clear file input when switching away from FAIL
+      const fileInput = photoContainer.querySelector('input[type="file"]');
+      if (fileInput) fileInput.value = '';
+    }
+  }
+}
+
 // Room Selection Action
 function selectRoom(roomId, btn) {
   selectedRoomId = roomId;
@@ -315,9 +330,9 @@ function selectServer(serverId, srvName, ipAddress, typeName, uPosition, btn) {
         data.items.forEach(item => {
           const prevVal = item.previous ? item.previous.result_value : 'pass';
           const prevBool = item.previous ? item.previous.boolean_value : null;
-          const prevNum = item.previous ? item.previous.numeric_value : '';
-          const prevTxt = item.previous ? item.previous.text_value : '';
-          const prevRemark = item.previous ? item.previous.remark : '';
+          const prevNum = item.previous && item.previous.numeric_value !== null ? item.previous.numeric_value : '';
+          const prevTxt = item.previous && item.previous.text_value !== null ? item.previous.text_value : '';
+          const prevRemark = item.previous && item.previous.remark !== null ? item.previous.remark : '';
 
           let typeSpecificHtml = '';
 
@@ -349,13 +364,13 @@ function selectServer(serverId, srvName, ipAddress, typeName, uPosition, btn) {
                 </div>
                 <div class="col-md-5 d-flex justify-content-end">
                   <div class="btn-group btn-group-sm" role="group" aria-label="Result Options">
-                    <input type="radio" class="btn-check" name="result_${item.id}" id="pass_${item.id}" value="pass" ${prevVal === 'pass' ? 'checked' : ''} required>
+                    <input type="radio" class="btn-check" name="result_${item.id}" id="pass_${item.id}" value="pass" ${prevVal === 'pass' ? 'checked' : ''} onchange="togglePhotoUpload(${item.id}, this.value)" required>
                     <label class="btn btn-outline-success px-3" for="pass_${item.id}"><i class="bi bi-check2"></i> ปกติ (PASS)</label>
 
-                    <input type="radio" class="btn-check" name="result_${item.id}" id="fail_${item.id}" value="fail" ${prevVal === 'fail' ? 'checked' : ''}>
+                    <input type="radio" class="btn-check" name="result_${item.id}" id="fail_${item.id}" value="fail" ${prevVal === 'fail' ? 'checked' : ''} onchange="togglePhotoUpload(${item.id}, this.value)">
                     <label class="btn btn-outline-danger px-3" for="fail_${item.id}"><i class="bi bi-x-lg"></i> ผิดปกติ (FAIL)</label>
 
-                    <input type="radio" class="btn-check" name="result_${item.id}" id="na_${item.id}" value="na" ${prevVal === 'na' ? 'checked' : ''}>
+                    <input type="radio" class="btn-check" name="result_${item.id}" id="na_${item.id}" value="na" ${prevVal === 'na' ? 'checked' : ''} onchange="togglePhotoUpload(${item.id}, this.value)">
                     <label class="btn btn-outline-secondary px-3" for="na_${item.id}">ไม่มี / N/A</label>
                   </div>
                 </div>
@@ -364,6 +379,11 @@ function selectServer(serverId, srvName, ipAddress, typeName, uPosition, btn) {
 
                 <div class="col-12 mt-2">
                   <input type="text" class="form-control form-control-sm border-0 bg-light fs-8 py-1.5" name="remark_${item.id}" value="${prevRemark}" placeholder="ระบุบันทึกช่วยจำ/คำชี้แจง (ถ้ามี)...">
+                </div>
+
+                <div class="col-12 mt-2 photo-upload-container_${item.id} ${prevVal === 'fail' ? '' : 'd-none'}">
+                  <label class="form-label small fw-semibold text-danger mb-1 d-block"><i class="bi bi-camera-fill me-1"></i> แนบรูปหลักฐานความผิดปกติ (ไม่บังคับ)</label>
+                  <input type="file" class="form-control form-control-sm" name="photo_${item.id}" accept="image/*">
                 </div>
               </div>
               <input type="hidden" name="item_type_${item.id}" value="${item.item_type}">
@@ -427,12 +447,25 @@ function submitChecklist(event) {
     });
   });
 
-  const postData = {
-    sessionId: activeSessionId,
-    serverId: selectedServerId,
-    remark: document.getElementById('serverRemark').value,
-    results: results
-  };
+  const formData = new FormData();
+  formData.append('sessionId', activeSessionId);
+  formData.append('serverId', selectedServerId);
+  formData.append('remark', document.getElementById('serverRemark').value);
+  formData.append('results', JSON.stringify(results));
+
+  // Append files for items marked as FAIL
+  itemWrappers.forEach(wrapper => {
+    const radioInput = wrapper.querySelector('input[type="radio"]:checked');
+    const itemId = radioInput.name.split('_')[1];
+    const resultValue = radioInput.value;
+
+    if (resultValue === 'fail') {
+      const fileInput = wrapper.querySelector(`input[name="photo_${itemId}"]`);
+      if (fileInput && fileInput.files && fileInput.files[0]) {
+        formData.append(`photo_${itemId}`, fileInput.files[0]);
+      }
+    }
+  });
 
   Swal.fire({
     title: 'กำลังบันทึกข้อมูล...',
@@ -444,10 +477,7 @@ function submitChecklist(event) {
 
   fetch('/inspections/api/save-server', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(postData)
+    body: formData
   })
     .then(res => res.json())
     .then(data => {

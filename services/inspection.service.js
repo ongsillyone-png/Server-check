@@ -7,6 +7,7 @@ const RackRepository = require('../repositories/rack.repository');
 const ServerRepository = require('../repositories/server.repository');
 const TemplateItemRepository = require('../repositories/template-item.repository');
 const SettingRepository = require('../repositories/setting.repository');
+const InspectionPhotoRepository = require('../repositories/inspection-photo.repository');
 
 class InspectionService {
   /**
@@ -207,7 +208,7 @@ class InspectionService {
   /**
    * Save checklist answers for a specific server (with automatic transaction rollback)
    */
-  static async saveServerInspection(sessionId, serverId, results, serverRemark, userId) {
+  static async saveServerInspection(sessionId, serverId, results, serverRemark, userId, filesMap = {}) {
     let conn;
     try {
       // 1. Acquire single connection for database transaction block
@@ -221,10 +222,6 @@ class InspectionService {
           overallStatus = 'fail';
           break; // Fail overrides everything
         }
-        if (res.result_value === 'na') {
-          // You can treat N/A as pass or warning based on preference; standard is pass/no warning.
-          // Let's keep status as pass unless a failure exists.
-        }
       }
 
       // 3. Create or Update inspection_details
@@ -233,6 +230,8 @@ class InspectionService {
       if (detail) {
         detailId = Number(detail.id);
         await InspectionDetailRepository.updateDetail(detailId, overallStatus, serverRemark, userId, conn);
+        // Clear previous photo records to avoid orphans/duplicates
+        await InspectionPhotoRepository.deletePhotosByDetail(detailId, conn);
         // Clear previous results to avoid duplicates
         await InspectionResultRepository.deleteResultsByDetail(detailId, conn);
       } else {
@@ -254,7 +253,7 @@ class InspectionService {
           txtVal = res.text_value;
         }
 
-        await InspectionResultRepository.createResult(
+        const resultId = await InspectionResultRepository.createResult(
           detailId,
           res.template_item_id,
           res.result_value, // 'pass', 'fail', 'na'
@@ -265,6 +264,17 @@ class InspectionService {
           userId,
           conn
         );
+
+        // Save photo if result is FAIL and a photo was uploaded
+        if (res.result_value === 'fail' && filesMap[res.template_item_id]) {
+          await InspectionPhotoRepository.createPhoto(
+            detailId,
+            resultId,
+            filesMap[res.template_item_id],
+            userId,
+            conn
+          );
+        }
       }
 
       // 5. Commit transaction
@@ -301,6 +311,180 @@ class InspectionService {
    */
   static async cancelSession(sessionId, userId) {
     await InspectionSessionRepository.cancelSession(sessionId, userId);
+  }
+
+  /**
+   * Fetch filtered list of inspection sessions with pagination metadata
+   */
+  static async getFilteredHistory(filters, page = 1, limit = 10) {
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.max(1, parseInt(limit) || 10);
+    const offset = (pageNum - 1) * limitNum;
+
+    const [sessions, totalCount] = await Promise.all([
+      InspectionSessionRepository.findSessionsWithFilters({ ...filters, limit: limitNum, offset }),
+      InspectionSessionRepository.countSessionsWithFilters(filters)
+    ]);
+
+    const totalPages = Math.ceil(totalCount / limitNum);
+
+    return {
+      sessions,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        totalCount,
+        totalPages,
+        hasNext: pageNum < totalPages,
+        hasPrev: pageNum > 1
+      }
+    };
+  }
+
+  /**
+   * Fetch comprehensive report data for a completed/active session
+   */
+  static async getSessionReport(sessionId) {
+    const session = await InspectionSessionRepository.getSessionDetailsForReport(sessionId);
+    if (!session) return null;
+
+    // Fetch detail rows (servers)
+    const details = await InspectionDetailRepository.findDetailsWithMetadataBySession(sessionId);
+
+    // Group nested details by Room -> Rack -> Server
+    const roomsMap = {};
+
+    for (const d of details) {
+      const roomId = Number(d.room_id);
+      const rackId = Number(d.rack_id);
+
+      if (!roomsMap[roomId]) {
+        roomsMap[roomId] = {
+          id: roomId,
+          room_name: d.room_name,
+          building: d.building,
+          floor: d.floor,
+          racks: {}
+        };
+      }
+
+      if (!roomsMap[roomId].racks[rackId]) {
+        roomsMap[roomId].racks[rackId] = {
+          id: rackId,
+          rack_name: d.rack_name,
+          servers: []
+        };
+      }
+
+      // Load results (with photos if any)
+      const results = await InspectionResultRepository.findResultsWithPhotosByDetail(d.detail_id);
+
+      roomsMap[roomId].racks[rackId].servers.push({
+        detail_id: d.detail_id,
+        server_id: d.server_id,
+        server_name: d.server_name,
+        ip_address: d.ip_address,
+        model: d.model,
+        rack_position_u: d.rack_position_u,
+        overall_status: d.overall_status,
+        server_remark: d.server_remark,
+        inspected_at: d.inspected_at,
+        results
+      });
+    }
+
+    // Map to array structures
+    const rooms = Object.values(roomsMap).map(room => {
+      room.racks = Object.values(room.racks);
+      return room;
+    });
+
+    return {
+      session,
+      rooms
+    };
+  }
+
+  /**
+   * Fetch matching records formatted for CSV output
+   */
+  static async getHistoryCSVData(filters) {
+    const sessions = await InspectionSessionRepository.findSessionsWithFilters(filters);
+    const csvRows = [];
+
+    for (const sess of sessions) {
+      const details = await InspectionDetailRepository.findDetailsWithMetadataBySession(sess.session_id);
+      
+      for (const d of details) {
+        const results = await InspectionResultRepository.findResultsWithPhotosByDetail(d.detail_id);
+        
+        for (const r of results) {
+          let valueStr = '-';
+          if (r.item_type === 'boolean') {
+            valueStr = r.boolean_value === 1 ? 'ผ่าน / ปกติ' : 'ไม่ผ่าน / ผิดปกติ';
+          } else if (r.item_type === 'numeric') {
+            valueStr = r.numeric_value !== null ? `${r.numeric_value}` : '-';
+          } else if (r.item_type === 'text') {
+            valueStr = r.text_value || '-';
+          }
+
+          const statusMap = { 'pass': 'ปกติ / ผ่าน', 'warning': 'เฝ้าระวัง', 'fail': 'ไม่ผ่านเกณฑ์' };
+          const resultValueMap = { 'pass': 'ปกติ (PASS)', 'fail': 'ผิดปกติ (FAIL)', 'na': 'ไม่มี / N/A' };
+
+          csvRows.push({
+            'รหัสรอบตรวจ': `#${sess.session_id}`,
+            'เวลาเริ่มตรวจ': sess.started_at ? new Date(sess.started_at).toLocaleString('th-TH') : '-',
+            'เวลาเสร็จสิ้น': sess.completed_at ? new Date(sess.completed_at).toLocaleString('th-TH') : '-',
+            'สถานะรอบตรวจ': sess.session_status === 'completed' ? 'เสร็จสมบูรณ์' : 'กำลังดำเนินการ',
+            'ผู้ตรวจสอบ': sess.inspector_name,
+            'ห้องเซิร์ฟเวอร์': d.room_name,
+            'ตู้แร็ค': d.rack_name,
+            'เครื่องเซิร์ฟเวอร์': d.server_name,
+            'สถานะเซิร์ฟเวอร์': statusMap[d.overall_status] || d.overall_status,
+            'หมายเหตุเซิร์ฟเวอร์': d.server_remark || '-',
+            'รายการตรวจสอบ': r.item_name,
+            'ผลตรวจสอบรายข้อ': resultValueMap[r.result_value] || r.result_value,
+            'ค่าที่กรอก/วัดได้': valueStr,
+            'หมายเหตุรายข้อ': r.remark || '-'
+          });
+        }
+      }
+    }
+
+    return csvRows;
+  }
+
+  static async getHistoryFilterOptions() {
+    const rooms = await RoomRepository.findAll('', 1000, 0);
+    const RackRepository = require('../repositories/rack.repository');
+    const ServerRepository = require('../repositories/server.repository');
+    const UserRepository = require('../repositories/user.repository');
+
+    const [racks, servers, users] = await Promise.all([
+      RackRepository.findAll('', 1000, 0),
+      ServerRepository.findAll('', 1000, 0),
+      UserRepository.findAll('', 1000, 0)
+    ]);
+
+    // Convert BigInt IDs to Number and extract only required fields to avoid JSON.stringify BigInt serialization issues in EJS
+    const safeRooms = rooms.map(rm => ({
+      id: Number(rm.id),
+      room_name: rm.room_name
+    }));
+
+    const safeRacks = racks.map(r => ({
+      id: Number(r.id),
+      room_id: Number(r.room_id),
+      rack_name: r.rack_name
+    }));
+
+    const safeServers = servers.map(s => ({
+      id: Number(s.id),
+      rack_id: Number(s.rack_id),
+      server_name: s.server_name
+    }));
+
+    return { rooms: safeRooms, racks: safeRacks, servers: safeServers, users };
   }
 }
 

@@ -3,38 +3,279 @@
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
   <div>
-    <h1 class="h2 fw-bold text-dark">Inspection History</h1>
-    <p class="text-muted small">ประวัติและข้อมูลบันทึกการเดินตรวจเช็คย้อนหลังทั้งหมด</p>
+    <h1 class="h2 fw-bold text-dark"><i class="bi bi-file-earmark-bar-graph text-primary me-2"></i>รายงานและประวัติย้อนหลัง</h1>
+    <p class="text-muted small mb-0">สืบค้นประวัติ คัดกรองข้อมูล และตรวจสอบรายละเอียดผลบันทึกการเดินตรวจเช็คระบบ</p>
+  </div>
+  <div class="btn-toolbar mb-2 mb-md-0">
+    <button type="button" onclick="exportCSV()" class="btn btn-outline-success d-flex align-items-center gap-1.5 px-3 py-2 fw-semibold shadow-sm rounded-3">
+      <i class="bi bi-file-earmark-excel fs-6"></i> ส่งออกไฟล์ Excel / CSV
+    </button>
   </div>
 </div>
 
-<div class="card border-0 shadow-sm rounded-4 p-4">
+<!-- SEARCH FILTERS PANEL -->
+<div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+  <h6 class="fw-bold text-dark mb-3"><i class="bi bi-search text-primary me-2"></i>ตัวกรองการสืบค้นประวัติ</h6>
+  <form id="filterForm" method="GET" action="/inspections/history">
+    <div class="row g-3">
+      <!-- Date Range Start -->
+      <div class="col-12 col-sm-6 col-md-3">
+        <label for="startDate" class="form-label small fw-semibold text-muted">วันเริ่มต้นการตรวจ</label>
+        <input type="date" class="form-control" id="startDate" name="startDate" value="<%= filters.startDate %>">
+      </div>
+      <!-- Date Range End -->
+      <div class="col-12 col-sm-6 col-md-3">
+        <label for="endDate" class="form-label small fw-semibold text-muted">วันสิ้นสุดการตรวจ</label>
+        <input type="date" class="form-control" id="endDate" name="endDate" value="<%= filters.endDate %>">
+      </div>
+      <!-- Inspector Selector -->
+      <div class="col-12 col-sm-6 col-md-3">
+        <label for="inspectorId" class="form-label small fw-semibold text-muted">ผู้ตรวจสอบ</label>
+        <select class="form-select" id="inspectorId" name="inspectorId">
+          <option value="">-- ทั้งหมด --</option>
+          <% users.forEach(usr => { %>
+            <option value="<%= usr.id %>" <%= filters.inspectorId == usr.id ? 'selected' : '' %>><%= usr.name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <!-- Room Selector -->
+      <div class="col-12 col-sm-6 col-md-3">
+        <label for="roomId" class="form-label small fw-semibold text-muted">ห้อง Server</label>
+        <select class="form-select" id="roomId" name="roomId" onchange="onRoomChange(this.value)">
+          <option value="">-- ทั้งหมด --</option>
+          <% rooms.forEach(rm => { %>
+            <option value="<%= rm.id %>" <%= filters.roomId == rm.id ? 'selected' : '' %>><%= rm.room_name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <!-- Rack Selector (Dynamic) -->
+      <div class="col-12 col-sm-6 col-md-3">
+        <label for="rackId" class="form-label small fw-semibold text-muted">ตู้ Rack</label>
+        <select class="form-select" id="rackId" name="rackId" onchange="onRackChange(this.value)">
+          <option value="">-- ทั้งหมด --</option>
+          <!-- Populated dynamically via JS -->
+        </select>
+      </div>
+      <!-- Server Selector (Dynamic) -->
+      <div class="col-12 col-sm-6 col-md-3">
+        <label for="serverId" class="form-label small fw-semibold text-muted">เครื่องเซิร์ฟเวอร์</label>
+        <select class="form-select" id="serverId" name="serverId">
+          <option value="">-- ทั้งหมด --</option>
+          <!-- Populated dynamically via JS -->
+        </select>
+      </div>
+      <!-- Action Buttons -->
+      <div class="col-12 col-md-6 d-flex align-items-end gap-2 justify-content-md-end">
+        <button type="submit" class="btn btn-primary px-4 shadow-sm fw-semibold"><i class="bi bi-filter me-1.5"></i>ค้นหา</button>
+        <a href="/inspections/history" class="btn btn-light border px-4 fw-semibold text-muted"><i class="bi bi-arrow-counterclockwise me-1.5"></i>ล้างค่า</a>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- SESSIONS HISTORY LIST TABLE -->
+<div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
   <div class="table-responsive">
-    <table class="table align-middle table-hover">
+    <table class="table align-middle table-hover mb-0">
       <thead class="table-light">
         <tr>
-          <th>ID</th>
-          <th>รอบการเดินตรวจ</th>
-          <th>ผู้เดินตรวจ</th>
-          <th>เวลาเริ่ม</th>
-          <th>เวลาสิ้นสุด</th>
-          <th>สถานะ</th>
-          <th>จัดการ</th>
+          <th>รหัสรอบ</th>
+          <th>วันและเวลาเริ่มตรวจ</th>
+          <th>วันและเวลาสิ้นสุด</th>
+          <th>ผู้ตรวจสอบ</th>
+          <th>สถานะผลตรวจสอบอุปกรณ์</th>
+          <th>สถานะรอบตรวจ</th>
+          <th class="text-center">จัดการ</th>
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td>#1</td>
-          <td><span class="fw-semibold">Daily Inspection V1</span></td>
-          <td>John Doe</td>
-          <td>02 กรกฎาคม 2026, 09:00 น.</td>
-          <td>02 กรกฎาคม 2026, 10:00 น.</td>
-          <td><span class="badge bg-success">เสร็จสมบูรณ์</span></td>
-          <td><a href="/inspections/1" class="btn btn-sm btn-outline-secondary">ดูรายงานผล</a></td>
-        </tr>
+        <% if (sessions && sessions.length > 0) { %>
+          <% sessions.forEach(sess => { %>
+            <tr>
+              <td><span class="fw-bold">#<%= sess.session_id %></span></td>
+              <td><%= formatThaiDate(sess.started_at, true) %></td>
+              <td><%= formatThaiDate(sess.completed_at, true) %></td>
+              <td><strong><%= sess.inspector_name %></strong></td>
+              <td>
+                <div class="d-flex gap-1.5 flex-wrap">
+                  <% if (sess.pass_count > 0) { %>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-3">ปกติ: <%= sess.pass_count %></span>
+                  <% } %>
+                  <% if (sess.warning_count > 0) { %>
+                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-3">เตือน: <%= sess.warning_count %></span>
+                  <% } %>
+                  <% if (sess.fail_count > 0) { %>
+                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-3">ผิดปกติ: <%= sess.fail_count %></span>
+                  <% } %>
+                  <% if (sess.total_inspected === 0) { %>
+                    <span class="text-muted fs-8.5">-</span>
+                  <% } %>
+                </div>
+              </td>
+              <td>
+                <% if (sess.session_status === 'completed') { %>
+                  <span class="badge bg-success rounded-pill px-2.5 py-1.5"><i class="bi bi-check-circle-fill me-1"></i>เสร็จสมบูรณ์</span>
+                <% } else if (sess.session_status === 'in_progress') { %>
+                  <span class="badge bg-warning text-dark rounded-pill px-2.5 py-1.5"><i class="bi bi-hourglass-split me-1"></i>กำลังตรวจ</span>
+                <% } else { %>
+                  <span class="badge bg-secondary rounded-pill px-2.5 py-1.5"><%= sess.session_status.toUpperCase() %></span>
+                <% } %>
+              </td>
+              <td class="text-center">
+                <a href="/inspections/history/<%= sess.session_id %>" class="btn btn-sm btn-outline-primary px-3 py-1.5 fw-semibold rounded-3">
+                  <i class="bi bi-search me-1"></i> ดูรายละเอียด
+                </a>
+              </td>
+            </tr>
+          <% }) %>
+        <% } else { %>
+          <tr>
+            <td colspan="7" class="text-center py-5 text-muted">
+              <i class="bi bi-clipboard2-x fs-1 mb-2 d-block text-secondary opacity-50"></i>
+              ไม่พบประวัติข้อมูลรอบการเดินตรวจตามเงื่อนไขที่เลือก
+            </td>
+          </tr>
+        <% } %>
       </tbody>
     </table>
   </div>
+
+  <!-- PAGINATION CONTROLS -->
+  <% if (pagination && pagination.totalPages > 1) { %>
+    <nav aria-label="Page navigation" class="mt-4">
+      <ul class="pagination pagination-sm justify-content-center mb-0">
+        <!-- Previous Page Link -->
+        <li class="page-item <%= pagination.hasPrev ? '' : 'disabled' %>">
+          <a class="page-link py-2 px-3" href="<%= getPaginationUrl(pagination.page - 1) %>" aria-label="Previous">
+            <span aria-hidden="true">&laquo; ก่อนหน้า</span>
+          </a>
+        </li>
+
+        <!-- Page Numbers List -->
+        <% for(let i = 1; i <= pagination.totalPages; i++) { %>
+          <li class="page-item <%= pagination.page == i ? 'active' : '' %>">
+            <a class="page-link py-2 px-3" href="<%= getPaginationUrl(i) %>"><%= i %></a>
+          </li>
+        <% } %>
+
+        <!-- Next Page Link -->
+        <li class="page-item <%= pagination.hasNext ? '' : 'disabled' %>">
+          <a class="page-link py-2 px-3" href="<%= getPaginationUrl(pagination.page + 1) %>" aria-label="Next">
+            <span aria-hidden="true">ถัดไป &raquo;</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  <% } %>
 </div>
+
+<style>
+.badge {
+  font-size: 0.8rem;
+  padding: 0.4em 0.7em;
+}
+.fs-8.5 {
+  font-size: 0.85rem;
+}
+.rounded-4 {
+  border-radius: 12px !important;
+}
+.rounded-3 {
+  border-radius: 8px !important;
+}
+.page-link {
+  border-radius: 6px;
+  color: var(--bs-primary);
+}
+.page-item.active .page-link {
+  background-color: var(--bs-primary);
+  border-color: var(--bs-primary);
+}
+</style>
+
+<!-- HELPER FOR URL REBUILDING IN PAGINATION -->
+<%
+  function getPaginationUrl(targetPage) {
+    const params = new URLSearchParams();
+    for (const [key, val] of Object.entries(filters)) {
+      if (val) params.set(key, val);
+    }
+    params.set('page', targetPage);
+    return '/inspections/history?' + params.toString();
+  }
+%>
+
+<script>
+  // Serialize racks and servers for cascade selection logic
+  const allRacks = <%- JSON.stringify(racks) %>;
+  const allServers = <%- JSON.stringify(servers) %>;
+
+  const currentFilters = {
+    roomId: "<%= filters.roomId %>",
+    rackId: "<%= filters.rackId %>",
+    serverId: "<%= filters.serverId %>"
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Populate dropdown filters if they were set previously
+    if (currentFilters.roomId) {
+      onRoomChange(currentFilters.roomId);
+      if (currentFilters.rackId) {
+        document.getElementById('rackId').value = currentFilters.rackId;
+        onRackChange(currentFilters.rackId);
+        if (currentFilters.serverId) {
+          document.getElementById('serverId').value = currentFilters.serverId;
+        }
+      }
+    }
+  });
+
+  // Handler when Room select dropdown changes
+  function onRoomChange(roomId) {
+    const rackSelect = document.getElementById('rackId');
+    const serverSelect = document.getElementById('serverId');
+    
+    // Clear selections
+    rackSelect.innerHTML = '<option value="">-- ทั้งหมด --</option>';
+    serverSelect.innerHTML = '<option value="">-- ทั้งหมด --</option>';
+
+    if (!roomId) return;
+
+    // Filter racks matching roomId
+    const filteredRacks = allRacks.filter(r => Number(r.room_id) === Number(roomId));
+    
+    filteredRacks.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r.id;
+      opt.innerText = r.rack_name;
+      rackSelect.appendChild(opt);
+    });
+  }
+
+  // Handler when Rack select dropdown changes
+  function onRackChange(rackId) {
+    const serverSelect = document.getElementById('serverId');
+    serverSelect.innerHTML = '<option value="">-- ทั้งหมด --</option>';
+
+    if (!rackId) return;
+
+    // Filter servers matching rackId
+    const filteredServers = allServers.filter(s => Number(s.rack_id) === Number(rackId));
+
+    filteredServers.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id;
+      opt.innerText = s.server_name;
+      serverSelect.appendChild(opt);
+    });
+  }
+
+  // Redirect to CSV Export endpoint passing current search filters
+  function exportCSV() {
+    const form = document.getElementById('filterForm');
+    const params = new URLSearchParams(new FormData(form));
+    window.location.href = '/inspections/history/export?' + params.toString();
+  }
+</script>
 
 <%- include('../layouts/footer') %>

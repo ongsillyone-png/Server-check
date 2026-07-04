@@ -148,19 +148,35 @@ class InspectionController {
    */
   static async saveServer(req, res, next) {
     try {
-      const { sessionId, serverId, remark, results } = req.body;
+      const sessionId = Number(req.body.sessionId);
+      const serverId = Number(req.body.serverId);
+      const remark = req.body.remark;
+      const results = typeof req.body.results === 'string' ? JSON.parse(req.body.results) : req.body.results;
       const userId = req.session.user.id;
 
       if (!sessionId || !serverId || !Array.isArray(results)) {
         return res.status(400).json({ error: 'Invalid parameters' });
       }
 
+      // Map uploaded files to checklist item IDs
+      const filesMap = {};
+      if (req.files && req.files.length > 0) {
+        req.files.forEach(file => {
+          const match = file.fieldname.match(/^photo_(\d+)$/);
+          if (match) {
+            const itemId = Number(match[1]);
+            filesMap[itemId] = '/uploads/inspections/' + file.filename;
+          }
+        });
+      }
+
       const outcome = await InspectionService.saveServerInspection(
-        Number(sessionId),
-        Number(serverId),
+        sessionId,
+        serverId,
         results,
         remark,
-        userId
+        userId,
+        filesMap
       );
 
       res.json(outcome);
@@ -184,6 +200,121 @@ class InspectionController {
       
       await InspectionService.reopenSession(Number(sessionId), userId);
       res.redirect('/inspections/walk');
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * Render history list page
+   * GET /inspections/history
+   */
+  static async showHistory(req, res, next) {
+    try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+
+      const filters = {
+        startDate: req.query.startDate || '',
+        endDate: req.query.endDate || '',
+        roomId: req.query.roomId || '',
+        rackId: req.query.rackId || '',
+        serverId: req.query.serverId || '',
+        inspectorId: req.query.inspectorId || ''
+      };
+
+      const [historyResult, options] = await Promise.all([
+        InspectionService.getFilteredHistory(filters, page, limit),
+        InspectionService.getHistoryFilterOptions()
+      ]);
+
+      res.render('inspection/history', {
+        title: 'ประวัติและรายงานการเดินตรวจ - Server Check',
+        currentPage: 'history',
+        sessions: historyResult.sessions,
+        pagination: historyResult.pagination,
+        filters,
+        rooms: options.rooms,
+        racks: options.racks,
+        servers: options.servers,
+        users: options.users,
+        success: req.query.success || null,
+        error: req.query.error || null
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * Render detailed report for a specific walking tour session
+   * GET /inspections/history/:id
+   */
+  static async showHistoryDetail(req, res, next) {
+    try {
+      const sessionId = Number(req.params.id);
+      const report = await InspectionService.getSessionReport(sessionId);
+
+      if (!report) {
+        return res.status(404).render('errors/404', {
+          title: 'ไม่พบข้อมูล - Server Check',
+          message: `ไม่พบประวัติการตรวจรอบที่ #${sessionId} ในระบบ`
+        });
+      }
+
+      res.render('inspection/detail', {
+        title: `รายงานการตรวจเช็ครอบที่ #${sessionId} - Server Check`,
+        currentPage: 'history',
+        session: report.session,
+        rooms: report.rooms,
+        user: req.session.user
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * Stream history results matching filters as CSV
+   * GET /inspections/history/export
+   */
+  static async exportHistoryCSV(req, res, next) {
+    try {
+      const filters = {
+        startDate: req.query.startDate || '',
+        endDate: req.query.endDate || '',
+        roomId: req.query.roomId || '',
+        rackId: req.query.rackId || '',
+        serverId: req.query.serverId || '',
+        inspectorId: req.query.inspectorId || ''
+      };
+
+      const csvRows = await InspectionService.getHistoryCSVData(filters);
+
+      const headers = [
+        'รหัสรอบตรวจ', 'เวลาเริ่มตรวจ', 'เวลาเสร็จสิ้น', 'สถานะรอบตรวจ',
+        'ผู้ตรวจสอบ', 'ห้องเซิร์ฟเวอร์', 'ตู้แร็ค', 'เครื่องเซิร์ฟเวอร์',
+        'สถานะเซิร์ฟเวอร์', 'หมายเหตุเซิร์ฟเวอร์', 'รายการตรวจสอบ',
+        'ผลตรวจสอบรายข้อ', 'ค่าที่กรอก/วัดได้', 'หมายเหตุรายข้อ'
+      ];
+
+      const csvLines = [];
+      // Prepend BOM (\uFEFF) for Excel Thai character rendering
+      csvLines.push('\uFEFF' + headers.map(h => `"${h.replace(/"/g, '""')}"`).join(','));
+      
+      csvRows.forEach(row => {
+        const line = headers.map(header => {
+          const val = String(row[header] || '');
+          return `"${val.replace(/"/g, '""')}"`;
+        }).join(',');
+        csvLines.push(line);
+      });
+
+      const csvString = csvLines.join('\r\n');
+      
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename=inspection_history_${Date.now()}.csv`);
+      res.send(csvString);
     } catch (err) {
       next(err);
     }

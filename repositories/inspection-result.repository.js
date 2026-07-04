@@ -61,6 +61,24 @@ class InspectionResultRepository {
     `;
     return await BaseRepository.query(sql, [detailId]);
   }
+
+  /**
+   * Find results with checklist details and any uploaded photos
+   */
+  static async findResultsWithPhotosByDetail(detailId) {
+    const sql = `
+      SELECT r.*, 
+             ti.item_name, 
+             ti.item_type,
+             p.photo_path
+      FROM inspection_results r
+      JOIN inspection_template_items ti ON r.template_item_id = ti.id
+      LEFT JOIN inspection_photos p ON p.result_id = r.id AND p.deleted_at IS NULL
+      WHERE r.detail_id = ? AND r.deleted_at IS NULL
+      ORDER BY ti.sort_order ASC, ti.id ASC
+    `;
+    return await BaseRepository.query(sql, [detailId]);
+  }
 }
 
 module.exports = InspectionResultRepository;
