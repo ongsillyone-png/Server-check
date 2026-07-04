@@ -18,7 +18,7 @@ class ReportRepository extends BaseRepository {
         d.remark as server_remark, 
         d.created_at as inspected_at
       FROM inspection_sessions s
-      INNER JOIN users u ON s.user_id = u.id
+      INNER JOIN users u ON s.inspector_id = u.id
       INNER JOIN inspection_details d ON d.session_id = s.id
       INNER JOIN physical_servers ps ON d.physical_server_id = ps.id
       INNER JOIN racks r ON ps.rack_id = r.id
@@ -166,7 +166,7 @@ class ReportRepository extends BaseRepository {
         COUNT(s.id) as completed_sessions
       FROM users u
       INNER JOIN roles r ON u.role_id = r.id
-      LEFT JOIN inspection_sessions s ON u.id = s.user_id AND s.status = 'completed'
+      LEFT JOIN inspection_sessions s ON u.id = s.inspector_id AND s.status = 'completed'
       GROUP BY u.id, u.name, u.username, r.role_name
       ORDER BY completed_sessions DESC, u.name
     `;
