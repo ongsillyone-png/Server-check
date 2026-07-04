@@ -14,16 +14,16 @@ class ReportRepository extends BaseRepository {
         ps.server_name, 
         rm.room_name, 
         r.rack_name, 
-        d.overall_status, 
-        d.server_remark, 
-        d.inspected_at
+        d.status as overall_status, 
+        d.remark as server_remark, 
+        d.created_at as inspected_at
       FROM inspection_sessions s
       INNER JOIN users u ON s.user_id = u.id
       INNER JOIN inspection_details d ON d.session_id = s.id
-      INNER JOIN physical_servers ps ON d.server_id = ps.id
+      INNER JOIN physical_servers ps ON d.physical_server_id = ps.id
       INNER JOIN racks r ON ps.rack_id = r.id
       INNER JOIN rooms rm ON r.room_id = rm.id
-      WHERE DATE(s.completed_at) = ? AND s.status = 'completed'
+      WHERE DATE(s.completed_at) = ? AND s.status = 'completed' AND d.deleted_at IS NULL
       ORDER BY s.completed_at DESC, rm.room_name, r.rack_name, ps.server_name
     `;
     return await this.query(sql, [dateStr]);
@@ -35,18 +35,19 @@ class ReportRepository extends BaseRepository {
   static async getMonthlyReportData(year, month) {
     const sql = `
       SELECT 
-        DATE(d.inspected_at) as inspect_date,
+        DATE(d.created_at) as inspect_date,
         COUNT(DISTINCT d.session_id) as total_sessions,
         COUNT(d.id) as total_inspected,
-        SUM(CASE WHEN d.overall_status = 'pass' THEN 1 ELSE 0 END) as pass_count,
-        SUM(CASE WHEN d.overall_status = 'warning' THEN 1 ELSE 0 END) as warn_count,
-        SUM(CASE WHEN d.overall_status = 'fail' THEN 1 ELSE 0 END) as fail_count
+        SUM(CASE WHEN d.status = 'pass' THEN 1 ELSE 0 END) as pass_count,
+        SUM(CASE WHEN d.status = 'warning' THEN 1 ELSE 0 END) as warn_count,
+        SUM(CASE WHEN d.status = 'fail' THEN 1 ELSE 0 END) as fail_count
       FROM inspection_details d
       INNER JOIN inspection_sessions s ON d.session_id = s.id
-      WHERE YEAR(d.inspected_at) = ? 
-        AND MONTH(d.inspected_at) = ?
+      WHERE YEAR(d.created_at) = ? 
+        AND MONTH(d.created_at) = ?
         AND s.status = 'completed'
-      GROUP BY DATE(d.inspected_at)
+        AND d.deleted_at IS NULL
+      GROUP BY DATE(d.created_at)
       ORDER BY inspect_date
     `;
     return await this.query(sql, [parseInt(year), parseInt(month)]);
@@ -58,17 +59,18 @@ class ReportRepository extends BaseRepository {
   static async getYearlyReportData(year) {
     const sql = `
       SELECT 
-        MONTH(d.inspected_at) as inspect_month,
+        MONTH(d.created_at) as inspect_month,
         COUNT(DISTINCT d.session_id) as total_sessions,
         COUNT(d.id) as total_inspected,
-        SUM(CASE WHEN d.overall_status = 'pass' THEN 1 ELSE 0 END) as pass_count,
-        SUM(CASE WHEN d.overall_status = 'warning' THEN 1 ELSE 0 END) as warn_count,
-        SUM(CASE WHEN d.overall_status = 'fail' THEN 1 ELSE 0 END) as fail_count
+        SUM(CASE WHEN d.status = 'pass' THEN 1 ELSE 0 END) as pass_count,
+        SUM(CASE WHEN d.status = 'warning' THEN 1 ELSE 0 END) as warn_count,
+        SUM(CASE WHEN d.status = 'fail' THEN 1 ELSE 0 END) as fail_count
       FROM inspection_details d
       INNER JOIN inspection_sessions s ON d.session_id = s.id
-      WHERE YEAR(d.inspected_at) = ?
+      WHERE YEAR(d.created_at) = ?
         AND s.status = 'completed'
-      GROUP BY MONTH(d.inspected_at)
+        AND d.deleted_at IS NULL
+      GROUP BY MONTH(d.created_at)
       ORDER BY inspect_month
     `;
     return await this.query(sql, [parseInt(year)]);
@@ -87,15 +89,15 @@ class ReportRepository extends BaseRepository {
         r.rack_name,
         rm.room_name,
         COUNT(d.id) as total_inspected,
-        SUM(CASE WHEN d.overall_status = 'pass' THEN 1 ELSE 0 END) as pass_count,
-        SUM(CASE WHEN d.overall_status = 'warning' THEN 1 ELSE 0 END) as warn_count,
-        SUM(CASE WHEN d.overall_status = 'fail' THEN 1 ELSE 0 END) as fail_count
+        SUM(CASE WHEN d.status = 'pass' THEN 1 ELSE 0 END) as pass_count,
+        SUM(CASE WHEN d.status = 'warning' THEN 1 ELSE 0 END) as warn_count,
+        SUM(CASE WHEN d.status = 'fail' THEN 1 ELSE 0 END) as fail_count
       FROM physical_servers ps
       INNER JOIN racks r ON ps.rack_id = r.id
       INNER JOIN rooms rm ON r.room_id = rm.id
-      LEFT JOIN inspection_details d ON ps.id = d.server_id
+      LEFT JOIN inspection_details d ON ps.id = d.physical_server_id AND d.deleted_at IS NULL
       LEFT JOIN inspection_sessions s ON d.session_id = s.id AND s.status = 'completed'
-      WHERE ps.status = 'active'
+      WHERE ps.status = 'active' AND ps.deleted_at IS NULL
       GROUP BY ps.id, ps.server_name, ps.model, ps.ip_address, r.rack_name, rm.room_name
       ORDER BY rm.room_name, r.rack_name, ps.server_name
     `;
@@ -112,13 +114,13 @@ class ReportRepository extends BaseRepository {
         r.rack_name,
         rm.room_name,
         COUNT(d.id) as total_inspected,
-        SUM(CASE WHEN d.overall_status = 'pass' THEN 1 ELSE 0 END) as pass_count,
-        SUM(CASE WHEN d.overall_status = 'warning' THEN 1 ELSE 0 END) as warn_count,
-        SUM(CASE WHEN d.overall_status = 'fail' THEN 1 ELSE 0 END) as fail_count
+        SUM(CASE WHEN d.status = 'pass' THEN 1 ELSE 0 END) as pass_count,
+        SUM(CASE WHEN d.status = 'warning' THEN 1 ELSE 0 END) as warn_count,
+        SUM(CASE WHEN d.status = 'fail' THEN 1 ELSE 0 END) as fail_count
       FROM racks r
       INNER JOIN rooms rm ON r.room_id = rm.id
-      LEFT JOIN physical_servers ps ON ps.rack_id = r.id AND ps.status = 'active'
-      LEFT JOIN inspection_details d ON ps.id = d.server_id
+      LEFT JOIN physical_servers ps ON ps.rack_id = r.id AND ps.status = 'active' AND ps.deleted_at IS NULL
+      LEFT JOIN inspection_details d ON ps.id = d.physical_server_id AND d.deleted_at IS NULL
       LEFT JOIN inspection_sessions s ON d.session_id = s.id AND s.status = 'completed'
       GROUP BY r.id, r.rack_name, rm.room_name
       ORDER BY rm.room_name, r.rack_name
@@ -137,13 +139,13 @@ class ReportRepository extends BaseRepository {
         rm.building,
         rm.floor,
         COUNT(d.id) as total_inspected,
-        SUM(CASE WHEN d.overall_status = 'pass' THEN 1 ELSE 0 END) as pass_count,
-        SUM(CASE WHEN d.overall_status = 'warning' THEN 1 ELSE 0 END) as warn_count,
-        SUM(CASE WHEN d.overall_status = 'fail' THEN 1 ELSE 0 END) as fail_count
+        SUM(CASE WHEN d.status = 'pass' THEN 1 ELSE 0 END) as pass_count,
+        SUM(CASE WHEN d.status = 'warning' THEN 1 ELSE 0 END) as warn_count,
+        SUM(CASE WHEN d.status = 'fail' THEN 1 ELSE 0 END) as fail_count
       FROM rooms rm
       LEFT JOIN racks r ON r.room_id = rm.id
-      LEFT JOIN physical_servers ps ON ps.rack_id = r.id AND ps.status = 'active'
-      LEFT JOIN inspection_details d ON ps.id = d.server_id
+      LEFT JOIN physical_servers ps ON ps.rack_id = r.id AND ps.status = 'active' AND ps.deleted_at IS NULL
+      LEFT JOIN inspection_details d ON ps.id = d.physical_server_id AND d.deleted_at IS NULL
       LEFT JOIN inspection_sessions s ON d.session_id = s.id AND s.status = 'completed'
       GROUP BY rm.id, rm.room_name, rm.building, rm.floor
       ORDER BY rm.room_name
