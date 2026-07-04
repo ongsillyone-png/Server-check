@@ -1,0 +1,303 @@
+<%- include('../layouts/header') %>
+<%- include('../layouts/sidebar') %>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <div>
+    <h1 class="h2 fw-bold text-dark"><i class="bi bi-bar-chart-line-fill text-primary me-2"></i>แดชบอร์ดสถิติผู้บริหาร (Executive Dashboard)</h1>
+    <p class="text-muted small mb-0">วิเคราะห์ข้อมูลความขัดข้อง แนวโน้มปัญหา และเปรียบเทียบตัวชี้วัดประสิทธิภาพ (KPI) การปฏิบัติงาน</p>
+  </div>
+</div>
+
+<!-- KPI SUMMARY CARDS -->
+<div class="row g-3 mb-4">
+  <!-- Card 1: Pass Rate -->
+  <div class="col-12 col-sm-6 col-md-3">
+    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <span class="text-muted small fw-semibold">อัตราตรวจผ่านระบบ (KPI)</span>
+        <span class="bg-success bg-opacity-10 text-success px-2 py-1 rounded-3 fs-9.5 fw-bold">เป้าหมาย >= 95%</span>
+      </div>
+      <div class="d-flex align-items-baseline gap-1">
+        <h2 class="fw-extrabold text-success mb-0"><%= kpis.passRatePercent %>%</h2>
+        <span class="text-muted fs-8.5">ปกติ</span>
+      </div>
+      <p class="text-muted small mt-2 mb-0">คิดจากสัดส่วน PASS ต่อรายการเครื่องที่ถูกตรวจทั้งหมด</p>
+    </div>
+  </div>
+
+  <!-- Card 2: Average Walk Time -->
+  <div class="col-12 col-sm-6 col-md-3">
+    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <span class="text-muted small fw-semibold">เวลาตรวจเฉลี่ย / รอบ</span>
+        <div class="bg-primary bg-opacity-10 text-primary p-1.5 rounded-3">
+          <i class="bi bi-clock-history"></i>
+        </div>
+      </div>
+      <div class="d-flex align-items-baseline gap-1">
+        <h2 class="fw-extrabold text-primary mb-0"><%= kpis.avgWalkTimeMinutes %></h2>
+        <span class="text-muted fs-8.5">นาที</span>
+      </div>
+      <p class="text-muted small mt-2 mb-0">เวลาเฉลี่ยตั้งแต่เริ่มสแกนจนถึงส่งมอบงานบันทึกตรวจเช็ค</p>
+    </div>
+  </div>
+
+  <!-- Card 3: Failure Counts -->
+  <div class="col-12 col-sm-6 col-md-3">
+    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <span class="text-muted small fw-semibold">ยอดตรวจพบผิดปกติ (FAIL)</span>
+        <span class="bg-danger bg-opacity-10 text-danger px-2.5 py-0.5 rounded-3 fs-9.5 fw-semibold">สะสมสะท้อนปัญหา</span>
+      </div>
+      <div class="d-flex align-items-baseline gap-1">
+        <h2 class="fw-extrabold text-danger mb-0"><%= kpis.failCount %></h2>
+        <span class="text-muted fs-8.5">ครั้ง</span>
+      </div>
+      <p class="text-muted small mt-2 mb-0">จำนวนตรวจพบความบกพร่องและส่งระบบเตือนเข้ากลุ่ม LINE</p>
+    </div>
+  </div>
+
+  <!-- Card 4: Total Sessions -->
+  <div class="col-12 col-sm-6 col-md-3">
+    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <span class="text-muted small fw-semibold">รอบเดินตรวจที่เสร็จสมบูรณ์</span>
+        <div class="bg-dark bg-opacity-10 text-dark p-1.5 rounded-3">
+          <i class="bi bi-journal-check"></i>
+        </div>
+      </div>
+      <div class="d-flex align-items-baseline gap-1">
+        <h2 class="fw-extrabold text-dark mb-0"><%= kpis.totalSessionsCount %></h2>
+        <span class="text-muted fs-8.5">รอบตรวจ</span>
+      </div>
+      <p class="text-muted small mt-2 mb-0">จำนวนรอบการเดินตรวจสรุปงานของเจ้าหน้าที่สะสมทั้งหมด</p>
+    </div>
+  </div>
+</div>
+
+<!-- CHARTS GRID -->
+<div class="row g-3 mb-4">
+  <!-- Chart 1: Monthly Trends (Full Width) -->
+  <div class="col-12">
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+      <h5 class="fw-bold text-dark mb-3"><i class="bi bi-graph-up text-primary me-2"></i>แนวโน้มผลการเดินตรวจเช็คและอัตราการเกิดปัญหา (รายเดือนปีนี้)</h5>
+      <div id="monthlyTrendsChart" style="width: 100%; height: 350px;"></div>
+    </div>
+  </div>
+
+  <!-- Chart 2: Top Servers Fail (Half Width) -->
+  <div class="col-12 col-md-6">
+    <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+      <h5 class="fw-bold text-dark mb-3"><i class="bi bi-cpu text-danger me-2"></i>5 อันดับเซิร์ฟเวอร์ที่ตรวจพบปัญหาบ่อยที่สุด (Top Server Failures)</h5>
+      <div id="topServersChart" style="width: 100%; height: 300px;"></div>
+    </div>
+  </div>
+
+  <!-- Chart 3: Top Racks Fail (Half Width) -->
+  <div class="col-12 col-md-6">
+    <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+      <h5 class="fw-bold text-dark mb-3"><i class="bi bi-hdd-rack text-warning me-2"></i>5 อันดับตู้แร็คที่พบอุปกรณ์เสียบ่อยที่สุด (Top Rack Failures)</h5>
+      <div id="topRacksChart" style="width: 100%; height: 300px;"></div>
+    </div>
+  </div>
+
+  <!-- Chart 4: Failure by Room Breakdown (Half Width) -->
+  <div class="col-12 col-md-6">
+    <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+      <h5 class="fw-bold text-dark mb-3"><i class="bi bi-door-closed text-info me-2"></i>สัดส่วนการตรวจพบปัญหาแบ่งตามห้อง Server (Room Failures)</h5>
+      <div id="topRoomsChart" style="width: 100%; height: 300px;"></div>
+    </div>
+  </div>
+
+  <!-- Chart 5: Top Inspectors Performance (Half Width) -->
+  <div class="col-12 col-md-6">
+    <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+      <h5 class="fw-bold text-dark mb-3"><i class="bi bi-trophy text-success me-2"></i>สถิติจำนวนรอบเดินตรวจของเจ้าหน้าที่ปฏิบัติงานสูงสุด (Top Inspectors)</h5>
+      <div id="topInspectorsChart" style="width: 100%; height: 300px;"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+.rounded-4 {
+  border-radius: 12px !important;
+}
+.fw-extrabold {
+  font-weight: 800 !important;
+}
+.fs-9.5 {
+  font-size: 0.76rem;
+}
+.fs-8.5 {
+  font-size: 0.85rem;
+}
+</style>
+
+<!-- Load Apache ECharts via CDN -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Show loading indicators or fetch data directly via AJAX
+    fetch('/analytics/api/charts-data')
+      .then(res => res.json())
+      .then(data => {
+        renderCharts(data);
+      })
+      .catch(err => console.error('Error fetching analytics charts data:', err));
+  });
+
+  function renderCharts(data) {
+    const themeColors = {
+      primary: '#0d6efd',
+      success: '#198754',
+      danger: '#dc3545',
+      warning: '#ffc107',
+      info: '#0dcaf0',
+      dark: '#212529',
+      gray: '#6c757d'
+    };
+
+    // 1. Monthly Trends Chart
+    const monthlyChartDom = document.getElementById('monthlyTrendsChart');
+    const monthlyChart = echarts.init(monthlyChartDom);
+    monthlyChart.setOption({
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' }
+      },
+      legend: {
+        data: ['จำนวนรายการเดินตรวจสะสม', 'จำนวนปัญหาขัดข้อง (FAIL)'],
+        bottom: 0
+      },
+      grid: { left: '3%', right: '4%', bottom: '10%', containLabel: true },
+      xAxis: [
+        {
+          type: 'category',
+          data: data.monthlyTrends.months,
+          axisTick: { alignWithLabel: true }
+        }
+      ],
+      yAxis: [
+        {
+          type: 'value',
+          name: 'จำนวนเดินตรวจ (ครั้ง)',
+          position: 'left'
+        },
+        {
+          type: 'value',
+          name: 'ปัญหาที่พบ (ครั้ง)',
+          position: 'right',
+          splitLine: { show: false }
+        }
+      ],
+      series: [
+        {
+          name: 'จำนวนรายการเดินตรวจสะสม',
+          type: 'bar',
+          barWidth: '50%',
+          itemStyle: { color: themeColors.primary },
+          data: data.monthlyTrends.inspected
+        },
+        {
+          name: 'จำนวนปัญหาขัดข้อง (FAIL)',
+          type: 'line',
+          yAxisIndex: 1,
+          symbolSize: 8,
+          lineStyle: { width: 3 },
+          itemStyle: { color: themeColors.danger },
+          data: data.monthlyTrends.fails
+        }
+      ]
+    });
+
+    // 2. Top Servers Chart
+    const serversChartDom = document.getElementById('topServersChart');
+    const serversChart = echarts.init(serversChartDom);
+    serversChart.setOption({
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+      grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+      xAxis: { type: 'value', minInterval: 1 },
+      yAxis: { type: 'category', data: data.topServers.labels.reverse() },
+      series: [
+        {
+          name: 'พบปัญหา (ครั้ง)',
+          type: 'bar',
+          itemStyle: { color: themeColors.danger },
+          data: data.topServers.values.reverse()
+        }
+      ]
+    });
+
+    // 3. Top Racks Chart
+    const racksChartDom = document.getElementById('topRacksChart');
+    const racksChart = echarts.init(racksChartDom);
+    racksChart.setOption({
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+      grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+      xAxis: { type: 'category', data: data.topRacks.labels },
+      yAxis: { type: 'value', minInterval: 1 },
+      series: [
+        {
+          name: 'พบปัญหาภายในตู้ (ครั้ง)',
+          type: 'bar',
+          itemStyle: { color: themeColors.warning },
+          data: data.topRacks.values
+        }
+      ]
+    });
+
+    // 4. Top Rooms Chart (Pie Chart)
+    const roomsChartDom = document.getElementById('topRoomsChart');
+    const roomsChart = echarts.init(roomsChartDom);
+    roomsChart.setOption({
+      tooltip: { trigger: 'item', formatter: '{a} <br/>{b} : {c} ครั้ง ({d}%)' },
+      legend: { bottom: '0', left: 'center' },
+      series: [
+        {
+          name: 'ตรวจพบปัญหาในห้อง',
+          type: 'pie',
+          radius: '55%',
+          center: ['50%', '45%'],
+          data: data.topRooms.length > 0 ? data.topRooms : [{ name: 'ไม่มีข้อมูล', value: 0 }],
+          emphasis: {
+            itemStyle: {
+              shadowBlur: 10,
+              shadowOffsetX: 0,
+              shadowColor: 'rgba(0, 0, 0, 0.5)'
+            }
+          }
+        }
+      ]
+    });
+
+    // 5. Top Inspectors Chart
+    const inspectorsChartDom = document.getElementById('topInspectorsChart');
+    const inspectorsChart = echarts.init(inspectorsChartDom);
+    inspectorsChart.setOption({
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+      grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+      xAxis: { type: 'value', minInterval: 1 },
+      yAxis: { type: 'category', data: data.topInspectors.labels.reverse() },
+      series: [
+        {
+          name: 'นับรอบเดินตรวจสำเร็จ (รอบ)',
+          type: 'bar',
+          itemStyle: { color: themeColors.success },
+          data: data.topInspectors.values.reverse()
+        }
+      ]
+    });
+
+    // Handle Responsive Resize
+    window.addEventListener('resize', function () {
+      monthlyChart.resize();
+      serversChart.resize();
+      racksChart.resize();
+      roomsChart.resize();
+      inspectorsChart.resize();
+    });
+  }
+</script>
+
+<%- include('../layouts/footer') %>
