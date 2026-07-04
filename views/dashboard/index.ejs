@@ -1,130 +1,588 @@
 <%- include('../layouts/header') %>
 <%- include('../layouts/sidebar') %>
 
+<!-- ECharts Library from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
   <div>
-    <h1 class="h2 fw-bold text-dark">Dashboard</h1>
-    <p class="text-muted small">ระบบติดตามและวิเคราะห์สุขภาพห้อง Server โรงพยาบาล</p>
+    <h1 class="h2 fw-bold text-dark"><i class="bi bi-speedometer2 text-primary me-2"></i>หน้าแรก / สรุปภาพรวม</h1>
+    <p class="text-muted small mb-0">ระบบวิเคราะห์ ติดตามความพร้อม และประเมินสุขภาพอุปกรณ์ห้อง Server</p>
   </div>
   <div class="btn-toolbar mb-2 mb-md-0">
     <div class="btn-group me-2">
-      <a href="#" onclick="alert('ระบบเดินตรวจ (Inspection) ยังไม่เปิดใช้งานในเฟสนี้'); return false;" class="btn btn-sm btn-primary d-flex align-items-center gap-1">
-        <i class="bi bi-plus-lg"></i> เริ่มเดินตรวจ
+      <a href="/inspections/walk" class="btn btn-sm btn-primary d-flex align-items-center gap-1.5 px-3 py-2 fw-bold shadow-sm rounded-3">
+        <i class="bi bi-clipboard2-check fs-6"></i> เริ่มเดินตรวจอุปกรณ์
       </a>
     </div>
   </div>
 </div>
 
-<!-- Mock Status Cards -->
+<!-- TOP ASSETS CARDS -->
 <div class="row g-3 mb-4">
+  <!-- Rooms Card -->
   <div class="col-12 col-sm-6 col-xl-3">
-    <div class="card border-0 shadow-sm rounded-4 h-100 p-3">
+    <div class="card border-0 shadow-sm rounded-4 h-100 p-3 card-hover">
       <div class="d-flex align-items-center gap-3">
         <div class="bg-primary bg-opacity-10 text-primary rounded-3 p-3">
           <i class="bi bi-door-closed fs-3"></i>
         </div>
         <div>
           <h6 class="text-muted mb-0 small">ห้อง Server ทั้งหมด</h6>
-          <h3 class="fw-bold mb-0">2</h3>
+          <h3 class="fw-bold mb-0 text-dark"><%= summary.assets.rooms %></h3>
         </div>
       </div>
     </div>
   </div>
+  <!-- Racks Card -->
   <div class="col-12 col-sm-6 col-xl-3">
-    <div class="card border-0 shadow-sm rounded-4 h-100 p-3">
+    <div class="card border-0 shadow-sm rounded-4 h-100 p-3 card-hover">
       <div class="d-flex align-items-center gap-3">
         <div class="bg-info bg-opacity-10 text-info rounded-3 p-3">
           <i class="bi bi-hdd-rack fs-3"></i>
         </div>
         <div>
           <h6 class="text-muted mb-0 small">ตู้ Rack ในระบบ</h6>
-          <h3 class="fw-bold mb-0">3</h3>
+          <h3 class="fw-bold mb-0 text-dark"><%= summary.assets.racks %></h3>
         </div>
       </div>
     </div>
   </div>
+  <!-- Servers Card -->
   <div class="col-12 col-sm-6 col-xl-3">
-    <div class="card border-0 shadow-sm rounded-4 h-100 p-3">
+    <div class="card border-0 shadow-sm rounded-4 h-100 p-3 card-hover">
       <div class="d-flex align-items-center gap-3">
         <div class="bg-success bg-opacity-10 text-success rounded-3 p-3">
           <i class="bi bi-pc-display-horizontal fs-3"></i>
         </div>
         <div>
           <h6 class="text-muted mb-0 small">Physical Server</h6>
-          <h3 class="fw-bold mb-0">5</h3>
+          <h3 class="fw-bold mb-0 text-dark"><%= summary.assets.servers %></h3>
         </div>
       </div>
     </div>
   </div>
+  <!-- VMs Card -->
   <div class="col-12 col-sm-6 col-xl-3">
-    <div class="card border-0 shadow-sm rounded-4 h-100 p-3">
+    <div class="card border-0 shadow-sm rounded-4 h-100 p-3 card-hover">
       <div class="d-flex align-items-center gap-3">
         <div class="bg-warning bg-opacity-10 text-warning rounded-3 p-3">
           <i class="bi bi-cpu fs-3"></i>
         </div>
         <div>
-          <h6 class="text-muted mb-0 small">Virtual Machines</h6>
-          <h3 class="fw-bold mb-0">5</h3>
+          <h6 class="text-muted mb-0 small">Virtual Machines (VM)</h6>
+          <h3 class="fw-bold mb-0 text-dark"><%= summary.assets.vms %></h3>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<div class="row g-4">
-  <div class="col-12 col-lg-8">
-    <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
-      <h5 class="fw-bold mb-3">สถานะการตรวจเช็คล่าสุด</h5>
-      <div class="table-responsive">
-        <table class="table align-middle table-hover mb-0">
-          <thead class="table-light">
-            <tr>
-              <th>วันที่ตรวจสอบ</th>
-              <th>ผู้ตรวจสอบ</th>
-              <th>ผลการตรวจ</th>
-              <th>สถานะรอบตรวจ</th>
-              <th>จัดการ</th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- Dummy Data Placeholder -->
-            <tr>
-              <td>02 กรกฎาคม 2026</td>
-              <td>John Doe</td>
-              <td><span class="badge bg-success-subtle text-success">Pass (3/3 Servers)</span></td>
-              <td><span class="badge bg-success">เสร็จสมบูรณ์</span></td>
-              <td><a href="#" onclick="alert('ระบบเดินตรวจ (Inspection) ยังไม่เปิดใช้งานในเฟสนี้'); return false;" class="btn btn-sm btn-outline-secondary">ดูรายละเอียด</a></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-  <div class="col-12 col-lg-4">
-    <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
-      <h5 class="fw-bold mb-3">ดัชนีชี้วัดหลัก (KPIs)</h5>
-      <div class="d-flex flex-column gap-3">
-        <div>
-          <div class="d-flex justify-content-between mb-1 small">
-            <span class="text-muted">อัตราความสำเร็จรอบการเดินตรวจ</span>
-            <span class="fw-bold">100%</span>
+<!-- PERIODIC INSPECTION STATS CARDS -->
+<div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+  <h5 class="fw-bold text-dark mb-3"><i class="bi bi-bar-chart-steps text-primary me-2"></i>สรุปสถานะการตรวจเช็ครายเครื่องเซิร์ฟเวอร์</h5>
+  <div class="row g-3">
+    <!-- Today Stats -->
+    <div class="col-12 col-md-4">
+      <div class="p-3 bg-light rounded-4 border h-100">
+        <h6 class="fw-bold text-dark border-bottom pb-2 mb-2 d-flex justify-content-between align-items-center">
+          <span>วันนี้ (Today)</span>
+          <span class="badge bg-primary fs-9 rounded-pill">รอบการตรวจล่าสุด</span>
+        </h6>
+        <div class="d-flex flex-column gap-2 mt-3">
+          <div class="d-flex justify-content-between align-items-center py-1.5 border-bottom border-dashed">
+            <span class="text-muted fs-8.5"><i class="bi bi-check-circle-fill text-success me-1.5"></i>ปกติ (Pass)</span>
+            <span class="fw-bold text-success fs-7.5"><%= summary.todayStats.pass %> เครื่อง</span>
           </div>
-          <div class="progress" style="height: 6px;">
-            <div class="progress-bar bg-success" role="progressbar" style="width: 100%"></div>
+          <div class="d-flex justify-content-between align-items-center py-1.5 border-bottom border-dashed">
+            <span class="text-muted fs-8.5"><i class="bi bi-exclamation-triangle-fill text-warning me-1.5"></i>เฝ้าระวัง (Warning)</span>
+            <span class="fw-bold text-warning fs-7.5"><%= summary.todayStats.warning %> เครื่อง</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center py-1.5 border-bottom border-dashed">
+            <span class="text-muted fs-8.5"><i class="bi bi-x-circle-fill text-danger me-1.5"></i>ผิดปกติ (Fail)</span>
+            <span class="fw-bold text-danger fs-7.5"><%= summary.todayStats.fail %> เครื่อง</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center py-1.5">
+            <span class="text-muted fs-8.5"><i class="bi bi-clock-history text-secondary me-1.5"></i>รอดำเนินการ (Pending)</span>
+            <span class="fw-bold text-secondary fs-7.5"><%= summary.todayStats.pending %> เครื่อง</span>
           </div>
         </div>
-        <div>
-          <div class="d-flex justify-content-between mb-1 small">
-            <span class="text-muted">อัตราสุขภาพฮาร์ดแวร์ภายนอก</span>
-            <span class="fw-bold">92%</span>
+      </div>
+    </div>
+    
+    <!-- This Month Stats -->
+    <div class="col-12 col-md-4">
+      <div class="p-3 bg-light rounded-4 border h-100">
+        <h6 class="fw-bold text-dark border-bottom pb-2 mb-2">เดือนนี้ (This Month)</h6>
+        <div class="d-flex flex-column gap-2 mt-3">
+          <div class="d-flex justify-content-between align-items-center py-1.5 border-bottom border-dashed">
+            <span class="text-muted fs-8.5"><i class="bi bi-check-circle-fill text-success me-1.5"></i>ปกติ (Pass)</span>
+            <span class="fw-bold text-success fs-7.5"><%= summary.monthStats.pass %> เครื่อง</span>
           </div>
-          <div class="progress" style="height: 6px;">
-            <div class="progress-bar bg-warning" role="progressbar" style="width: 92%"></div>
+          <div class="d-flex justify-content-between align-items-center py-1.5 border-bottom border-dashed">
+            <span class="text-muted fs-8.5"><i class="bi bi-exclamation-triangle-fill text-warning me-1.5"></i>เฝ้าระวัง (Warning)</span>
+            <span class="fw-bold text-warning fs-7.5"><%= summary.monthStats.warning %> เครื่อง</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center py-1.5 border-bottom border-dashed">
+            <span class="text-muted fs-8.5"><i class="bi bi-x-circle-fill text-danger me-1.5"></i>ผิดปกติ (Fail)</span>
+            <span class="fw-bold text-danger fs-7.5"><%= summary.monthStats.fail %> เครื่อง</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center py-1.5">
+            <span class="text-muted fs-8.5"><i class="bi bi-clock-history text-secondary me-1.5"></i>รอดำเนินการ (Pending)</span>
+            <span class="fw-bold text-secondary fs-7.5"><%= summary.monthStats.pending %> เครื่อง</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- This Year Stats -->
+    <div class="col-12 col-md-4">
+      <div class="p-3 bg-light rounded-4 border h-100">
+        <h6 class="fw-bold text-dark border-bottom pb-2 mb-2">ปีนี้ (This Year)</h6>
+        <div class="d-flex flex-column gap-2 mt-3">
+          <div class="d-flex justify-content-between align-items-center py-1.5 border-bottom border-dashed">
+            <span class="text-muted fs-8.5"><i class="bi bi-check-circle-fill text-success me-1.5"></i>ปกติ (Pass)</span>
+            <span class="fw-bold text-success fs-7.5"><%= summary.yearStats.pass %> เครื่อง</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center py-1.5 border-bottom border-dashed">
+            <span class="text-muted fs-8.5"><i class="bi bi-exclamation-triangle-fill text-warning me-1.5"></i>เฝ้าระวัง (Warning)</span>
+            <span class="fw-bold text-warning fs-7.5"><%= summary.yearStats.warning %> เครื่อง</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center py-1.5 border-bottom border-dashed">
+            <span class="text-muted fs-8.5"><i class="bi bi-x-circle-fill text-danger me-1.5"></i>ผิดปกติ (Fail)</span>
+            <span class="fw-bold text-danger fs-7.5"><%= summary.yearStats.fail %> เครื่อง</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center py-1.5">
+            <span class="text-muted fs-8.5"><i class="bi bi-clock-history text-secondary me-1.5"></i>รอดำเนินการ (Pending)</span>
+            <span class="fw-bold text-secondary fs-7.5"><%= summary.yearStats.pending %> เครื่อง</span>
           </div>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<!-- TRENDS CHARTS SECTION (30 DAYS & 12 MONTHS) -->
+<div class="row g-4 mb-4">
+  <!-- 30 Days Trend -->
+  <div class="col-12 col-xl-6">
+    <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+      <h5 class="fw-bold text-dark mb-3"><i class="bi bi-calendar3 text-primary me-2"></i>ประวัติการตรวจย้อนหลัง 30 วัน</h5>
+      <div id="chart30Days" style="height: 350px; width: 100%;"></div>
+    </div>
+  </div>
+
+  <!-- 12 Months Trend -->
+  <div class="col-12 col-xl-6">
+    <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+      <h5 class="fw-bold text-dark mb-3"><i class="bi bi-calendar-range text-primary me-2"></i>ประวัติการตรวจย้อนหลัง 12 เดือน</h5>
+      <div id="chart12Months" style="height: 350px; width: 100%;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PIE CHART & TOP RISK ANALYSIS -->
+<div class="row g-4 mb-4">
+  <!-- Checklist Item Results Pie Chart -->
+  <div class="col-12 col-lg-5">
+    <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+      <h5 class="fw-bold text-dark mb-3"><i class="bi bi-pie-chart text-primary me-2"></i>สัดส่วนผลลัพธ์ข้อคำถามตรวจเช็ค</h5>
+      <div id="chartChecklistPie" style="height: 320px; width: 100%;"></div>
+    </div>
+  </div>
+
+  <!-- Top Risk Analysis Lists -->
+  <div class="col-12 col-lg-7">
+    <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+      <h5 class="fw-bold text-dark mb-3"><i class="bi bi-shield-alert text-danger me-2"></i>จุดเสี่ยงสะสม (วิเคราะห์ความผิดปกติบ่อยสุด)</h5>
+      
+      <ul class="nav nav-pills nav-justified mb-3 bg-light p-1 rounded-3" id="riskTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active py-2 rounded-3 text-dark small fw-semibold" id="rooms-tab" data-bs-toggle="pill" data-bs-target="#tab-rooms" type="button" role="tab" aria-controls="tab-rooms" aria-selected="true">
+            <i class="bi bi-door-closed me-1"></i>ห้องพักเซิร์ฟเวอร์
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link py-2 rounded-3 text-dark small fw-semibold" id="racks-tab" data-bs-toggle="pill" data-bs-target="#tab-racks" type="button" role="tab" aria-controls="tab-racks" aria-selected="false">
+            <i class="bi bi-hdd-rack me-1"></i>ตู้แร็ค (Rack)
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link py-2 rounded-3 text-dark small fw-semibold" id="servers-tab" data-bs-toggle="pill" data-bs-target="#tab-servers" type="button" role="tab" aria-controls="tab-servers" aria-selected="false">
+            <i class="bi bi-pc-display-horizontal me-1"></i>เครื่องเซิร์ฟเวอร์
+          </button>
+        </li>
+      </ul>
+      
+      <div class="tab-content" id="riskTabsContent">
+        <!-- Top Rooms Tab -->
+        <div class="tab-pane fade show active" id="tab-rooms" role="tabpanel" aria-labelledby="rooms-tab">
+          <div class="list-group list-group-flush" id="topRoomsList">
+            <div class="text-center text-muted py-5"><i class="bi bi-check2-circle text-success fs-1 mb-2 d-block"></i>ไม่พบรายงานความผิดปกติในห้องเซิร์ฟเวอร์ในช่วงนี้</div>
+          </div>
+        </div>
+        
+        <!-- Top Racks Tab -->
+        <div class="tab-pane fade" id="tab-racks" role="tabpanel" aria-labelledby="racks-tab">
+          <div class="list-group list-group-flush" id="topRacksList">
+            <div class="text-center text-muted py-5"><i class="bi bi-check2-circle text-success fs-1 mb-2 d-block"></i>ไม่พบรายงานความผิดปกติในตู้แร็คในช่วงนี้</div>
+          </div>
+        </div>
+
+        <!-- Top Servers Tab -->
+        <div class="tab-pane fade" id="tab-servers" role="tabpanel" aria-labelledby="servers-tab">
+          <div class="list-group list-group-flush" id="topServersList">
+            <div class="text-center text-muted py-5"><i class="bi bi-check2-circle text-success fs-1 mb-2 d-block"></i>ไม่พบรายงานความผิดปกติในเครื่องเซิร์ฟเวอร์ในช่วงนี้</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LATEST INSPECTION HISTORY -->
+<div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="fw-bold text-dark mb-0"><i class="bi bi-clock-history text-primary me-2"></i>สถานะรอบการตรวจเช็คล่าสุด</h5>
+    <a href="/inspections/walk" class="btn btn-sm btn-outline-secondary">ดูทั้งหมด</a>
+  </div>
+  
+  <div class="table-responsive">
+    <table class="table align-middle table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>รหัสรอบ</th>
+          <th>วันที่และเวลา</th>
+          <th>ผู้ตรวจสอบ</th>
+          <th>ผลการตรวจอุปกรณ์</th>
+          <th>สถานะการเดินตรวจ</th>
+          <th class="text-center">จัดการ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (summary.latestSessions && summary.latestSessions.length > 0) { %>
+          <% summary.latestSessions.forEach(sess => { %>
+            <tr>
+              <td><span class="fw-bold">#<%= sess.session_id %></span></td>
+              <td><%= formatThaiDate(sess.started_at, true) %></td>
+              <td><strong><%= sess.inspector_name %></strong></td>
+              <td>
+                <div class="d-flex gap-1.5">
+                  <% if (sess.pass_count > 0) { %>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle">ปกติ: <%= sess.pass_count %></span>
+                  <% } %>
+                  <% if (sess.warning_count > 0) { %>
+                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle">เตือน: <%= sess.warning_count %></span>
+                  <% } %>
+                  <% if (sess.fail_count > 0) { %>
+                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle">ผิดปกติ: <%= sess.fail_count %></span>
+                  <% } %>
+                  <% if (sess.pass_count === 0 && sess.warning_count === 0 && sess.fail_count === 0) { %>
+                    <span class="text-muted fs-8.5">-</span>
+                  <% } %>
+                </div>
+              </td>
+              <td>
+                <% if (sess.session_status === 'completed') { %>
+                  <span class="badge bg-success rounded-pill px-2.5 py-1.5"><i class="bi bi-check-circle-fill me-1"></i>เสร็จสมบูรณ์</span>
+                <% } else if (sess.session_status === 'in_progress') { %>
+                  <span class="badge bg-warning text-dark rounded-pill px-2.5 py-1.5"><i class="bi bi-hourglass-split me-1"></i>กำลังตรวจ</span>
+                <% } %>
+              </td>
+              <td class="text-center">
+                <% if (sess.session_status === 'completed') { %>
+                  <form action="/inspections/reopen" method="POST" class="d-inline">
+                    <input type="hidden" name="sessionId" value="<%= sess.session_id %>">
+                    <button type="submit" class="btn btn-xs btn-outline-primary py-1 px-2.5 rounded-2 small fw-semibold">
+                      <i class="bi bi-pencil-square"></i> แก้ไขผลตรวจ
+                    </button>
+                  </form>
+                <% } else if (sess.session_status === 'in_progress' && user.id === sess.inspector_id) { %>
+                  <a href="/inspections/walk" class="btn btn-xs btn-primary py-1 px-2.5 rounded-2 small fw-semibold">
+                    <i class="bi bi-play-fill"></i> เดินตรวจต่อ
+                  </a>
+                <% } else { %>
+                  <span class="text-muted small">-</span>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        <% } else { %>
+          <tr>
+            <td colspan="6" class="text-center py-4 text-muted">ไม่พบข้อมูลการเดินตรวจเช็คในระบบ</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<style>
+/* Dashboard Styles & Animations */
+.card-hover {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+}
+.border-dashed {
+  border-style: dashed !important;
+}
+.fs-8.5 {
+  font-size: 0.85rem !important;
+}
+.fs-9 {
+  font-size: 0.75rem !important;
+}
+.fs-7.5 {
+  font-size: 1.1rem !important;
+}
+.btn-xs {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // Initialize and load ECharts charts from analytics API
+  fetch('/dashboard/api/analytics')
+    .then(res => res.json())
+    .then(data => {
+      render30DaysChart(data.dailyTrends);
+      render12MonthsChart(data.monthlyTrends);
+      renderPieChart(data.checklistDistribution);
+      renderRiskLists(data.topRooms, data.topRacks, data.topServers);
+    })
+    .catch(err => {
+      console.error('Error loading analytics charts:', err);
+    });
+});
+
+// Render 30 Days Trend Bar Chart
+function render30DaysChart(trends) {
+  const chartDom = document.getElementById('chart30Days');
+  const myChart = echarts.init(chartDom);
+  
+  const dates = trends.map(t => {
+    const d = new Date(t.date);
+    return `${d.getDate()} / ${d.getMonth() + 1}`;
+  });
+  const pass = trends.map(t => Number(t.pass_count));
+  const warning = trends.map(t => Number(t.warning_count));
+  const fail = trends.map(t => Number(t.fail_count));
+
+  const option = {
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' }
+    },
+    legend: {
+      data: ['ปกติ (Pass)', 'เฝ้าระวัง (Warning)', 'ผิดปกติ (Fail)'],
+      bottom: 0
+    },
+    grid: {
+      top: '8%',
+      left: '3%',
+      right: '4%',
+      bottom: '12%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      data: dates
+    },
+    yAxis: {
+      type: 'value',
+      minInterval: 1
+    },
+    color: ['#198754', '#ffc107', '#dc3545'],
+    series: [
+      { name: 'ปกติ (Pass)', type: 'bar', stack: 'total', data: pass },
+      { name: 'เฝ้าระวัง (Warning)', type: 'bar', stack: 'total', data: warning },
+      { name: 'ผิดปกติ (Fail)', type: 'bar', stack: 'total', data: fail }
+    ]
+  };
+
+  myChart.setOption(option);
+  window.addEventListener('resize', myChart.resize);
+}
+
+// Render 12 Months Trend Bar/Line Chart
+function render12MonthsChart(trends) {
+  const chartDom = document.getElementById('chart12Months');
+  const myChart = echarts.init(chartDom);
+
+  const months = trends.map(t => {
+    const [year, month] = t.month.split('-');
+    const monthNames = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+    return `${monthNames[parseInt(month) - 1]} ${year.slice(2)}`;
+  });
+  const pass = trends.map(t => Number(t.pass_count));
+  const warning = trends.map(t => Number(t.warning_count));
+  const fail = trends.map(t => Number(t.fail_count));
+
+  const option = {
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' }
+    },
+    legend: {
+      data: ['ปกติ (Pass)', 'เฝ้าระวัง (Warning)', 'ผิดปกติ (Fail)'],
+      bottom: 0
+    },
+    grid: {
+      top: '8%',
+      left: '3%',
+      right: '4%',
+      bottom: '12%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      data: months
+    },
+    yAxis: {
+      type: 'value',
+      minInterval: 1
+    },
+    color: ['#198754', '#ffc107', '#dc3545'],
+    series: [
+      { name: 'ปกติ (Pass)', type: 'bar', stack: 'total', data: pass },
+      { name: 'เฝ้าระวัง (Warning)', type: 'bar', stack: 'total', data: warning },
+      { name: 'ผิดปกติ (Fail)', type: 'bar', stack: 'total', data: fail }
+    ]
+  };
+
+  myChart.setOption(option);
+  window.addEventListener('resize', myChart.resize);
+}
+
+// Render Checklist Item Distribution Pie Chart
+function renderPieChart(dist) {
+  const chartDom = document.getElementById('chartChecklistPie');
+  const myChart = echarts.init(chartDom);
+
+  let pass = 0, fail = 0, na = 0;
+  dist.forEach(d => {
+    if (d.result_value === 'pass') pass = Number(d.count);
+    else if (d.result_value === 'fail') fail = Number(d.count);
+    else if (d.result_value === 'na') na = Number(d.count);
+  });
+
+  const option = {
+    tooltip: {
+      trigger: 'item',
+      formatter: '{b}: {c} ข้อ ({d}%)'
+    },
+    legend: {
+      orient: 'horizontal',
+      bottom: 0,
+      left: 'center'
+    },
+    color: ['#198754', '#dc3545', '#6c757d'],
+    series: [
+      {
+        name: 'สัดส่วนผลลัพธ์',
+        type: 'pie',
+        radius: ['40%', '70%'],
+        avoidLabelOverlap: false,
+        itemStyle: {
+          borderRadius: 8,
+          borderColor: '#fff',
+          borderWidth: 2
+        },
+        label: {
+          show: false,
+          position: 'center'
+        },
+        emphasis: {
+          label: {
+            show: true,
+            fontSize: 16,
+            fontWeight: 'bold',
+            formatter: '{b}\n{c} ({d}%)'
+          }
+        },
+        labelLine: {
+          show: false
+        },
+        data: [
+          { value: pass, name: 'ปกติ (Pass)' },
+          { value: fail, name: 'ผิดปกติ (Fail)' },
+          { value: na, name: 'ไม่มี / N/A' }
+        ]
+      }
+    ]
+  };
+
+  myChart.setOption(option);
+  window.addEventListener('resize', myChart.resize);
+}
+
+// Render Top Risk Lists
+function renderRiskLists(rooms, racks, servers) {
+  // Render Rooms
+  const roomsList = document.getElementById('topRoomsList');
+  if (rooms.length > 0) {
+    roomsList.innerHTML = '';
+    rooms.forEach(r => {
+      roomsList.innerHTML += `
+        <div class="list-group-item d-flex justify-content-between align-items-center py-3 border-bottom">
+          <div>
+            <h6 class="fw-bold text-dark mb-1"><i class="bi bi-door-closed text-muted me-2"></i>${r.room_name}</h6>
+            <span class="text-muted fs-9">ตรวจเช็คสะสม ${r.total_inspections} ครั้ง</span>
+          </div>
+          <div class="text-end">
+            <span class="badge bg-danger rounded-pill px-2.5 py-1 mb-1">ผิดปกติ: ${r.fail_count} ครั้ง</span>
+            ${r.warning_count > 0 ? `<br><span class="badge bg-warning text-dark rounded-pill px-2.5 py-1">เฝ้าระวัง: ${r.warning_count} ครั้ง</span>` : ''}
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  // Render Racks
+  const racksList = document.getElementById('topRacksList');
+  if (racks.length > 0) {
+    racksList.innerHTML = '';
+    racks.forEach(rk => {
+      racksList.innerHTML += `
+        <div class="list-group-item d-flex justify-content-between align-items-center py-3 border-bottom">
+          <div>
+            <h6 class="fw-bold text-dark mb-1"><i class="bi bi-hdd-rack text-muted me-2"></i>${rk.rack_name}</h6>
+            <span class="text-muted fs-9">ห้อง: ${rk.room_name} | ตรวจเช็คสะสม ${rk.total_inspections} ครั้ง</span>
+          </div>
+          <div class="text-end">
+            <span class="badge bg-danger rounded-pill px-2.5 py-1 mb-1">ผิดปกติ: ${rk.fail_count} ครั้ง</span>
+            ${rk.warning_count > 0 ? `<br><span class="badge bg-warning text-dark rounded-pill px-2.5 py-1">เฝ้าระวัง: ${rk.warning_count} ครั้ง</span>` : ''}
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  // Render Servers
+  const serversList = document.getElementById('topServersList');
+  if (servers.length > 0) {
+    serversList.innerHTML = '';
+    servers.forEach(srv => {
+      serversList.innerHTML += `
+        <div class="list-group-item d-flex justify-content-between align-items-center py-3 border-bottom">
+          <div>
+            <h6 class="fw-bold text-dark mb-1"><i class="bi bi-pc-display-horizontal text-muted me-2"></i>${srv.server_name}</h6>
+            <span class="text-muted fs-9">แร็ค: ${srv.rack_name} (ห้อง: ${srv.room_name}) | ตรวจเช็คสะสม ${srv.total_inspections} ครั้ง</span>
+          </div>
+          <div class="text-end">
+            <span class="badge bg-danger rounded-pill px-2.5 py-1 mb-1">ผิดปกติ: ${srv.fail_count} ครั้ง</span>
+            ${srv.warning_count > 0 ? `<br><span class="badge bg-warning text-dark rounded-pill px-2.5 py-1">เฝ้าระวัง: ${srv.warning_count} ครั้ง</span>` : ''}
+          </div>
+        </div>
+      `;
+    });
+  }
+}
+</script>
 
 <%- include('../layouts/footer') %>

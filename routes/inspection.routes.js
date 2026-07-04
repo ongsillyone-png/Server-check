@@ -8,6 +8,7 @@ router.get('/walk', requireLogin, InspectionController.showWalkthrough);
 router.post('/start', requireLogin, InspectionController.startSession);
 router.post('/cancel', requireLogin, InspectionController.cancelSession);
 router.post('/complete', requireLogin, InspectionController.completeSession);
+router.post('/reopen', requireLogin, InspectionController.reopenSession);
 
 // API routes
 router.get('/api/rooms/:id/racks', requireLogin, InspectionController.getRacksByRoom);

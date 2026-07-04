@@ -2,103 +2,103 @@
 <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-white sidebar collapse border-end min-vh-100 py-3">
   <div class="position-sticky sidebar-sticky">
     <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-2 mb-2 text-muted text-uppercase fw-semibold fs-8 tracking-wider">
-      <span>Operations</span>
+      <span>งานตรวจสอบหลัก (Operations)</span>
     </h6>
     <ul class="nav flex-column gap-1 px-2">
       <li class="nav-item">
         <a class="nav-link d-flex align-items-center gap-2 rounded px-3 py-2 <%= typeof currentPage !== 'undefined' && currentPage === 'dashboard' ? 'active bg-primary text-white' : 'text-dark hover-bg-light' %>" href="/dashboard">
           <i class="bi bi-grid-1x2-fill"></i>
-          <span>Dashboard</span>
+          <span>หน้าแรก / สรุปภาพรวม</span>
         </a>
       </li>
       <li class="nav-item">
         <a class="nav-link d-flex align-items-center gap-2 rounded px-3 py-2 <%= typeof currentPage !== 'undefined' && currentPage === 'inspections' ? 'active bg-primary text-white' : 'text-dark hover-bg-light' %>" href="/inspections/walk">
           <i class="bi bi-clipboard2-check"></i>
-          <span>Walkthrough Inspect</span>
+          <span>เริ่มเดินตรวจตามรอบ</span>
         </a>
       </li>
       <li class="nav-item">
         <a class="nav-link d-flex align-items-center gap-2 rounded px-3 py-2 text-muted" style="cursor: not-allowed;" href="#" onclick="alert('ระบบรายงาน (Reports) ยังไม่เปิดให้บริการในเฟสนี้'); return false;">
           <i class="bi bi-file-earmark-bar-graph"></i>
-          <span>Reports & History</span>
+          <span>รายงานและประวัติย้อนหลัง</span>
         </a>
       </li>
     </ul>
 
     <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-2 text-muted text-uppercase fw-semibold fs-8 tracking-wider">
-      <span>Assets Inventory</span>
+      <span>รายการสินทรัพย์ไอที (Assets)</span>
     </h6>
     <ul class="nav flex-column gap-1 px-2">
       <li class="nav-item">
         <a class="nav-link d-flex align-items-center gap-2 rounded px-3 py-2 <%= typeof currentPage !== 'undefined' && currentPage === 'rooms' ? 'active bg-primary text-white' : 'text-dark hover-bg-light' %>" href="/rooms">
           <i class="bi bi-door-closed-fill"></i>
-          <span>Rooms</span>
+          <span>ห้องเซิร์ฟเวอร์ (Rooms)</span>
         </a>
       </li>
       <li class="nav-item">
         <a class="nav-link d-flex align-items-center gap-2 rounded px-3 py-2 <%= typeof currentPage !== 'undefined' && currentPage === 'racks' ? 'active bg-primary text-white' : 'text-dark hover-bg-light' %>" href="/racks">
           <i class="bi bi-hdd-rack-fill"></i>
-          <span>Racks</span>
+          <span>ตู้แร็ค (Racks)</span>
         </a>
       </li>
       <li class="nav-item">
         <a class="nav-link d-flex align-items-center gap-2 rounded px-3 py-2 <%= typeof currentPage !== 'undefined' && currentPage === 'servers' && typeof title !== 'undefined' && title.includes('Asset Type') ? 'active bg-primary text-white' : 'text-dark hover-bg-light' %>" href="/asset-types">
           <i class="bi bi-tags-fill"></i>
-          <span>Asset Types</span>
+          <span>ประเภทอุปกรณ์ (Types)</span>
         </a>
       </li>
       <li class="nav-item">
         <a class="nav-link d-flex align-items-center gap-2 rounded px-3 py-2 <%= typeof currentPage !== 'undefined' && currentPage === 'servers' && typeof title !== 'undefined' && title.includes('Physical') ? 'active bg-primary text-white' : 'text-dark hover-bg-light' %>" href="/servers">
           <i class="bi bi-pc-display-horizontal"></i>
-          <span>Physical Servers</span>
+          <span>เครื่องเซิร์ฟเวอร์ (Servers)</span>
         </a>
       </li>
       <li class="nav-item">
         <a class="nav-link d-flex align-items-center gap-2 rounded px-3 py-2 <%= typeof currentPage !== 'undefined' && currentPage === 'servers' && typeof title !== 'undefined' && title.includes('Virtual') ? 'active bg-primary text-white' : 'text-dark hover-bg-light' %>" href="/vms">
           <i class="bi bi-cpu"></i>
-          <span>Virtual Machines</span>
+          <span>เครื่องเสมือน (VMs)</span>
         </a>
       </li>
     </ul>
 
     <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-2 text-muted text-uppercase fw-semibold fs-8 tracking-wider">
-      <span>Checklists & Configs</span>
+      <span>จัดการแบบฟอร์ม & ค่าระบบ</span>
     </h6>
     <ul class="nav flex-column gap-1 px-2">
       <li class="nav-item">
         <a class="nav-link d-flex align-items-center gap-2 rounded px-3 py-2 <%= typeof currentPage !== 'undefined' && currentPage === 'templates' && typeof title !== 'undefined' && title.includes('Templates') ? 'active bg-primary text-white' : 'text-dark hover-bg-light' %>" href="/templates">
           <i class="bi bi-layout-text-window-reverse"></i>
-          <span>Checklist Templates</span>
+          <span>แบบฟอร์มเช็คลิสต์ (Templates)</span>
         </a>
       </li>
       <li class="nav-item">
         <a class="nav-link d-flex align-items-center gap-2 rounded px-3 py-2 <%= typeof currentPage !== 'undefined' && currentPage === 'templates' && typeof title !== 'undefined' && title.includes('Items') ? 'active bg-primary text-white' : 'text-dark hover-bg-light' %>" href="/template-items">
           <i class="bi bi-list-task"></i>
-          <span>Template Items</span>
+          <span>หัวข้อการตรวจเช็ค (Items)</span>
         </a>
       </li>
       <li class="nav-item">
         <a class="nav-link d-flex align-items-center gap-2 rounded px-3 py-2 <%= typeof currentPage !== 'undefined' && currentPage === 'templates' && typeof title !== 'undefined' && title.includes('Settings') ? 'active bg-primary text-white' : 'text-dark hover-bg-light' %>" href="/settings">
           <i class="bi bi-sliders"></i>
-          <span>System Settings</span>
+          <span>ตั้งค่าระบบ (Settings)</span>
         </a>
       </li>
     </ul>
 
     <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-2 text-muted text-uppercase fw-semibold fs-8 tracking-wider">
-      <span>Access Management</span>
+      <span>สิทธิ์และจัดการผู้ใช้ (Access)</span>
     </h6>
     <ul class="nav flex-column gap-1 px-2">
       <li class="nav-item">
         <a class="nav-link d-flex align-items-center gap-2 rounded px-3 py-2 <%= typeof currentPage !== 'undefined' && currentPage === 'users' && typeof title !== 'undefined' && title.includes('User') ? 'active bg-primary text-white' : 'text-dark hover-bg-light' %>" href="/users">
           <i class="bi bi-people-fill"></i>
-          <span>Users List</span>
+          <span>รายชื่อผู้ใช้งาน (Users)</span>
         </a>
       </li>
       <li class="nav-item">
         <a class="nav-link d-flex align-items-center gap-2 rounded px-3 py-2 <%= typeof currentPage !== 'undefined' && currentPage === 'users' && typeof title !== 'undefined' && title.includes('Role') ? 'active bg-primary text-white' : 'text-dark hover-bg-light' %>" href="/roles">
           <i class="bi bi-shield-lock-fill"></i>
-          <span>Roles & Permissions</span>
+          <span>สิทธิ์การใช้งาน (Roles)</span>
         </a>
       </li>
     </ul>

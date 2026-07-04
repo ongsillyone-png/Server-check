@@ -4,7 +4,7 @@
 <!-- Top Bar Control -->
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
   <div>
-    <h1 class="h2 fw-bold text-dark">Walkthrough Inspect</h1>
+    <h1 class="h2 fw-bold text-dark">เริ่มเดินตรวจอุปกรณ์</h1>
     <p class="text-muted small mb-0">รอบตรวจที่: #<%= session.id %> | ผู้บันทึก: <%= user.name %> | เริ่มเมื่อ: <%= formatThaiDate(session.started_at, true) %></p>
   </div>
   <div class="btn-toolbar mb-2 mb-md-0 gap-2">
@@ -98,7 +98,7 @@
             <h4 class="fw-bold text-dark mb-1" id="selectedServerName">Dell-Server-01</h4>
             <span class="text-muted small" id="selectedServerMeta">IP: 10.200.x.x | Slot: U10</span>
           </div>
-          <span class="badge py-2 px-3 bg-secondary text-white" id="inspectedStatusBadge">PENDING</span>
+          <span class="badge py-2 px-3 bg-secondary text-white" id="inspectedStatusBadge">รอดำเนินการ</span>
         </div>
 
         <form id="checklistSubmissionForm" onsubmit="submitChecklist(event)">
@@ -190,7 +190,7 @@ function selectRoom(roomId, btn) {
                       onclick="selectRack(${rack.id}, this)">
                 <i class="bi bi-hdd-rack fs-5"></i>
                 <span class="small fw-semibold text-truncate d-block w-100">${rack.rack_name}</span>
-                <span class="badge ${badgeClass} fs-9">${rack.inspected_servers}/${rack.total_servers} Checked</span>
+                <span class="badge ${badgeClass} fs-9">${rack.inspected_servers}/${rack.total_servers} ตรวจแล้ว</span>
               </button>
             </div>
           `;
@@ -236,17 +236,17 @@ function selectRack(rackId, btn) {
           
           if (srv.inspected) {
             if (srv.status === 'fail') {
-              statusBadge = '<span class="badge bg-danger">FAIL</span>';
+              statusBadge = '<span class="badge bg-danger">ไม่ผ่านเกณฑ์</span>';
               srvClass = 'border-danger-subtle bg-danger-subtle bg-opacity-10';
             } else if (srv.status === 'warning') {
-              statusBadge = '<span class="badge bg-warning text-dark">WARNING</span>';
+              statusBadge = '<span class="badge bg-warning text-dark">เฝ้าระวัง</span>';
               srvClass = 'border-warning-subtle bg-warning-subtle bg-opacity-10';
             } else {
-              statusBadge = '<span class="badge bg-success">PASS</span>';
+              statusBadge = '<span class="badge bg-success">ปกติ / ผ่าน</span>';
               srvClass = 'border-success-subtle bg-success-subtle bg-opacity-10';
             }
           } else {
-            statusBadge = '<span class="badge bg-secondary">PENDING</span>';
+            statusBadge = '<span class="badge bg-secondary">รอดำเนินการ</span>';
             srvClass = 'border-secondary-subtle';
           }
 
@@ -301,10 +301,11 @@ function selectServer(serverId, srvName, ipAddress, typeName, uPosition, btn) {
       // Update inspected status badge
       const statusBadge = document.getElementById('inspectedStatusBadge');
       if (data.overall_status !== 'pending' && data.items.some(i => i.previous)) {
-        statusBadge.innerText = data.overall_status.toUpperCase();
+        const statusMap = { 'pass': 'ปกติ / ผ่าน', 'warning': 'เฝ้าระวัง', 'fail': 'ไม่ผ่านเกณฑ์' };
+        statusBadge.innerText = statusMap[data.overall_status] || data.overall_status.toUpperCase();
         statusBadge.className = `badge py-2 px-3 ${data.overall_status === 'fail' ? 'bg-danger' : (data.overall_status === 'warning' ? 'bg-warning text-dark' : 'bg-success')}`;
       } else {
-        statusBadge.innerText = 'PENDING';
+        statusBadge.innerText = 'รอดำเนินการ';
         statusBadge.className = 'badge py-2 px-3 bg-secondary text-white';
       }
 
@@ -349,13 +350,13 @@ function selectServer(serverId, srvName, ipAddress, typeName, uPosition, btn) {
                 <div class="col-md-5 d-flex justify-content-end">
                   <div class="btn-group btn-group-sm" role="group" aria-label="Result Options">
                     <input type="radio" class="btn-check" name="result_${item.id}" id="pass_${item.id}" value="pass" ${prevVal === 'pass' ? 'checked' : ''} required>
-                    <label class="btn btn-outline-success px-3" for="pass_${item.id}"><i class="bi bi-check2"></i> PASS</label>
+                    <label class="btn btn-outline-success px-3" for="pass_${item.id}"><i class="bi bi-check2"></i> ปกติ (PASS)</label>
 
                     <input type="radio" class="btn-check" name="result_${item.id}" id="fail_${item.id}" value="fail" ${prevVal === 'fail' ? 'checked' : ''}>
-                    <label class="btn btn-outline-danger px-3" for="fail_${item.id}"><i class="bi bi-x-lg"></i> FAIL</label>
+                    <label class="btn btn-outline-danger px-3" for="fail_${item.id}"><i class="bi bi-x-lg"></i> ผิดปกติ (FAIL)</label>
 
                     <input type="radio" class="btn-check" name="result_${item.id}" id="na_${item.id}" value="na" ${prevVal === 'na' ? 'checked' : ''}>
-                    <label class="btn btn-outline-secondary px-3" for="na_${item.id}">N/A</label>
+                    <label class="btn btn-outline-secondary px-3" for="na_${item.id}">ไม่มี / N/A</label>
                   </div>
                 </div>
                 
@@ -451,10 +452,12 @@ function submitChecklist(event) {
     .then(res => res.json())
     .then(data => {
       if (data.success) {
+        const statusMap = { 'pass': 'ปกติ / ผ่าน', 'warning': 'เฝ้าระวัง', 'fail': 'ไม่ผ่านเกณฑ์' };
+        const thaiStatus = statusMap[data.overallStatus] || data.overallStatus.toUpperCase();
         Swal.fire({
           icon: 'success',
           title: 'บันทึกสำเร็จ',
-          text: `บันทึกผลการตรวจสอบอุปกรณ์นี้เรียบร้อย (ผลโดยรวม: ${data.overallStatus.toUpperCase()})`,
+          text: `บันทึกผลการตรวจสอบอุปกรณ์นี้เรียบร้อย (ผลโดยรวม: ${thaiStatus})`,
           timer: 1500,
           showConfirmButton: false
         }).then(() => {
@@ -465,6 +468,8 @@ function submitChecklist(event) {
           }
           // Refresh room counts progress indicators
           refreshRoomProgress();
+          // Refresh rack counts progress indicators
+          refreshRackProgress();
         });
       } else {
         Swal.fire('Error', data.error || 'บันทึกข้อมูลไม่สำเร็จ', 'error');
@@ -501,6 +506,29 @@ function refreshRoomProgress() {
           }
         });
       }
+    });
+}
+
+// Reload Rack buttons progress count dynamically
+function refreshRackProgress() {
+  if (!selectedRoomId) return;
+  fetch(`/inspections/api/rooms/${selectedRoomId}/racks?sessionId=${activeSessionId}`)
+    .then(res => res.json())
+    .then(data => {
+      data.racks.forEach(rack => {
+        const rackBtn = document.querySelector(`[onclick*="selectRack(${rack.id},"]`);
+        if (rackBtn) {
+          const badge = rackBtn.querySelector('.badge');
+          if (badge) {
+            badge.innerText = `${rack.inspected_servers}/${rack.total_servers} ตรวจแล้ว`;
+            badge.className = `badge ${rack.is_completed ? 'bg-success' : 'bg-secondary'} fs-9`;
+          }
+          // Update button classes while keeping active state if selected
+          const isActive = rack.id === selectedRackId;
+          const outlineClass = rack.is_completed ? 'btn-outline-success' : 'btn-outline-secondary';
+          rackBtn.className = `btn ${outlineClass} w-100 p-2.5 rounded-3 text-center rack-btn d-flex flex-column justify-content-center align-items-center gap-1 ${isActive ? 'active' : ''}`;
+        }
+      });
     });
 }
 

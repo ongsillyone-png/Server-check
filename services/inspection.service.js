@@ -6,6 +6,7 @@ const RoomRepository = require('../repositories/room.repository');
 const RackRepository = require('../repositories/rack.repository');
 const ServerRepository = require('../repositories/server.repository');
 const TemplateItemRepository = require('../repositories/template-item.repository');
+const SettingRepository = require('../repositories/setting.repository');
 
 class InspectionService {
   /**
@@ -15,8 +16,41 @@ class InspectionService {
     const active = await InspectionSessionRepository.findActiveSessionByInspector(inspectorId);
     if (active) return active;
 
+    // Check how many sessions the inspector has today (excluding canceled)
+    const countToday = await InspectionSessionRepository.countSessionsTodayByInspector(inspectorId);
+    
+    // Get limit from settings
+    const limitSetting = await SettingRepository.findByKey('inspections_per_day');
+    const limit = limitSetting ? parseInt(limitSetting.setting_value) : 1;
+
+    if (countToday >= limit) {
+      throw new Error(`ไม่สามารถเริ่มรอบการตรวจใหม่ได้ เนื่องจากวันนี้มีการตรวจเช็คครบตามโควตาที่กำหนดแล้ว (${limit} รอบ/วัน) หากต้องการแก้ไขกรุณากดปุ่มแก้ไขในรอบตรวจด้านล่าง`);
+    }
+
     const newSessionId = await InspectionSessionRepository.createSession(inspectorId, inspectorId);
     return await InspectionSessionRepository.findById(newSessionId);
+  }
+
+  /**
+   * Reopen a completed session for updating
+   */
+  static async reopenSession(sessionId, userId) {
+    const session = await InspectionSessionRepository.findById(sessionId);
+    if (!session) throw new Error('ไม่พบรอบการตรวจนี้ในระบบ');
+    if (session.status === 'completed') {
+      await InspectionSessionRepository.reopenSession(sessionId, userId);
+    }
+    return await InspectionSessionRepository.findById(sessionId);
+  }
+
+  /**
+   * Get data for prompt page (today's sessions list and the daily limit)
+   */
+  static async getPromptData() {
+    const todaySessions = await InspectionSessionRepository.findSessionsToday();
+    const limitSetting = await SettingRepository.findByKey('inspections_per_day');
+    const limit = limitSetting ? parseInt(limitSetting.setting_value) : 1;
+    return { todaySessions, limit };
   }
 
   /**
@@ -31,7 +65,7 @@ class InspectionService {
    */
   static async getRoomsWithStatus(sessionId) {
     // Rooms metadata
-    const rooms = await RoomRepository.findAll('', 1, 100); // reuse repository
+    const rooms = await RoomRepository.findAll('', 100, 0); // reuse repository
     
     // Get counts per room
     const countsSql = `

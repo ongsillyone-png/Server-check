@@ -12,10 +12,14 @@ class InspectionController {
 
       if (!activeSession) {
         // Render prompt to start session
+        const { todaySessions, limit } = await InspectionService.getPromptData();
         return res.render('inspections/prompt', {
-          title: 'Start Walking Inspection',
+          title: 'เริ่มรอบการเดินตรวจ',
           currentPage: 'inspections',
-          user: req.session.user
+          user: req.session.user,
+          todaySessions,
+          limit,
+          error: req.query.error || null
         });
       }
 
@@ -45,7 +49,7 @@ class InspectionController {
       await InspectionService.startSession(userId);
       res.redirect('/inspections/walk');
     } catch (err) {
-      next(err);
+      res.redirect(`/inspections/walk?error=${encodeURIComponent(err.message)}`);
     }
   }
 
@@ -162,6 +166,26 @@ class InspectionController {
       res.json(outcome);
     } catch (err) {
       res.status(500).json({ error: err.message });
+    }
+  }
+
+  /**
+   * Reopen a completed session for update
+   * POST /inspections/reopen
+   */
+  static async reopenSession(req, res, next) {
+    try {
+      const { sessionId } = req.body;
+      const userId = req.session.user.id;
+      
+      if (!sessionId) {
+        return res.status(400).send('Invalid session ID');
+      }
+      
+      await InspectionService.reopenSession(Number(sessionId), userId);
+      res.redirect('/inspections/walk');
+    } catch (err) {
+      next(err);
     }
   }
 }

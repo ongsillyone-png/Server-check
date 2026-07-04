@@ -1,15 +1,29 @@
+const DashboardService = require('../services/dashboard.service');
+
 class DashboardController {
   // GET /dashboard
-  static showDashboard(req, res) {
-    res.render('dashboard/index', {
-      title: 'Dashboard - Server Check',
-      currentPage: 'dashboard'
-    });
+  static async showDashboard(req, res, next) {
+    try {
+      const summary = await DashboardService.getDashboardSummary();
+      
+      res.render('dashboard/index', {
+        title: 'หน้าแรก / สรุปภาพรวม - Server Check',
+        currentPage: 'dashboard',
+        summary
+      });
+    } catch (err) {
+      next(err);
+    }
   }
 
-  // GET /api/dashboard/summary (API Placeholder)
-  static getSummary(req, res) {
-    res.json({ message: 'Dashboard summary API data scaffold' });
+  // GET /dashboard/api/analytics (AJAX Endpoint for ECharts)
+  static async getAnalytics(req, res, next) {
+    try {
+      const analytics = await DashboardService.getAnalyticsData();
+      res.json(analytics);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
   }
 }
 
