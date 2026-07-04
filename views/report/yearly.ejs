@@ -1,0 +1,185 @@
+<%- include('../layouts/header') %>
+<%- include('../layouts/sidebar') %>
+
+<div class="print-container">
+  <!-- HEADER CONTROLS (HIDDEN ON PRINT) -->
+  <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom no-print">
+    <div>
+      <h1 class="h2 fw-bold text-dark"><i class="bi bi-calendar-check text-primary me-2"></i>รายงานสรุปการเดินตรวจประจำปี</h1>
+      <p class="text-muted small mb-0">สรุปแนวโน้มสถิติการปฏิบัติงานเดินตรวจเช็คระบบรายเดือนในรอบ 1 ปี</p>
+    </div>
+    <div class="btn-toolbar mb-2 mb-md-0 gap-2">
+      <a href="/reports" class="btn btn-outline-secondary d-flex align-items-center gap-1.5 px-3 py-2 fw-semibold rounded-3 shadow-sm">
+        <i class="bi bi-arrow-left"></i> ย้อนกลับ
+      </a>
+      <button type="button" onclick="window.print()" class="btn btn-outline-primary d-flex align-items-center gap-1.5 px-3 py-2 fw-semibold rounded-3 shadow-sm">
+        <i class="bi bi-printer"></i> สั่งพิมพ์ / บันทึก PDF
+      </button>
+      <button type="button" onclick="exportYearlyCSV()" class="btn btn-outline-success d-flex align-items-center gap-1.5 px-3 py-2 fw-semibold rounded-3 shadow-sm">
+        <i class="bi bi-file-earmark-excel"></i> ส่งออกไฟล์ CSV
+      </button>
+    </div>
+  </div>
+
+  <!-- DATE FILTER PANEL (HIDDEN ON PRINT) -->
+  <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 no-print">
+    <form method="GET" action="/reports/yearly" class="row g-3 align-items-end">
+      <div class="col-12 col-md-3">
+        <label for="year" class="form-label small fw-semibold text-muted">ปี ค.ศ. (เช่น 2026)</label>
+        <input type="number" class="form-control" id="year" name="year" value="<%= year %>" required>
+      </div>
+      <div class="col-12 col-md-3">
+        <button type="submit" class="btn btn-primary w-100 fw-semibold"><i class="bi bi-filter me-1.5"></i>ค้นหาและกรองรายงาน</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- FORMAL PRINT HEADER (ONLY VISIBLE ON PRINT) -->
+  <div class="only-print text-center mb-4">
+    <h3 class="fw-bold mb-1">รายงานสรุปผลการเดินตรวจเช็คระบบประจำปี</h3>
+    <h5 class="text-muted mb-2">โรงพยาบาลศูนย์บริการสุขภาพส่วนกลาง</h5>
+    <div class="small fw-semibold text-dark">
+      ประจำปี: ค.ศ. <%= year %>
+    </div>
+    <hr class="border-secondary my-3">
+  </div>
+
+  <!-- YEARLY RESULTS TABLE -->
+  <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 print-card">
+    <h5 class="fw-bold text-dark mb-3 no-print">
+      <i class="bi bi-table text-primary me-2"></i>ตารางรายงานสรุปแนวโน้มสถิติประจำปี ค.ศ. <%= year %>
+    </h5>
+    
+    <div class="table-responsive">
+      <table class="table align-middle table-hover table-bordered mb-0">
+        <thead class="table-light">
+          <tr>
+            <th style="width: 20%;">เดือน</th>
+            <th class="text-center" style="width: 15%;">จำนวนรอบตรวจ (รอบ)</th>
+            <th class="text-center" style="width: 15%;">เครื่องที่ตรวจ (ครั้ง)</th>
+            <th class="text-center text-success" style="width: 15%;">ปกติ (PASS)</th>
+            <th class="text-center text-warning" style="width: 15%;">เฝ้าระวัง (WARN)</th>
+            <th class="text-center text-danger" style="width: 15%;">ผิดปกติ (FAIL)</th>
+            <th class="text-center" style="width: 10%;">เปอร์เซ็นต์ PASS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% 
+            const thaiMonths = [
+              'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+              'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+            ];
+          %>
+          <% if (data && data.length > 0) { %>
+            <% data.forEach(row => { %>
+              <% 
+                const rate = row.total_inspected > 0 
+                  ? ((row.pass_count / row.total_inspected) * 100).toFixed(1) 
+                  : '0.0';
+              %>
+              <tr>
+                <td><strong><%= thaiMonths[row.inspect_month - 1] || row.inspect_month %></strong></td>
+                <td class="text-center"><%= row.total_sessions %></td>
+                <td class="text-center"><%= row.total_inspected %></td>
+                <td class="text-center text-success fw-semibold"><%= row.pass_count %></td>
+                <td class="text-center text-warning fw-semibold"><%= row.warn_count %></td>
+                <td class="text-center text-danger fw-semibold"><%= row.fail_count %></td>
+                <td class="text-center font-monospace">
+                  <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-3"><%= rate %>%</span>
+                </td>
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <tr>
+              <td colspan="7" class="text-center py-5 text-muted">
+                <i class="bi bi-clipboard-x fs-1 mb-2 d-block text-secondary opacity-50"></i>
+                ไม่พบข้อมูลรอบการตรวจในวันที่เลือกหรือปีที่ระบุ
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- FORMAL SIGNATURE BLOCKS (ONLY VISIBLE ON PRINT) -->
+    <div class="only-print row mt-5 pt-4 text-center">
+      <div class="col-6">
+        <div class="mb-5 text-muted small">ลงชื่อ.............................................................. ผู้ตรวจรายงาน</div>
+        <div>(......................................................................)</div>
+        <div class="small text-muted mt-1">ตำแหน่ง เจ้าหน้าที่ผู้เดินตรวจระบบ</div>
+      </div>
+      <div class="col-6">
+        <div class="mb-5 text-muted small">ลงชื่อ.............................................................. ผู้รับรองรายงาน</div>
+        <div>(......................................................................)</div>
+        <div class="small text-muted mt-1">ตำแหน่ง หัวหน้าฝ่ายเทคโนโลยีสารสนเทศ</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.rounded-4 {
+  border-radius: 12px !important;
+}
+.rounded-3 {
+  border-radius: 8px !important;
+}
+
+/* PRINT LAYOUT CUSTOM STYLES */
+@media print {
+  body {
+    background-color: #fff !important;
+    color: #000 !important;
+    font-size: 11pt !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  header, nav, .sidebar-wrapper, .navbar, .btn, .no-print, form {
+    display: none !important;
+  }
+  main, .col-md-9, .col-lg-10, .print-container, .print-card {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  .print-card {
+    background: transparent !important;
+    padding: 0 !important;
+  }
+  .table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+  .table th, .table td {
+    border: 1px solid #000 !important;
+    padding: 6px !important;
+    color: #000 !important;
+    font-size: 10pt !important;
+  }
+  .badge {
+    border: none !important;
+    background: transparent !important;
+    color: #000 !important;
+    font-weight: bold !important;
+    padding: 0 !important;
+  }
+  .only-print {
+    display: block !important;
+  }
+}
+
+.only-print {
+  display: none;
+}
+</style>
+
+<script>
+  function exportYearlyCSV() {
+    window.location.href = `/reports/export?type=yearly&year=<%= year %>`;
+  }
+</script>
+
+<%- include('../layouts/footer') %>

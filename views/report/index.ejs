@@ -3,39 +3,191 @@
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
   <div>
-    <h1 class="h2 fw-bold text-dark">Reports & History</h1>
-    <p class="text-muted small">ระบบออกรายงานและประเมินผลประสิทธิภาพความเสถียรภาพ</p>
+    <h1 class="h2 fw-bold text-dark"><i class="bi bi-graph-up-arrow text-primary me-2"></i>ระบบออกรายงาน (Reports)</h1>
+    <p class="text-muted small mb-0">ศูนย์รวมการสรุปผลการเดินตรวจเชิงสถิติ วิเคราะห์การปฏิบัติงาน และวิเคราะห์ความมั่นคงปลอดภัยของโครงสร้างพื้นฐาน</p>
   </div>
 </div>
 
-<div class="row g-4">
-  <div class="col-md-6 col-lg-5">
-    <div class="card border-0 shadow-sm rounded-4 p-4">
-      <h5 class="fw-bold mb-3">กรองข้อมูลเพื่ออกรายงาน</h5>
+<div class="row g-4 mb-4">
+  <!-- Section 1: Time-based Reports -->
+  <div class="col-12">
+    <h5 class="fw-bold text-dark mb-3"><i class="bi bi-calendar3 text-primary me-2"></i>รายงานวิเคราะห์เชิงเวลา (Time-based Reports)</h5>
+    <div class="row g-3">
       
-      <form action="/reports/summary" method="GET" target="_blank">
-        <div class="mb-3">
-          <label for="start_date" class="form-label small fw-semibold">ตั้งแต่วันที่</label>
-          <input type="date" class="form-control" id="start_date" name="start_date" required>
+      <!-- Daily Report Card -->
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 hover-translate transition-all">
+          <div class="card-body p-4 d-flex flex-column justify-content-between">
+            <div>
+              <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-3 d-inline-block mb-3">
+                <i class="bi bi-calendar-event fs-3"></i>
+              </div>
+              <h5 class="fw-bold text-dark">รายงานสรุปประจำวัน</h5>
+              <p class="text-muted small">สืบค้นผลการตรวจสอบอุปกรณ์ ความเห็นผู้ตรวจ และรอบบันทึกการส่งงานของเครื่องเซิร์ฟเวอร์แบบรายวันเฉพาะเจาะจง</p>
+            </div>
+            <form action="/reports/daily" method="GET" class="mt-3">
+              <div class="input-group input-group-sm">
+                <input type="date" name="date" class="form-control" value="<%= new Date().toISOString().split('T')[0] %>" required>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-chevron-right"></i> เรียกดู</button>
+              </div>
+            </form>
+          </div>
         </div>
-        <div class="mb-3">
-          <label for="end_date" class="form-label small fw-semibold">ถึงวันที่</label>
-          <input type="date" class="form-control" id="end_date" name="end_date" required>
+      </div>
+
+      <!-- Monthly Report Card -->
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 hover-translate transition-all">
+          <div class="card-body p-4 d-flex flex-column justify-content-between">
+            <div>
+              <div class="bg-success bg-opacity-10 text-success p-3 rounded-3 d-inline-block mb-3">
+                <i class="bi bi-calendar-month fs-3"></i>
+              </div>
+              <h5 class="fw-bold text-dark">รายงานสรุปประจำเดือน</h5>
+              <p class="text-muted small">สรุปสถิติความถี่ในการตรวจสอบ เปอร์เซ็นต์ความสำเร็จ และแนวโน้มข้อผิดพลาดของเซิร์ฟเวอร์แบบรายวันในแต่ละเดือน</p>
+            </div>
+            <form action="/reports/monthly" method="GET" class="mt-3">
+              <div class="row g-1">
+                <div class="col-7">
+                  <select name="month" class="form-select form-select-sm">
+                    <% 
+                      const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+                      const currentMonth = new Date().getMonth() + 1;
+                      months.forEach((m, idx) => {
+                    %>
+                      <option value="<%= idx + 1 %>" <%= currentMonth === idx + 1 ? 'selected' : '' %>><%= m %></option>
+                    <% }) %>
+                  </select>
+                </div>
+                <div class="col-5">
+                  <input type="number" name="year" class="form-control form-control-sm text-center" value="<%= new Date().getFullYear() %>" required>
+                </div>
+                <div class="col-12 mt-1.5 d-grid">
+                  <button type="submit" class="btn btn-sm btn-success"><i class="bi bi-chevron-right me-1"></i> เรียกดูรายงานประจำเดือน</button>
+                </div>
+              </div>
+            </form>
+          </div>
         </div>
-        <div class="mb-3">
-          <label for="room_id" class="form-label small fw-semibold">เลือกห้อง Server</label>
-          <select class="form-select" id="room_id" name="room_id">
-            <option value="all">ทุกห้อง (All Rooms)</option>
-            <option value="1">Main Server Room A</option>
-            <option value="2">Backup Server Room B</option>
-          </select>
+      </div>
+
+      <!-- Yearly Report Card -->
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 hover-translate transition-all">
+          <div class="card-body p-4 d-flex flex-column justify-content-between">
+            <div>
+              <div class="bg-warning bg-opacity-10 text-warning p-3 rounded-3 d-inline-block mb-3">
+                <i class="bi bi-calendar-check fs-3"></i>
+              </div>
+              <h5 class="fw-bold text-dark">รายงานสรุปประจำปี</h5>
+              <p class="text-muted small">ภาพรวมแนวโน้มความถี่การเดินตรวจรายเดือน ความสมบูรณ์ของระบบงาน และประวัติข้อบกพร่องสะสมรายปีสำหรับผู้บริหาร</p>
+            </div>
+            <form action="/reports/yearly" method="GET" class="mt-3">
+              <div class="input-group input-group-sm">
+                <input type="number" name="year" class="form-control text-center" value="<%= new Date().getFullYear() %>" required>
+                <button type="submit" class="btn btn-warning"><i class="bi bi-chevron-right text-dark"></i> เรียกดู</button>
+              </div>
+            </form>
+          </div>
         </div>
-        <button type="submit" class="btn btn-primary w-100 py-2.5 fw-semibold d-flex align-items-center justify-content-center gap-1">
-          <i class="bi bi-printer"></i> ออกรายงานเพื่อพิมพ์ (Print Mode)
-        </button>
-      </form>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Section 2: Summary/Asset-based Reports -->
+  <div class="col-12 mt-5">
+    <h5 class="fw-bold text-dark mb-3"><i class="bi bi-database-check text-primary me-2"></i>รายงานสรุปตามสินทรัพย์ไอทีและบุคลากร (Asset & User Summaries)</h5>
+    <div class="row g-3">
+      
+      <!-- Server Summary Card -->
+      <div class="col-12 col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100 text-center hover-translate transition-all">
+          <div class="card-body p-4 d-flex flex-column justify-content-between align-items-center">
+            <div>
+              <div class="bg-info bg-opacity-10 text-info p-3 rounded-circle d-inline-block mb-3">
+                <i class="bi bi-server fs-3"></i>
+              </div>
+              <h6 class="fw-bold text-dark">รายงานรายเซิร์ฟเวอร์</h6>
+              <p class="text-muted small mb-0">ตรวจสอบจำนวนครั้งที่เซิร์ฟเวอร์แต่ละตัวถูกตรวจ อัตราความสำเร็จ และประวัติ FAIL</p>
+            </div>
+            <a href="/reports/server" class="btn btn-sm btn-outline-info w-100 mt-3 rounded-pill fw-semibold">เปิดดูรายงาน</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rack Summary Card -->
+      <div class="col-12 col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100 text-center hover-translate transition-all">
+          <div class="card-body p-4 d-flex flex-column justify-content-between align-items-center">
+            <div>
+              <div class="bg-secondary bg-opacity-10 text-secondary p-3 rounded-circle d-inline-block mb-3">
+                <i class="bi bi-hdd-rack fs-3"></i>
+              </div>
+              <h6 class="fw-bold text-dark">รายงานรายตู้แร็ค (Rack)</h6>
+              <p class="text-muted small mb-0">สรุปสถิติจำนวนครั้งที่ตรวจเช็คอุปกรณ์ภายในแต่ละตู้แร็ค และประเมินอัตราข้อขัดข้อง</p>
+            </div>
+            <a href="/reports/rack" class="btn btn-sm btn-outline-secondary w-100 mt-3 rounded-pill fw-semibold">เปิดดูรายงาน</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Room Summary Card -->
+      <div class="col-12 col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100 text-center hover-translate transition-all">
+          <div class="card-body p-4 d-flex flex-column justify-content-between align-items-center">
+            <div>
+              <div class="bg-danger bg-opacity-10 text-danger p-3 rounded-circle d-inline-block mb-3">
+                <i class="bi bi-door-closed fs-3"></i>
+              </div>
+              <h6 class="fw-bold text-dark">รายงานรายห้อง Server</h6>
+              <p class="text-muted small mb-0">ตรวจสอบสรุปประวัติผลการเดินตรวจเชิงสถิติในระดับโซนห้องเซิร์ฟเวอร์แต่ละแห่ง</p>
+            </div>
+            <a href="/reports/room" class="btn btn-sm btn-outline-danger w-100 mt-3 rounded-pill fw-semibold">เปิดดูรายงาน</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- User Summary Card -->
+      <div class="col-12 col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100 text-center hover-translate transition-all">
+          <div class="card-body p-4 d-flex flex-column justify-content-between align-items-center">
+            <div>
+              <div class="bg-dark bg-opacity-10 text-dark p-3 rounded-circle d-inline-block mb-3">
+                <i class="bi bi-people fs-3"></i>
+              </div>
+              <h6 class="fw-bold text-dark">รายงานผู้ปฏิบัติงาน</h6>
+              <p class="text-muted small mb-0">สถิติจำนวนรอบเดินตรวจของเจ้าหน้าที่และผู้ปฏิบัติงานแต่ละคน เพื่อวัด KPI การทำงาน</p>
+            </div>
+            <a href="/reports/user" class="btn btn-sm btn-outline-dark w-100 mt-3 rounded-pill fw-semibold">เปิดดูรายงาน</a>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
+
+<style>
+.hover-translate {
+  transition: transform 0.25s ease-in-out, box-shadow 0.25s ease-in-out;
+}
+.hover-translate:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08) !important;
+}
+.rounded-4 {
+  border-radius: 14px !important;
+}
+.rounded-3 {
+  border-radius: 10px !important;
+}
+.fs-7 {
+  font-size: 0.9rem;
+}
+.mt-1.5 {
+  margin-top: 0.35rem;
+}
+</style>
 
 <%- include('../layouts/footer') %>

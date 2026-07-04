@@ -1,103 +1,275 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>รายงานสรุปผลการเดินตรวจเช็คห้อง Server</title>
-  <!-- Bootstrap 5 CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Google Fonts - Sarabun -->
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <style>
-    body {
-      font-family: 'Sarabun', sans-serif;
-      background-color: #fff;
-    }
-    @media print {
-      .no-print {
-        display: none !important;
-      }
-      body {
-        font-size: 12px;
-      }
-    }
-  </style>
-</head>
-<body class="py-5">
+<%- include('../layouts/header') %>
+<%- include('../layouts/sidebar') %>
 
-  <div class="container">
-    <!-- Action buttons for print -->
-    <div class="d-flex justify-content-between align-items-center mb-5 no-print bg-light p-3 rounded border">
-      <div>
-        <h5 class="fw-bold mb-0">รายงานพร้อมพิมพ์</h5>
-        <span class="text-muted small">คลิกปุ่มด้านขวาเพื่อเปิดหน้าต่างพิมพ์เอกสารรายงาน</span>
-      </div>
-      <div class="d-flex gap-2">
-        <button onclick="window.print()" class="btn btn-primary"><i class="bi bi-printer"></i> พิมพ์รายงาน (Print)</button>
-        <button onclick="window.close()" class="btn btn-outline-secondary">ปิดหน้านี้</button>
-      </div>
+<%
+  let reportTitle = '';
+  let iconClass = '';
+  if (summaryType === 'server') {
+    reportTitle = 'รายงานสรุปผลการเดินตรวจรายเครื่องเซิร์ฟเวอร์';
+    iconClass = 'bi-server';
+  } else if (summaryType === 'rack') {
+    reportTitle = 'รายงานสรุปผลการเดินตรวจรายตู้แร็ค (Racks)';
+    iconClass = 'bi-hdd-rack';
+  } else if (summaryType === 'room') {
+    reportTitle = 'รายงานสรุปผลการเดินตรวจรายห้อง Server';
+    iconClass = 'bi-door-closed';
+  } else if (summaryType === 'user') {
+    reportTitle = 'รายงานสรุปผลการเข้าปฏิบัติงานเดินตรวจรายบุคคล';
+    iconClass = 'bi-people';
+  }
+%>
+
+<div class="print-container">
+  <!-- HEADER CONTROLS (HIDDEN ON PRINT) -->
+  <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom no-print">
+    <div>
+      <h1 class="h2 fw-bold text-dark"><i class="bi <%= iconClass %> text-primary me-2"></i><%= reportTitle %></h1>
+      <p class="text-muted small mb-0">รายงานสถิติตัวเลขข้อบกพร่องสะสม อัตราการตรวจผ่าน และภาระงานเดินตรวจของระบบสารสนเทศ</p>
     </div>
-
-    <!-- Printable Report Document -->
-    <div class="text-center mb-5 border-bottom pb-4">
-      <h2 class="fw-bold">รายงานสรุปผลการเดินตรวจเช็คห้อง Server</h2>
-      <h5 class="text-muted">โรงพยาบาลศูนย์บริการสุขภาพส่วนกลาง</h5>
-      <p class="mb-0 text-secondary">ข้อมูล ณ วันที่ 01 กรกฎาคม 2026 - 03 กรกฎาคม 2026</p>
-    </div>
-
-    <!-- Info Section -->
-    <div class="row mb-4">
-      <div class="col-6">
-        <strong>หน่วยงานผู้จัดทำ:</strong> ศูนย์สารสนเทศและการสื่อสารข้อมูล<br>
-        <strong>ผู้ตรวจเช็คหลัก:</strong> นายสมศักดิ์ รักงาน (เจ้าหน้าที่ระบบ)
-      </div>
-      <div class="col-6 text-end">
-        <strong>วันที่พิมพ์รายงาน:</strong> 03 กรกฎาคม 2026<br>
-        <strong>เวลาที่พิมพ์:</strong> 22:00 น.
-      </div>
-    </div>
-
-    <!-- Summary Details Table -->
-    <table class="table table-bordered align-middle">
-      <thead class="table-light">
-        <tr>
-          <th>วันที่ตรวจ</th>
-          <th>ห้อง Server</th>
-          <th>ตู้ Rack</th>
-          <th>เซิร์ฟเวอร์กายภาพ</th>
-          <th>สถานะผลการตรวจ</th>
-          <th>หมายเหตุ/ข้อบกพร่อง</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>02/07/2026</td>
-          <td>Main Server Room A</td>
-          <td>Rack A-01</td>
-          <td>HIS-DB-01</td>
-          <td class="text-success fw-bold">ผ่าน (PASS)</td>
-          <td>การระบายอากาศและอุณหภูมิปกติ (21.5°C)</td>
-        </tr>
-        <tr>
-          <td>02/07/2026</td>
-          <td>Main Server Room A</td>
-          <td>Rack A-02</td>
-          <td>Core-Switch-01</td>
-          <td class="text-warning fw-bold">เตือน (WARNING)</td>
-          <td>ฝุ่นเกาะบริเวณช่องระบายพัดลมด้านหลังตู้แร็ค</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="row mt-5 pt-5 text-center">
-      <div class="col-6">
-        <p class="mb-5">ลงชื่อ..........................................................<br>ผู้รายงาน/ผู้ตรวจเช็ค</p>
-      </div>
-      <div class="col-6">
-        <p class="mb-5">ลงชื่อ..........................................................<br>หัวหน้าฝ่ายสารสนเทศโรงพยาบาล</p>
-      </div>
+    <div class="btn-toolbar mb-2 mb-md-0 gap-2">
+      <a href="/reports" class="btn btn-outline-secondary d-flex align-items-center gap-1.5 px-3 py-2 fw-semibold rounded-3 shadow-sm">
+        <i class="bi bi-arrow-left"></i> ย้อนกลับ
+      </a>
+      <button type="button" onclick="window.print()" class="btn btn-outline-primary d-flex align-items-center gap-1.5 px-3 py-2 fw-semibold rounded-3 shadow-sm">
+        <i class="bi bi-printer"></i> สั่งพิมพ์ / บันทึก PDF
+      </button>
+      <button type="button" onclick="exportSummaryCSV()" class="btn btn-outline-success d-flex align-items-center gap-1.5 px-3 py-2 fw-semibold rounded-3 shadow-sm">
+        <i class="bi bi-file-earmark-excel"></i> ส่งออกไฟล์ CSV
+      </button>
     </div>
   </div>
 
-</body>
-</html>
+  <!-- FORMAL PRINT HEADER (ONLY VISIBLE ON PRINT) -->
+  <div class="only-print text-center mb-4">
+    <h3 class="fw-bold mb-1"><%= reportTitle %></h3>
+    <h5 class="text-muted mb-2">โรงพยาบาลศูนย์บริการสุขภาพส่วนกลาง</h5>
+    <div class="small fw-semibold text-dark">
+      พิมพ์รายงาน ณ วันที่: <%= formatThaiDate(new Date().toISOString(), true) %>
+    </div>
+    <hr class="border-secondary my-3">
+  </div>
+
+  <!-- SUMMARY GRID CARD -->
+  <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 print-card">
+    <h5 class="fw-bold text-dark mb-3 no-print"><i class="bi bi-table text-primary me-2"></i>ตารางข้อมูลสรุปสะสม</h5>
+    
+    <div class="table-responsive">
+      <table class="table align-middle table-hover table-bordered mb-0">
+        <thead class="table-light">
+          <!-- SERVER HEADERS -->
+          <% if (summaryType === 'server') { %>
+            <tr>
+              <th>เครื่องเซิร์ฟเวอร์</th>
+              <th>Model / IP Address</th>
+              <th>พิกัด (ตู้แร็ค / ห้อง)</th>
+              <th class="text-center" style="width: 10%;">ตรวจทั้งหมด (ครั้ง)</th>
+              <th class="text-center text-success" style="width: 10%;">ปกติ (PASS)</th>
+              <th class="text-center text-warning" style="width: 10%;">เฝ้าระวัง (WARN)</th>
+              <th class="text-center text-danger" style="width: 10%;">ผิดปกติ (FAIL)</th>
+              <th class="text-center" style="width: 10%;">อัตราปกติ</th>
+            </tr>
+          <!-- RACK HEADERS -->
+          <% } else if (summaryType === 'rack') { %>
+            <tr>
+              <th>ตู้แร็ค (Rack)</th>
+              <th>ห้อง Server ที่ติดตั้ง</th>
+              <th class="text-center" style="width: 15%;">ตรวจอุปกรณ์สะสม (ครั้ง)</th>
+              <th class="text-center text-success" style="width: 15%;">ปกติ (PASS)</th>
+              <th class="text-center text-warning" style="width: 15%;">เฝ้าระวัง (WARN)</th>
+              <th class="text-center text-danger" style="width: 15%;">ผิดปกติ (FAIL)</th>
+              <th class="text-center" style="width: 12%;">อัตราปกติ</th>
+            </tr>
+          <!-- ROOM HEADERS -->
+          <% } else if (summaryType === 'room') { %>
+            <tr>
+              <th>ห้อง Server</th>
+              <th>พิกัดกายภาพ (อาคาร / ชั้น)</th>
+              <th class="text-center" style="width: 15%;">ตรวจอุปกรณ์สะสม (ครั้ง)</th>
+              <th class="text-center text-success" style="width: 15%;">ปกติ (PASS)</th>
+              <th class="text-center text-warning" style="width: 15%;">เฝ้าระวัง (WARN)</th>
+              <th class="text-center text-danger" style="width: 15%;">ผิดปกติ (FAIL)</th>
+              <th class="text-center" style="width: 12%;">อัตราปกติ</th>
+            </tr>
+          <!-- USER HEADERS -->
+          <% } else if (summaryType === 'user') { %>
+            <tr>
+              <th>ชื่อผู้ปฏิบัติงาน</th>
+              <th>Username</th>
+              <th>สิทธิ์การใช้งาน (Role)</th>
+              <th class="text-center" style="width: 25%;">จำนวนรอบที่เดินตรวจเช็คสำเร็จ (รอบ)</th>
+            </tr>
+          <% } %>
+        </thead>
+        <tbody>
+          <% if (data && data.length > 0) { %>
+            <% data.forEach(row => { %>
+              
+              <!-- SERVER ROWS -->
+              <% if (summaryType === 'server') { %>
+                <% 
+                  const rate = row.total_inspected > 0 
+                    ? ((row.pass_count / row.total_inspected) * 100).toFixed(1) 
+                    : '0.0';
+                %>
+                <tr>
+                  <td><strong><%= row.server_name %></strong></td>
+                  <td>
+                    <span class="small text-muted d-block">Model: <%= row.model || '-' %></span>
+                    <span class="small text-secondary d-block">IP: <%= row.ip_address || '-' %></span>
+                  </td>
+                  <td>
+                    <span class="small text-muted d-block">ห้อง: <%= row.room_name %></span>
+                    <span class="small text-secondary d-block">แร็ค: <%= row.rack_name %></span>
+                  </td>
+                  <td class="text-center"><%= row.total_inspected %></td>
+                  <td class="text-center text-success"><%= row.pass_count %></td>
+                  <td class="text-center text-warning"><%= row.warn_count %></td>
+                  <td class="text-center text-danger"><%= row.fail_count %></td>
+                  <td class="text-center font-monospace">
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-3"><%= rate %>%</span>
+                  </td>
+                </tr>
+
+              <!-- RACK ROWS -->
+              <% } else if (summaryType === 'rack') { %>
+                <% 
+                  const rate = row.total_inspected > 0 
+                    ? ((row.pass_count / row.total_inspected) * 100).toFixed(1) 
+                    : '0.0';
+                %>
+                <tr>
+                  <td><strong><%= row.rack_name %></strong></td>
+                  <td><%= row.room_name %></td>
+                  <td class="text-center"><%= row.total_inspected %></td>
+                  <td class="text-center text-success"><%= row.pass_count %></td>
+                  <td class="text-center text-warning"><%= row.warn_count %></td>
+                  <td class="text-center text-danger"><%= row.fail_count %></td>
+                  <td class="text-center font-monospace">
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-3"><%= rate %>%</span>
+                  </td>
+                </tr>
+
+              <!-- ROOM ROWS -->
+              <% } else if (summaryType === 'room') { %>
+                <% 
+                  const rate = row.total_inspected > 0 
+                    ? ((row.pass_count / row.total_inspected) * 100).toFixed(1) 
+                    : '0.0';
+                %>
+                <tr>
+                  <td><strong><%= row.room_name %></strong></td>
+                  <td>อาคาร: <%= row.building %>, ชั้น: <%= row.floor %></td>
+                  <td class="text-center"><%= row.total_inspected %></td>
+                  <td class="text-center text-success"><%= row.pass_count %></td>
+                  <td class="text-center text-warning"><%= row.warn_count %></td>
+                  <td class="text-center text-danger"><%= row.fail_count %></td>
+                  <td class="text-center font-monospace">
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-3"><%= rate %>%</span>
+                  </td>
+                </tr>
+
+              <!-- USER ROWS -->
+              <% } else if (summaryType === 'user') { %>
+                <tr>
+                  <td><strong><%= row.user_name %></strong></td>
+                  <td><code><%= row.username %></code></td>
+                  <td><span class="badge bg-secondary-subtle text-dark border rounded-3 px-2 py-1"><%= row.role_name %></span></td>
+                  <td class="text-center fw-bold text-primary fs-6"><%= row.completed_sessions %></td>
+                </tr>
+              <% } %>
+
+            <% }) %>
+          <% } else { %>
+            <tr>
+              <td colspan="<%= summaryType === 'server' ? 8 : (summaryType === 'user' ? 4 : 7) %>" class="text-center py-5 text-muted">
+                <i class="bi bi-clipboard-x fs-1 mb-2 d-block text-secondary opacity-50"></i>
+                ไม่พบข้อมูลสถิติประวัติสะสม
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- FORMAL SIGNATURE BLOCKS (ONLY VISIBLE ON PRINT) -->
+    <div class="only-print row mt-5 pt-4 text-center">
+      <div class="col-6">
+        <div class="mb-5 text-muted small">ลงชื่อ.............................................................. ผู้ออกรายงาน</div>
+        <div>(......................................................................)</div>
+        <div class="small text-muted mt-1">ตำแหน่ง เจ้าหน้าที่ผู้เดินตรวจระบบ</div>
+      </div>
+      <div class="col-6">
+        <div class="mb-5 text-muted small">ลงชื่อ.............................................................. ผู้รับรองรายงาน</div>
+        <div>(......................................................................)</div>
+        <div class="small text-muted mt-1">ตำแหน่ง หัวหน้าฝ่ายเทคโนโลยีสารสนเทศ</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.rounded-4 {
+  border-radius: 12px !important;
+}
+.rounded-3 {
+  border-radius: 8px !important;
+}
+
+/* PRINT LAYOUT CUSTOM STYLES */
+@media print {
+  body {
+    background-color: #fff !important;
+    color: #000 !important;
+    font-size: 11pt !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  header, nav, .sidebar-wrapper, .navbar, .btn, .no-print, form {
+    display: none !important;
+  }
+  main, .col-md-9, .col-lg-10, .print-container, .print-card {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  .print-card {
+    background: transparent !important;
+    padding: 0 !important;
+  }
+  .table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+  .table th, .table td {
+    border: 1px solid #000 !important;
+    padding: 6px !important;
+    color: #000 !important;
+    font-size: 10pt !important;
+  }
+  .badge {
+    border: none !important;
+    background: transparent !important;
+    color: #000 !important;
+    font-weight: bold !important;
+    padding: 0 !important;
+  }
+  .only-print {
+    display: block !important;
+  }
+}
+
+.only-print {
+  display: none;
+}
+</style>
+
+<script>
+  function exportSummaryCSV() {
+    window.location.href = '/reports/export?type=<%= summaryType %>';
+  }
+</script>
+
+<%- include('../layouts/footer') %>

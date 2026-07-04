@@ -15,6 +15,7 @@ const roleRoutes = require('./role.routes');
 const settingRoutes = require('./setting.routes');
 const inspectionRoutes = require('./inspection.routes');
 const notificationRoutes = require('./notification.routes');
+const reportRoutes = require('./report.routes');
 
 // Redirect root to dashboard
 router.get('/', (req, res) => {
@@ -36,5 +37,6 @@ router.use('/roles', roleRoutes);
 router.use('/settings', settingRoutes);
 router.use('/inspections', inspectionRoutes);
 router.use('/notifications', notificationRoutes);
+router.use('/reports', reportRoutes);
 
 module.exports = router;
