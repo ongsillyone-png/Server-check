@@ -102,6 +102,9 @@ Server-check/
 
 ---
 
+## Credit by ong-napho
+https://ssdpcu.com
+
 ## License
 
 ISC © 2026 Hospital IT Department
