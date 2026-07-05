@@ -18,6 +18,7 @@ const inspectionRoutes = require('./inspection.routes');
 const notificationRoutes = require('./notification.routes');
 const reportRoutes = require('./report.routes');
 const analyticsRoutes = require('./analytics.routes');
+const envInspectionRoutes = require('./env-inspection.routes');
 
 // Redirect root to dashboard
 router.get('/', (req, res) => {
@@ -41,5 +42,6 @@ router.use('/inspections', inspectionRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/reports', reportRoutes);
 router.use('/analytics', analyticsRoutes);
+router.use('/env-inspections', envInspectionRoutes);
 
 module.exports = router;

@@ -1,0 +1,164 @@
+<%- include('../layouts/header') %>
+<%- include('../layouts/sidebar') %>
+
+<div class="d-flex justify-content-between flex-wrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <div>
+    <h1 class="h2 fw-bold text-dark"><i class="bi bi-thermometer-half text-teal me-2"></i>รายละเอียดรอบตรวจ #<%= session.id %></h1>
+    <p class="text-muted small mb-0">ห้อง: <strong><%= session.room_name %></strong> | ผู้ตรวจ: <strong><%= session.inspector_name %></strong> | วันที่: <%= formatThaiDate(session.started_at, true) %></p>
+  </div>
+  <div class="d-flex gap-2">
+    <% if (session.status === 'completed') { %>
+      <form action="/env-inspections/reopen" method="POST">
+        <input type="hidden" name="sessionId" value="<%= session.id %>">
+        <button type="submit" class="btn btn-outline-teal fw-semibold px-3">
+          <i class="bi bi-pencil-square me-1"></i>แก้ไข
+        </button>
+      </form>
+    <% } %>
+    <a href="/env-inspections/history" class="btn btn-outline-secondary fw-semibold px-3">
+      <i class="bi bi-arrow-left me-1"></i>กลับ
+    </a>
+  </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="card border-0 shadow-sm rounded-4 p-3 h-100 text-center">
+      <div class="text-muted small mb-1">ผลรวมการตรวจ</div>
+      <% if (session.overall_status === 'pass') { %>
+        <span class="badge bg-success fs-6 px-3 py-2 rounded-pill"><i class="bi bi-check-circle-fill me-1"></i>ผ่านการตรวจ</span>
+      <% } else if (session.overall_status === 'warning') { %>
+        <span class="badge bg-warning text-dark fs-6 px-3 py-2 rounded-pill"><i class="bi bi-exclamation-triangle-fill me-1"></i>เฝ้าระวัง</span>
+      <% } else if (session.overall_status === 'fail') { %>
+        <span class="badge bg-danger fs-6 px-3 py-2 rounded-pill"><i class="bi bi-x-circle-fill me-1"></i>พบปัญหา</span>
+      <% } else { %>
+        <span class="badge bg-secondary fs-6 px-3 py-2 rounded-pill">กำลังตรวจ</span>
+      <% } %>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card border-0 shadow-sm rounded-4 p-3 h-100 text-center">
+      <div class="text-muted small mb-1">อุณหภูมิห้อง</div>
+      <% if (session.temperature_c !== null) { %>
+        <div class="fw-bold fs-4 <%= session.temperature_c > 27 ? 'text-danger' : session.temperature_c > 24 ? 'text-warning' : 'text-success' %>">
+          <%= session.temperature_c %>°C
+        </div>
+        <div class="text-muted" style="font-size:0.75rem;">มาตรฐาน 18–27°C</div>
+      <% } else { %><div class="text-muted">ไม่ได้บันทึก</div><% } %>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card border-0 shadow-sm rounded-4 p-3 h-100 text-center">
+      <div class="text-muted small mb-1">ความชื้นสัมพัทธ์</div>
+      <% if (session.humidity_pct !== null) { %>
+        <div class="fw-bold fs-4 <%= (session.humidity_pct < 20 || session.humidity_pct > 80) ? 'text-danger' : 'text-info' %>">
+          <%= session.humidity_pct %>%RH
+        </div>
+        <div class="text-muted" style="font-size:0.75rem;">มาตรฐาน 20–80%RH</div>
+      <% } else { %><div class="text-muted">ไม่ได้บันทึก</div><% } %>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card border-0 shadow-sm rounded-4 p-3 h-100 text-center">
+      <div class="text-muted small mb-1">หมายเหตุ</div>
+      <div class="fw-semibold text-dark" style="font-size:0.88rem;"><%= session.notes || '—' %></div>
+    </div>
+  </div>
+</div>
+
+<!-- Room Checklist -->
+<div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+  <h5 class="fw-bold text-dark mb-3"><i class="bi bi-door-closed-fill text-teal me-2"></i>ผลตรวจสภาพห้อง</h5>
+  <% if (roomChecks && roomChecks.length > 0) { %>
+    <div class="d-flex flex-column gap-2">
+      <% roomChecks.forEach(c => { %>
+        <div class="d-flex justify-content-between align-items-start p-3 rounded-3 border
+          <%= c.result === 'fail' ? 'border-danger bg-danger bg-opacity-5' : c.result === 'pass' ? 'border-success bg-success bg-opacity-5' : 'bg-light' %>">
+          <div>
+            <span class="fw-semibold text-dark d-block" style="font-size:0.9rem;"><%= c.check_label %></span>
+            <% if (c.remark) { %><span class="text-muted small"><i class="bi bi-chat-left-text me-1"></i><%= c.remark %></span><% } %>
+          </div>
+          <% if (c.result === 'pass') { %>
+            <span class="badge bg-success rounded-pill ms-3"><i class="bi bi-check-lg me-1"></i>ปกติ</span>
+          <% } else if (c.result === 'fail') { %>
+            <span class="badge bg-danger rounded-pill ms-3"><i class="bi bi-x-lg me-1"></i>พบปัญหา</span>
+          <% } else { %>
+            <span class="badge bg-secondary rounded-pill ms-3">N/A</span>
+          <% } %>
+        </div>
+      <% }); %>
+    </div>
+  <% } else { %>
+    <p class="text-muted small">ไม่มีข้อมูลผลตรวจห้อง</p>
+  <% } %>
+</div>
+
+<!-- Rack Checklists -->
+<% if (racksByChecks && racksByChecks.length > 0) { %>
+  <% racksByChecks.forEach(rackGroup => { %>
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+      <h5 class="fw-bold text-dark mb-3"><i class="bi bi-hdd-rack-fill text-primary me-2"></i>ตู้ Rack: <%= rackGroup.rack_name %></h5>
+      <div class="d-flex flex-column gap-2">
+        <% rackGroup.checks.forEach(c => { %>
+          <div class="d-flex justify-content-between align-items-start p-3 rounded-3 border
+            <%= c.result === 'fail' ? 'border-danger bg-danger bg-opacity-5' : c.result === 'pass' ? 'border-success bg-success bg-opacity-5' : 'bg-light' %>">
+            <div>
+              <span class="fw-semibold text-dark d-block" style="font-size:0.9rem;"><%= c.check_label %></span>
+              <% if (c.remark) { %><span class="text-muted small"><i class="bi bi-chat-left-text me-1"></i><%= c.remark %></span><% } %>
+            </div>
+            <% if (c.result === 'pass') { %>
+              <span class="badge bg-success rounded-pill ms-3"><i class="bi bi-check-lg me-1"></i>ปกติ</span>
+            <% } else if (c.result === 'fail') { %>
+              <span class="badge bg-danger rounded-pill ms-3"><i class="bi bi-x-lg me-1"></i>พบปัญหา</span>
+            <% } else { %>
+              <span class="badge bg-secondary rounded-pill ms-3">N/A</span>
+            <% } %>
+          </div>
+        <% }); %>
+      </div>
+    </div>
+  <% }); %>
+<% } %>
+
+<!-- Cooling Equipment -->
+<% if (coolingLogs && coolingLogs.length > 0) { %>
+  <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+    <h5 class="fw-bold text-dark mb-3"><i class="bi bi-wind text-info me-2"></i>อุปกรณ์ทำความเย็น / UPS / PDU</h5>
+    <div class="table-responsive">
+      <table class="table align-middle table-hover mb-0">
+        <thead class="table-light">
+          <tr><th>อุปกรณ์</th><th>ประเภท</th><th>Temp In</th><th>Temp Out</th><th>สถานะ</th><th>หมายเหตุ</th></tr>
+        </thead>
+        <tbody>
+          <% coolingLogs.forEach(log => { %>
+            <tr>
+              <td><strong><%= log.equipment_name %></strong></td>
+              <td><span class="badge bg-info-subtle text-info border border-info-subtle"><%= log.equipment_type.toUpperCase() %></span></td>
+              <td><%= log.temperature_in_c !== null ? log.temperature_in_c + '°C' : '—' %></td>
+              <td><%= log.temperature_out_c !== null ? log.temperature_out_c + '°C' : '—' %></td>
+              <td>
+                <% if (log.status === 'normal') { %>
+                  <span class="badge bg-success rounded-pill">ปกติ</span>
+                <% } else if (log.status === 'warning') { %>
+                  <span class="badge bg-warning text-dark rounded-pill">เฝ้าระวัง</span>
+                <% } else { %>
+                  <span class="badge bg-danger rounded-pill">พบปัญหา</span>
+                <% } %>
+              </td>
+              <td class="text-muted small"><%= log.remark || '—' %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% } %>
+
+<style>
+.text-teal { color: #0d9488 !important; }
+.btn-outline-teal { border:1.5px solid #0d9488; color:#0d9488; }
+.btn-outline-teal:hover { background:#0d9488; color:#fff; }
+</style>
+
+<%- include('../layouts/footer') %>

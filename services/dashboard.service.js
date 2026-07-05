@@ -1,4 +1,5 @@
 const DashboardRepository = require('../repositories/dashboard.repository');
+const EnvInspectionService = require('./env-inspection.service');
 
 class DashboardService {
   /**
@@ -77,10 +78,11 @@ class DashboardService {
     const totalServers = assets.servers;
     const totalVms = assets.vms;
 
-    // Fetch Physical + VM stats in parallel
+    // Fetch Physical + VM + Environment stats in parallel
     const [
       todayStats, monthStats, yearStats, latestSessions,
-      vmTodayStats, vmMonthStats, vmYearStats, vmLatestSessions
+      vmTodayStats, vmMonthStats, vmYearStats, vmLatestSessions,
+      envStats
     ] = await Promise.all([
       this._getStatsForPeriod(todayStart, todayEnd, totalServers),
       this._getStatsForPeriod(monthStart, monthEnd, totalServers),
@@ -89,13 +91,15 @@ class DashboardService {
       this._getVmStatsForPeriod(todayStart, todayEnd, totalVms),
       this._getVmStatsForPeriod(monthStart, monthEnd, totalVms),
       this._getVmStatsForPeriod(yearStart, yearEnd, totalVms),
-      DashboardRepository.getLatestVmInspectionSessions(5)
+      DashboardRepository.getLatestVmInspectionSessions(5),
+      EnvInspectionService.getDashboardSummary()
     ]);
 
     return {
       assets,
       todayStats, monthStats, yearStats, latestSessions,
-      vmTodayStats, vmMonthStats, vmYearStats, vmLatestSessions
+      vmTodayStats, vmMonthStats, vmYearStats, vmLatestSessions,
+      envStats
     };
   }
 

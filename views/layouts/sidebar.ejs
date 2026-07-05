@@ -24,6 +24,16 @@
         </a>
       </li>
       <li class="nav-item">
+        <a class="nav-link d-flex align-items-center gap-2 rounded px-3 py-2 <%= typeof currentPage !== 'undefined' && currentPage === 'env-inspections' ? 'active text-white' : 'text-dark hover-bg-light' %>"
+           href="/env-inspections/walk"
+           style="<%= typeof currentPage !== 'undefined' && currentPage === 'env-inspections' ? 'background: linear-gradient(135deg,#0d9488,#0ea5e9);' : '' %>">
+          <i class="bi bi-thermometer-half"></i>
+          <span>ตรวจสภาพแวดล้อม</span>
+          <span class="badge ms-auto" style="background:#0d9488;font-size:0.62rem;">NEW</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
         <a class="nav-link d-flex align-items-center gap-2 rounded px-3 py-2 <%= typeof currentPage !== 'undefined' && currentPage === 'history' ? 'active bg-primary text-white' : 'text-dark hover-bg-light' %>" href="/inspections/history">
           <i class="bi bi-file-earmark-bar-graph"></i>
           <span>รายงานและประวัติย้อนหลัง</span>

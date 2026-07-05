@@ -1,0 +1,453 @@
+<%- include('../layouts/header') %>
+<%- include('../layouts/sidebar') %>
+
+<% const totalSteps = 2 + racks.length; /* Step 1: Room | Step 2..N: Racks | Step N+1: Cooling */ %>
+
+<!-- Page Header -->
+<div class="d-flex justify-content-between flex-wrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <div>
+    <h1 class="h2 fw-bold text-dark">
+      <i class="bi bi-thermometer-half text-teal me-2"></i>ตรวจสภาพแวดล้อม — <span class="text-teal"><%= session.room_name %></span>
+    </h1>
+    <p class="text-muted small mb-0">รอบที่ #<%= session.id %> | ผู้ตรวจ: <strong><%= session.inspector_name %></strong> | เริ่ม: <%= formatThaiDate(session.started_at, true) %></p>
+  </div>
+  <form action="/env-inspections/cancel" method="POST" onsubmit="return confirm('ยกเลิกรอบตรวจนี้ใช่ไหม?')">
+    <button type="submit" class="btn btn-outline-danger btn-sm px-3 fw-semibold">
+      <i class="bi bi-x-circle me-1"></i>ยกเลิกรอบตรวจ
+    </button>
+  </form>
+</div>
+
+<% if (typeof error !== 'undefined' && error) { %>
+  <div class="alert alert-danger border-0 small mb-3"><i class="bi bi-exclamation-triangle-fill me-2"></i><%= error %></div>
+<% } %>
+
+<!-- Step Progress Bar -->
+<div class="card border-0 shadow-sm rounded-4 p-3 mb-4">
+  <div class="d-flex align-items-center gap-2 flex-wrap" id="stepProgressBar">
+    <!-- Step 1: Room -->
+    <div class="step-pill active" id="pill-step-1" onclick="goToStep(1)">
+      <i class="bi bi-door-closed-fill me-1"></i>ห้อง Server
+    </div>
+    <!-- Steps 2..N: Racks -->
+    <% racks.forEach((rack, idx) => { %>
+      <div class="step-pill" id="pill-step-<%= idx + 2 %>" onclick="goToStep(<%= idx + 2 %>)">
+        <i class="bi bi-hdd-rack-fill me-1"></i><%= rack.rack_name %>
+      </div>
+    <% }); %>
+    <!-- Last Step: Cooling -->
+    <div class="step-pill" id="pill-step-<%= totalSteps %>" onclick="goToStep(<%= totalSteps %>)">
+      <i class="bi bi-wind me-1"></i>แอร์ / UPS / PDU
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- STEP 1: Room Checks                                           -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div id="step-1" class="step-content">
+  <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+    <h5 class="fw-bold text-dark mb-3"><i class="bi bi-door-closed-fill text-teal me-2"></i>ตรวจสภาพห้อง Server</h5>
+
+    <% const savedRoomMap = {}; roomChecks.forEach(c => { savedRoomMap[c.check_key] = c; }); %>
+
+    <div class="d-flex flex-column gap-2" id="roomCheckList">
+      <% roomCheckDefs.forEach(def => { %>
+        <%
+          const saved = savedRoomMap[def.key];
+          const result = saved ? saved.result : 'na';
+          const remark = saved ? (saved.remark || '') : '';
+        %>
+        <div class="check-card" data-key="<%= def.key %>">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <span class="check-label fw-semibold"><%= def.label %></span>
+            <div class="btn-group btn-group-sm result-btns" role="group">
+              <input type="radio" class="btn-check" name="rc_<%= def.key %>" id="rc_<%= def.key %>_pass" value="pass" <%= result === 'pass' ? 'checked' : '' %>>
+              <label class="btn btn-outline-success fw-semibold" for="rc_<%= def.key %>_pass"><i class="bi bi-check-lg me-1"></i>ปกติ</label>
+
+              <input type="radio" class="btn-check" name="rc_<%= def.key %>" id="rc_<%= def.key %>_fail" value="fail" <%= result === 'fail' ? 'checked' : '' %>>
+              <label class="btn btn-outline-danger fw-semibold" for="rc_<%= def.key %>_fail"><i class="bi bi-x-lg me-1"></i>พบปัญหา</label>
+
+              <input type="radio" class="btn-check" name="rc_<%= def.key %>" id="rc_<%= def.key %>_na" value="na" <%= result === 'na' ? 'checked' : '' %>>
+              <label class="btn btn-outline-secondary fw-semibold" for="rc_<%= def.key %>_na">N/A</label>
+            </div>
+          </div>
+          <div class="mt-2">
+            <input type="text" class="form-control form-control-sm remark-input"
+              placeholder="หมายเหตุ (ถ้ามี)" value="<%= remark %>"
+              id="remark_<%= def.key %>">
+          </div>
+        </div>
+      <% }); %>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 mt-4">
+      <button class="btn btn-teal px-4 fw-bold" onclick="saveRoomAndNext()">
+        บันทึกและไปถัดไป <i class="bi bi-arrow-right ms-1"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- STEP 2..N: Rack Checks (one per rack)                        -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<% racks.forEach((rack, idx) => { %>
+  <%
+    const stepNum = idx + 2;
+    const savedRackMap = {};
+    rackChecks.filter(c => c.rack_id == rack.id).forEach(c => { savedRackMap[c.check_key] = c; });
+  %>
+  <div id="step-<%= stepNum %>" class="step-content" style="display:none;">
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+      <h5 class="fw-bold text-dark mb-3">
+        <i class="bi bi-hdd-rack-fill text-primary me-2"></i>ตรวจตู้ Rack: <span class="text-primary"><%= rack.rack_name %></span>
+        <span class="badge bg-primary bg-opacity-10 text-primary ms-2 fw-normal" style="font-size:0.78rem;">ตู้ที่ <%= idx+1 %>/<%= racks.length %></span>
+      </h5>
+
+      <div class="d-flex flex-column gap-2">
+        <% rackCheckDefs.forEach(def => { %>
+          <%
+            const saved = savedRackMap[def.key];
+            const result = saved ? saved.result : 'na';
+            const remark = saved ? (saved.remark || '') : '';
+          %>
+          <div class="check-card">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+              <span class="check-label fw-semibold"><%= def.label %></span>
+              <div class="btn-group btn-group-sm" role="group">
+                <input type="radio" class="btn-check" name="rack_<%= rack.id %>_<%= def.key %>" id="rack_<%= rack.id %>_<%= def.key %>_pass" value="pass" <%= result === 'pass' ? 'checked' : '' %>>
+                <label class="btn btn-outline-success fw-semibold" for="rack_<%= rack.id %>_<%= def.key %>_pass"><i class="bi bi-check-lg me-1"></i>ปกติ</label>
+
+                <input type="radio" class="btn-check" name="rack_<%= rack.id %>_<%= def.key %>" id="rack_<%= rack.id %>_<%= def.key %>_fail" value="fail" <%= result === 'fail' ? 'checked' : '' %>>
+                <label class="btn btn-outline-danger fw-semibold" for="rack_<%= rack.id %>_<%= def.key %>_fail"><i class="bi bi-x-lg me-1"></i>พบปัญหา</label>
+
+                <input type="radio" class="btn-check" name="rack_<%= rack.id %>_<%= def.key %>" id="rack_<%= rack.id %>_<%= def.key %>_na" value="na" <%= result === 'na' ? 'checked' : '' %>>
+                <label class="btn btn-outline-secondary fw-semibold" for="rack_<%= rack.id %>_<%= def.key %>_na">N/A</label>
+              </div>
+            </div>
+            <div class="mt-2">
+              <input type="text" class="form-control form-control-sm"
+                placeholder="หมายเหตุ (ถ้ามี)" value="<%= remark %>"
+                id="remark_rack_<%= rack.id %>_<%= def.key %>">
+            </div>
+          </div>
+        <% }); %>
+      </div>
+
+      <div class="d-flex justify-content-between mt-4">
+        <button class="btn btn-outline-secondary px-4" onclick="goToStep(<%= stepNum - 1 %>)">
+          <i class="bi bi-arrow-left me-1"></i>ย้อนกลับ
+        </button>
+        <button class="btn btn-teal px-4 fw-bold" onclick="saveRackAndNext(<%= rack.id %>, <%= stepNum %>)">
+          บันทึกและไปถัดไป <i class="bi bi-arrow-right ms-1"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+<% }); %>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- Last Step: Cooling / UPS / PDU + Complete                    -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div id="step-<%= totalSteps %>" class="step-content" style="display:none;">
+  <form action="/env-inspections/complete" method="POST" id="completeForm">
+    <input type="hidden" name="sessionId" value="<%= session.id %>">
+    <input type="hidden" name="coolingItems" id="coolingItemsJson" value="[]">
+
+    <!-- Environment readings -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+      <h5 class="fw-bold text-dark mb-3"><i class="bi bi-thermometer-half text-teal me-2"></i>ค่าสภาพแวดล้อมห้อง</h5>
+      <div class="row g-3">
+        <div class="col-12 col-sm-4">
+          <label class="form-label fw-semibold small text-muted">อุณหภูมิห้อง (°C)</label>
+          <div class="input-group">
+            <input type="number" step="0.1" min="10" max="50" class="form-control" id="temperatureC" name="temperatureC" placeholder="เช่น 22.5">
+            <span class="input-group-text">°C</span>
+          </div>
+          <div class="form-text">มาตรฐาน ASHRAE: 18–27°C</div>
+        </div>
+        <div class="col-12 col-sm-4">
+          <label class="form-label fw-semibold small text-muted">ความชื้นสัมพัทธ์ (%RH)</label>
+          <div class="input-group">
+            <input type="number" step="0.1" min="0" max="100" class="form-control" id="humidityPct" name="humidityPct" placeholder="เช่น 45.0">
+            <span class="input-group-text">%RH</span>
+          </div>
+          <div class="form-text">มาตรฐาน: 20–80%RH</div>
+        </div>
+        <div class="col-12 col-sm-4">
+          <label class="form-label fw-semibold small text-muted">หมายเหตุภาพรวม</label>
+          <input type="text" class="form-control" name="notes" placeholder="สรุปสภาพโดยรวม หรือข้อสังเกต">
+        </div>
+      </div>
+    </div>
+
+    <!-- Cooling Equipment list -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold text-dark mb-0"><i class="bi bi-wind text-info me-2"></i>อุปกรณ์ทำความเย็น / UPS / PDU</h5>
+        <button type="button" class="btn btn-sm btn-outline-teal fw-semibold" onclick="addCoolingRow()">
+          <i class="bi bi-plus-lg me-1"></i>เพิ่มอุปกรณ์
+        </button>
+      </div>
+
+      <div id="coolingRows" class="d-flex flex-column gap-3">
+        <!-- Rows added dynamically -->
+      </div>
+
+      <p id="noCoolingMsg" class="text-muted small text-center py-3 mb-0">
+        <i class="bi bi-info-circle me-1"></i>กดปุ่ม "เพิ่มอุปกรณ์" เพื่อบันทึกสถานะแอร์ / UPS / PDU
+      </p>
+
+      <!-- Pre-load saved cooling logs -->
+      <%
+        const savedCooling = coolingLogs || [];
+      %>
+      <script>
+        const savedCoolingLogs = <%- JSON.stringify(savedCooling) %>;
+      </script>
+    </div>
+
+    <div class="d-flex justify-content-between gap-2">
+      <button type="button" class="btn btn-outline-secondary px-4" onclick="goToStep(<%= totalSteps - 1 %>)">
+        <i class="bi bi-arrow-left me-1"></i>ย้อนกลับ
+      </button>
+      <button type="submit" class="btn btn-success btn-lg px-5 fw-bold" onclick="return prepareComplete()">
+        <i class="bi bi-check-circle-fill me-2"></i>เสร็จสิ้นและบันทึกผลตรวจ
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Styles -->
+<style>
+.text-teal { color: #0d9488; }
+.btn-teal { background: linear-gradient(135deg,#0d9488,#0ea5e9); color:#fff; border:none; }
+.btn-teal:hover { background: linear-gradient(135deg,#0f766e,#0284c7); color:#fff; }
+.btn-outline-teal { border:1.5px solid #0d9488; color:#0d9488; }
+.btn-outline-teal:hover { background:#0d9488; color:#fff; }
+
+.step-pill {
+  padding: 0.35rem 0.9rem;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.step-pill.active {
+  background: linear-gradient(135deg,#0d9488,#0ea5e9);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(13,148,136,0.3);
+}
+.step-pill.done {
+  background: #d1fae5;
+  border-color: #6ee7b7;
+  color: #065f46;
+}
+.step-pill:hover:not(.active) { border-color: #0d9488; color: #0d9488; }
+
+.check-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  transition: border-color 0.15s;
+}
+.check-card:hover { border-color: #0d9488; }
+.check-label { font-size: 0.9rem; color: #1e293b; }
+
+.cooling-row {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+}
+</style>
+
+<script>
+// ── State ──────────────────────────────────────────────────────
+const SESSION_ID    = <%= session.id %>;
+const TOTAL_STEPS   = <%= totalSteps %>;
+const RACKS         = <%- JSON.stringify(racks) %>;
+let   currentStep   = 1;
+let   coolingItems  = [];
+
+// ── Step navigation ────────────────────────────────────────────
+function goToStep(n) {
+  document.querySelectorAll('.step-content').forEach(el => el.style.display = 'none');
+  const target = document.getElementById('step-' + n);
+  if (target) target.style.display = 'block';
+
+  document.querySelectorAll('.step-pill').forEach((pill, i) => {
+    const stepN = i + 1;
+    pill.classList.remove('active', 'done');
+    if (stepN === n)       pill.classList.add('active');
+    else if (stepN < n)    pill.classList.add('done');
+  });
+  currentStep = n;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── Save Room Checks ───────────────────────────────────────────
+async function saveRoomAndNext() {
+  const defs = <%- JSON.stringify(roomCheckDefs) %>;
+  const body = { sessionId: SESSION_ID };
+  let valid = true;
+
+  defs.forEach(def => {
+    const checked = document.querySelector(`input[name="rc_${def.key}"]:checked`);
+    if (!checked) { valid = false; return; }
+    body[def.key] = checked.value;
+    body[`remark_${def.key}`] = document.getElementById(`remark_${def.key}`)?.value || '';
+  });
+
+  if (!valid) {
+    Swal.fire({ icon: 'warning', title: 'กรุณาเลือกผลทุกรายการ', confirmButtonText: 'ตกลง' });
+    return;
+  }
+
+  try {
+    const res = await fetch('/env-inspections/api/save-room', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message);
+    document.getElementById('pill-step-1').classList.add('done');
+    goToStep(2);
+  } catch (e) {
+    Swal.fire({ icon: 'error', title: 'บันทึกล้มเหลว', text: e.message });
+  }
+}
+
+// ── Save Rack Checks ───────────────────────────────────────────
+async function saveRackAndNext(rackId, currentStepNum) {
+  const defs = <%- JSON.stringify(rackCheckDefs) %>;
+  const body = { sessionId: SESSION_ID, rackId };
+  let valid = true;
+
+  defs.forEach(def => {
+    const checked = document.querySelector(`input[name="rack_${rackId}_${def.key}"]:checked`);
+    if (!checked) { valid = false; return; }
+    body[def.key] = checked.value;
+    body[`remark_${def.key}`] = document.getElementById(`remark_rack_${rackId}_${def.key}`)?.value || '';
+  });
+
+  if (!valid) {
+    Swal.fire({ icon: 'warning', title: 'กรุณาเลือกผลทุกรายการ', confirmButtonText: 'ตกลง' });
+    return;
+  }
+
+  try {
+    const res = await fetch('/env-inspections/api/save-rack', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message);
+    document.getElementById(`pill-step-${currentStepNum}`).classList.add('done');
+    goToStep(currentStepNum + 1);
+  } catch (e) {
+    Swal.fire({ icon: 'error', title: 'บันทึกล้มเหลว', text: e.message });
+  }
+}
+
+// ── Cooling Equipment ──────────────────────────────────────────
+let coolingRowCount = 0;
+
+function addCoolingRow(data = {}) {
+  coolingRowCount++;
+  const idx = coolingRowCount;
+  document.getElementById('noCoolingMsg').style.display = 'none';
+
+  const types = ['crac','crah','precision_ac','ups','pdu','other'];
+  const typeLabels = { crac:'CRAC', crah:'CRAH', precision_ac:'Precision AC', ups:'UPS', pdu:'PDU', other:'อื่นๆ' };
+
+  const html = `
+    <div class="cooling-row" id="crow-${idx}">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="fw-semibold text-dark small">อุปกรณ์ที่ ${idx}</span>
+        <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2" onclick="removeCoolingRow(${idx})">
+          <i class="bi bi-trash3"></i>
+        </button>
+      </div>
+      <div class="row g-2">
+        <div class="col-12 col-sm-4">
+          <label class="form-label small fw-semibold text-muted mb-1">ชื่ออุปกรณ์</label>
+          <input type="text" class="form-control form-control-sm" id="c_name_${idx}" placeholder="เช่น AC-01, UPS-A" value="${data.equipment_name||''}">
+        </div>
+        <div class="col-6 col-sm-3">
+          <label class="form-label small fw-semibold text-muted mb-1">ประเภท</label>
+          <select class="form-select form-select-sm" id="c_type_${idx}">
+            ${types.map(t => `<option value="${t}" ${(data.equipment_type||'crac')===t?'selected':''}>${typeLabels[t]}</option>`).join('')}
+          </select>
+        </div>
+        <div class="col-6 col-sm-2">
+          <label class="form-label small fw-semibold text-muted mb-1">สถานะ</label>
+          <select class="form-select form-select-sm" id="c_status_${idx}">
+            <option value="normal" ${(data.status||'normal')==='normal'?'selected':''}>ปกติ</option>
+            <option value="warning" ${data.status==='warning'?'selected':''}>เฝ้าระวัง</option>
+            <option value="fail" ${data.status==='fail'?'selected':''}>พบปัญหา</option>
+          </select>
+        </div>
+        <div class="col-6 col-sm-1half">
+          <label class="form-label small fw-semibold text-muted mb-1">Temp In (°C)</label>
+          <input type="number" step="0.1" class="form-control form-control-sm" id="c_tin_${idx}" placeholder="-" value="${data.temperature_in_c||''}">
+        </div>
+        <div class="col-6 col-sm-1half">
+          <label class="form-label small fw-semibold text-muted mb-1">Temp Out (°C)</label>
+          <input type="number" step="0.1" class="form-control form-control-sm" id="c_tout_${idx}" placeholder="-" value="${data.temperature_out_c||''}">
+        </div>
+        <div class="col-12">
+          <label class="form-label small fw-semibold text-muted mb-1">หมายเหตุ</label>
+          <input type="text" class="form-control form-control-sm" id="c_remark_${idx}" placeholder="หมายเหตุ / รายละเอียดปัญหา" value="${data.remark||''}">
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('coolingRows').insertAdjacentHTML('beforeend', html);
+}
+
+function removeCoolingRow(idx) {
+  document.getElementById('crow-' + idx)?.remove();
+  if (!document.querySelector('#coolingRows .cooling-row')) {
+    document.getElementById('noCoolingMsg').style.display = 'block';
+  }
+}
+
+function prepareComplete() {
+  const rows = document.querySelectorAll('#coolingRows .cooling-row');
+  const items = [];
+  rows.forEach(row => {
+    const id = row.id.replace('crow-', '');
+    items.push({
+      name:    document.getElementById(`c_name_${id}`)?.value    || '',
+      type:    document.getElementById(`c_type_${id}`)?.value    || 'crac',
+      status:  document.getElementById(`c_status_${id}`)?.value  || 'normal',
+      tempIn:  document.getElementById(`c_tin_${id}`)?.value     || null,
+      tempOut: document.getElementById(`c_tout_${id}`)?.value    || null,
+      remark:  document.getElementById(`c_remark_${id}`)?.value  || '',
+    });
+  });
+  document.getElementById('coolingItemsJson').value = JSON.stringify(items);
+  return true;
+}
+
+// ── Init ───────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // Pre-load saved cooling logs
+  if (savedCoolingLogs && savedCoolingLogs.length > 0) {
+    savedCoolingLogs.forEach(log => addCoolingRow(log));
+  }
+});
+</script>
+
+<%- include('../layouts/footer') %>

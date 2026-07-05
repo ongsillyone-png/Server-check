@@ -89,22 +89,22 @@
           <span>วันนี้ (Today)</span>
           <span class="badge bg-primary fs-9 rounded-pill">รอบการตรวจล่าสุด</span>
         </h6>
-        <div class="d-flex flex-column gap-2 mt-3">
-          <div class="d-flex justify-content-between align-items-center py-1.5 border-bottom border-dashed">
-            <span class="text-muted fs-8.5"><i class="bi bi-check-circle-fill text-success me-1.5"></i>ปกติ (Pass)</span>
-            <span class="fw-bold text-success fs-7.5"><%= summary.todayStats.pass %> เครื่อง</span>
+        <div class="d-flex flex-column gap-1 mt-3">
+          <div class="stat-row stat-row--pass">
+            <span class="stat-label"><i class="bi bi-check-circle-fill me-1.5"></i>ปกติ (Pass)</span>
+            <span class="stat-value"><%= summary.todayStats.pass %> เครื่อง</span>
           </div>
-          <div class="d-flex justify-content-between align-items-center py-1.5 border-bottom border-dashed">
-            <span class="text-muted fs-8.5"><i class="bi bi-exclamation-triangle-fill text-warning me-1.5"></i>เฝ้าระวัง (Warning)</span>
-            <span class="fw-bold text-warning fs-7.5"><%= summary.todayStats.warning %> เครื่อง</span>
+          <div class="stat-row stat-row--warning">
+            <span class="stat-label"><i class="bi bi-exclamation-triangle-fill me-1.5"></i>เฝ้าระวัง (Warning)</span>
+            <span class="stat-value"><%= summary.todayStats.warning %> เครื่อง</span>
           </div>
-          <div class="d-flex justify-content-between align-items-center py-1.5 border-bottom border-dashed">
-            <span class="text-muted fs-8.5"><i class="bi bi-x-circle-fill text-danger me-1.5"></i>ผิดปกติ (Fail)</span>
-            <span class="fw-bold text-danger fs-7.5"><%= summary.todayStats.fail %> เครื่อง</span>
+          <div class="stat-row stat-row--fail">
+            <span class="stat-label"><i class="bi bi-x-circle-fill me-1.5"></i>ผิดปกติ (Fail)</span>
+            <span class="stat-value"><%= summary.todayStats.fail %> เครื่อง</span>
           </div>
-          <div class="d-flex justify-content-between align-items-center py-1.5">
-            <span class="text-muted fs-8.5"><i class="bi bi-clock-history text-secondary me-1.5"></i>รอดำเนินการ (Pending)</span>
-            <span class="fw-bold text-secondary fs-7.5"><%= summary.todayStats.pending %> เครื่อง</span>
+          <div class="stat-row stat-row--pending">
+            <span class="stat-label"><i class="bi bi-clock-history me-1.5"></i>รอดำเนินการ (Pending)</span>
+            <span class="stat-value"><%= summary.todayStats.pending %> เครื่อง</span>
           </div>
         </div>
       </div>
@@ -114,22 +114,22 @@
     <div class="col-12 col-md-4">
       <div class="p-3 bg-light rounded-4 border h-100">
         <h6 class="fw-bold text-dark border-bottom pb-2 mb-2">เดือนนี้ (This Month)</h6>
-        <div class="d-flex flex-column gap-2 mt-3">
-          <div class="d-flex justify-content-between align-items-center py-1.5 border-bottom border-dashed">
-            <span class="text-muted fs-8.5"><i class="bi bi-check-circle-fill text-success me-1.5"></i>ปกติ (Pass)</span>
-            <span class="fw-bold text-success fs-7.5"><%= summary.monthStats.pass %> เครื่อง</span>
+        <div class="d-flex flex-column gap-1 mt-3">
+          <div class="stat-row stat-row--pass">
+            <span class="stat-label"><i class="bi bi-check-circle-fill me-1.5"></i>ปกติ (Pass)</span>
+            <span class="stat-value"><%= summary.monthStats.pass %> เครื่อง</span>
           </div>
-          <div class="d-flex justify-content-between align-items-center py-1.5 border-bottom border-dashed">
-            <span class="text-muted fs-8.5"><i class="bi bi-exclamation-triangle-fill text-warning me-1.5"></i>เฝ้าระวัง (Warning)</span>
-            <span class="fw-bold text-warning fs-7.5"><%= summary.monthStats.warning %> เครื่อง</span>
+          <div class="stat-row stat-row--warning">
+            <span class="stat-label"><i class="bi bi-exclamation-triangle-fill me-1.5"></i>เฝ้าระวัง (Warning)</span>
+            <span class="stat-value"><%= summary.monthStats.warning %> เครื่อง</span>
           </div>
-          <div class="d-flex justify-content-between align-items-center py-1.5 border-bottom border-dashed">
-            <span class="text-muted fs-8.5"><i class="bi bi-x-circle-fill text-danger me-1.5"></i>ผิดปกติ (Fail)</span>
-            <span class="fw-bold text-danger fs-7.5"><%= summary.monthStats.fail %> เครื่อง</span>
+          <div class="stat-row stat-row--fail">
+            <span class="stat-label"><i class="bi bi-x-circle-fill me-1.5"></i>ผิดปกติ (Fail)</span>
+            <span class="stat-value"><%= summary.monthStats.fail %> เครื่อง</span>
           </div>
-          <div class="d-flex justify-content-between align-items-center py-1.5">
-            <span class="text-muted fs-8.5"><i class="bi bi-clock-history text-secondary me-1.5"></i>รอดำเนินการ (Pending)</span>
-            <span class="fw-bold text-secondary fs-7.5"><%= summary.monthStats.pending %> เครื่อง</span>
+          <div class="stat-row stat-row--pending">
+            <span class="stat-label"><i class="bi bi-clock-history me-1.5"></i>รอดำเนินการ (Pending)</span>
+            <span class="stat-value"><%= summary.monthStats.pending %> เครื่อง</span>
           </div>
         </div>
       </div>
@@ -139,22 +139,22 @@
     <div class="col-12 col-md-4">
       <div class="p-3 bg-light rounded-4 border h-100">
         <h6 class="fw-bold text-dark border-bottom pb-2 mb-2">ปีนี้ (This Year)</h6>
-        <div class="d-flex flex-column gap-2 mt-3">
-          <div class="d-flex justify-content-between align-items-center py-1.5 border-bottom border-dashed">
-            <span class="text-muted fs-8.5"><i class="bi bi-check-circle-fill text-success me-1.5"></i>ปกติ (Pass)</span>
-            <span class="fw-bold text-success fs-7.5"><%= summary.yearStats.pass %> เครื่อง</span>
+        <div class="d-flex flex-column gap-1 mt-3">
+          <div class="stat-row stat-row--pass">
+            <span class="stat-label"><i class="bi bi-check-circle-fill me-1.5"></i>ปกติ (Pass)</span>
+            <span class="stat-value"><%= summary.yearStats.pass %> เครื่อง</span>
           </div>
-          <div class="d-flex justify-content-between align-items-center py-1.5 border-bottom border-dashed">
-            <span class="text-muted fs-8.5"><i class="bi bi-exclamation-triangle-fill text-warning me-1.5"></i>เฝ้าระวัง (Warning)</span>
-            <span class="fw-bold text-warning fs-7.5"><%= summary.yearStats.warning %> เครื่อง</span>
+          <div class="stat-row stat-row--warning">
+            <span class="stat-label"><i class="bi bi-exclamation-triangle-fill me-1.5"></i>เฝ้าระวัง (Warning)</span>
+            <span class="stat-value"><%= summary.yearStats.warning %> เครื่อง</span>
           </div>
-          <div class="d-flex justify-content-between align-items-center py-1.5 border-bottom border-dashed">
-            <span class="text-muted fs-8.5"><i class="bi bi-x-circle-fill text-danger me-1.5"></i>ผิดปกติ (Fail)</span>
-            <span class="fw-bold text-danger fs-7.5"><%= summary.yearStats.fail %> เครื่อง</span>
+          <div class="stat-row stat-row--fail">
+            <span class="stat-label"><i class="bi bi-x-circle-fill me-1.5"></i>ผิดปกติ (Fail)</span>
+            <span class="stat-value"><%= summary.yearStats.fail %> เครื่อง</span>
           </div>
-          <div class="d-flex justify-content-between align-items-center py-1.5">
-            <span class="text-muted fs-8.5"><i class="bi bi-clock-history text-secondary me-1.5"></i>รอดำเนินการ (Pending)</span>
-            <span class="fw-bold text-secondary fs-7.5"><%= summary.yearStats.pending %> เครื่อง</span>
+          <div class="stat-row stat-row--pending">
+            <span class="stat-label"><i class="bi bi-clock-history me-1.5"></i>รอดำเนินการ (Pending)</span>
+            <span class="stat-value"><%= summary.yearStats.pending %> เครื่อง</span>
           </div>
         </div>
       </div>
@@ -173,22 +173,22 @@
           <span>วันนี้ (Today)</span>
           <span class="badge bg-info fs-9 rounded-pill">รอบ VM ล่าสุด</span>
         </h6>
-        <div class="d-flex flex-column gap-2 mt-3">
-          <div class="d-flex justify-content-between align-items-center py-1 border-bottom border-dashed">
-            <span class="text-muted fs-8.5"><i class="bi bi-check-circle-fill text-success me-1.5"></i>ปกติ (Pass)</span>
-            <span class="fw-bold text-success fs-7.5"><%= summary.vmTodayStats.pass %> เครื่อง</span>
+        <div class="d-flex flex-column gap-1 mt-3">
+          <div class="stat-row stat-row--pass">
+            <span class="stat-label"><i class="bi bi-check-circle-fill me-1.5"></i>ปกติ (Pass)</span>
+            <span class="stat-value"><%= summary.vmTodayStats.pass %> เครื่อง</span>
           </div>
-          <div class="d-flex justify-content-between align-items-center py-1 border-bottom border-dashed">
-            <span class="text-muted fs-8.5"><i class="bi bi-exclamation-triangle-fill text-warning me-1.5"></i>เฝ้าระวัง (Warning)</span>
-            <span class="fw-bold text-warning fs-7.5"><%= summary.vmTodayStats.warning %> เครื่อง</span>
+          <div class="stat-row stat-row--warning">
+            <span class="stat-label"><i class="bi bi-exclamation-triangle-fill me-1.5"></i>เฝ้าระวัง (Warning)</span>
+            <span class="stat-value"><%= summary.vmTodayStats.warning %> เครื่อง</span>
           </div>
-          <div class="d-flex justify-content-between align-items-center py-1 border-bottom border-dashed">
-            <span class="text-muted fs-8.5"><i class="bi bi-x-circle-fill text-danger me-1.5"></i>ผิดปกติ (Fail)</span>
-            <span class="fw-bold text-danger fs-7.5"><%= summary.vmTodayStats.fail %> เครื่อง</span>
+          <div class="stat-row stat-row--fail">
+            <span class="stat-label"><i class="bi bi-x-circle-fill me-1.5"></i>ผิดปกติ (Fail)</span>
+            <span class="stat-value"><%= summary.vmTodayStats.fail %> เครื่อง</span>
           </div>
-          <div class="d-flex justify-content-between align-items-center py-1">
-            <span class="text-muted fs-8.5"><i class="bi bi-clock-history text-secondary me-1.5"></i>รอดำเนินการ (Pending)</span>
-            <span class="fw-bold text-secondary fs-7.5"><%= summary.vmTodayStats.pending %> เครื่อง</span>
+          <div class="stat-row stat-row--pending">
+            <span class="stat-label"><i class="bi bi-clock-history me-1.5"></i>รอดำเนินการ (Pending)</span>
+            <span class="stat-value"><%= summary.vmTodayStats.pending %> เครื่อง</span>
           </div>
         </div>
       </div>
@@ -197,22 +197,22 @@
     <div class="col-12 col-md-4">
       <div class="p-3 rounded-4 border h-100" style="background:#e8f9fb;">
         <h6 class="fw-bold text-dark border-bottom pb-2 mb-2">เดือนนี้ (This Month)</h6>
-        <div class="d-flex flex-column gap-2 mt-3">
-          <div class="d-flex justify-content-between align-items-center py-1 border-bottom border-dashed">
-            <span class="text-muted fs-8.5"><i class="bi bi-check-circle-fill text-success me-1.5"></i>ปกติ (Pass)</span>
-            <span class="fw-bold text-success fs-7.5"><%= summary.vmMonthStats.pass %> เครื่อง</span>
+        <div class="d-flex flex-column gap-1 mt-3">
+          <div class="stat-row stat-row--pass">
+            <span class="stat-label"><i class="bi bi-check-circle-fill me-1.5"></i>ปกติ (Pass)</span>
+            <span class="stat-value"><%= summary.vmMonthStats.pass %> เครื่อง</span>
           </div>
-          <div class="d-flex justify-content-between align-items-center py-1 border-bottom border-dashed">
-            <span class="text-muted fs-8.5"><i class="bi bi-exclamation-triangle-fill text-warning me-1.5"></i>เฝ้าระวัง (Warning)</span>
-            <span class="fw-bold text-warning fs-7.5"><%= summary.vmMonthStats.warning %> เครื่อง</span>
+          <div class="stat-row stat-row--warning">
+            <span class="stat-label"><i class="bi bi-exclamation-triangle-fill me-1.5"></i>เฝ้าระวัง (Warning)</span>
+            <span class="stat-value"><%= summary.vmMonthStats.warning %> เครื่อง</span>
           </div>
-          <div class="d-flex justify-content-between align-items-center py-1 border-bottom border-dashed">
-            <span class="text-muted fs-8.5"><i class="bi bi-x-circle-fill text-danger me-1.5"></i>ผิดปกติ (Fail)</span>
-            <span class="fw-bold text-danger fs-7.5"><%= summary.vmMonthStats.fail %> เครื่อง</span>
+          <div class="stat-row stat-row--fail">
+            <span class="stat-label"><i class="bi bi-x-circle-fill me-1.5"></i>ผิดปกติ (Fail)</span>
+            <span class="stat-value"><%= summary.vmMonthStats.fail %> เครื่อง</span>
           </div>
-          <div class="d-flex justify-content-between align-items-center py-1">
-            <span class="text-muted fs-8.5"><i class="bi bi-clock-history text-secondary me-1.5"></i>รอดำเนินการ (Pending)</span>
-            <span class="fw-bold text-secondary fs-7.5"><%= summary.vmMonthStats.pending %> เครื่อง</span>
+          <div class="stat-row stat-row--pending">
+            <span class="stat-label"><i class="bi bi-clock-history me-1.5"></i>รอดำเนินการ (Pending)</span>
+            <span class="stat-value"><%= summary.vmMonthStats.pending %> เครื่อง</span>
           </div>
         </div>
       </div>
@@ -221,28 +221,86 @@
     <div class="col-12 col-md-4">
       <div class="p-3 rounded-4 border h-100" style="background:#e8f9fb;">
         <h6 class="fw-bold text-dark border-bottom pb-2 mb-2">ปีนี้ (This Year)</h6>
-        <div class="d-flex flex-column gap-2 mt-3">
-          <div class="d-flex justify-content-between align-items-center py-1 border-bottom border-dashed">
-            <span class="text-muted fs-8.5"><i class="bi bi-check-circle-fill text-success me-1.5"></i>ปกติ (Pass)</span>
-            <span class="fw-bold text-success fs-7.5"><%= summary.vmYearStats.pass %> เครื่อง</span>
+        <div class="d-flex flex-column gap-1 mt-3">
+          <div class="stat-row stat-row--pass">
+            <span class="stat-label"><i class="bi bi-check-circle-fill me-1.5"></i>ปกติ (Pass)</span>
+            <span class="stat-value"><%= summary.vmYearStats.pass %> เครื่อง</span>
           </div>
-          <div class="d-flex justify-content-between align-items-center py-1 border-bottom border-dashed">
-            <span class="text-muted fs-8.5"><i class="bi bi-exclamation-triangle-fill text-warning me-1.5"></i>เฝ้าระวัง (Warning)</span>
-            <span class="fw-bold text-warning fs-7.5"><%= summary.vmYearStats.warning %> เครื่อง</span>
+          <div class="stat-row stat-row--warning">
+            <span class="stat-label"><i class="bi bi-exclamation-triangle-fill me-1.5"></i>เฝ้าระวัง (Warning)</span>
+            <span class="stat-value"><%= summary.vmYearStats.warning %> เครื่อง</span>
           </div>
-          <div class="d-flex justify-content-between align-items-center py-1 border-bottom border-dashed">
-            <span class="text-muted fs-8.5"><i class="bi bi-x-circle-fill text-danger me-1.5"></i>ผิดปกติ (Fail)</span>
-            <span class="fw-bold text-danger fs-7.5"><%= summary.vmYearStats.fail %> เครื่อง</span>
+          <div class="stat-row stat-row--fail">
+            <span class="stat-label"><i class="bi bi-x-circle-fill me-1.5"></i>ผิดปกติ (Fail)</span>
+            <span class="stat-value"><%= summary.vmYearStats.fail %> เครื่อง</span>
           </div>
-          <div class="d-flex justify-content-between align-items-center py-1">
-            <span class="text-muted fs-8.5"><i class="bi bi-clock-history text-secondary me-1.5"></i>รอดำเนินการ (Pending)</span>
-            <span class="fw-bold text-secondary fs-7.5"><%= summary.vmYearStats.pending %> เครื่อง</span>
+          <div class="stat-row stat-row--pending">
+            <span class="stat-label"><i class="bi bi-clock-history me-1.5"></i>รอดำเนินการ (Pending)</span>
+            <span class="stat-value"><%= summary.vmYearStats.pending %> เครื่อง</span>
           </div>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<!-- ENVIRONMENT INSPECTION STATS CARDS -->
+<div class="card border-0 shadow-sm rounded-4 p-4 mb-4" style="border-left: 4px solid #0d9488 !important;">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="fw-bold text-dark mb-0"><i class="bi bi-thermometer-half me-2" style="color:#0d9488;"></i>สรุปสถานะการตรวจสภาพแวดล้อม</h5>
+    <a href="/env-inspections/walk" class="btn btn-sm fw-semibold rounded-3 text-white" style="background:linear-gradient(135deg,#0d9488,#0ea5e9);">
+      <i class="bi bi-play-fill me-1"></i>เริ่มตรวจสภาพแวดล้อม
+    </a>
+  </div>
+  <div class="row g-3">
+    <div class="col-12 col-md-8">
+      <div class="p-3 rounded-4 border h-100" style="background:#f0fdf9;">
+        <h6 class="fw-bold text-dark border-bottom pb-2 mb-2 d-flex justify-content-between align-items-center">
+          <span>วันนี้ (Today)</span>
+          <span class="badge rounded-pill text-white" style="background:#0d9488;font-size:0.72rem;">รอบตรวจแวดล้อม</span>
+        </h6>
+        <div class="d-flex flex-column gap-1 mt-3">
+          <div class="stat-row stat-row--pass">
+            <span class="stat-label"><i class="bi bi-check-circle-fill me-1.5"></i>ผ่านการตรวจ (Pass)</span>
+            <span class="stat-value"><%= summary.envStats ? summary.envStats.today_pass || 0 : 0 %> รอบ</span>
+          </div>
+          <div class="stat-row stat-row--warning">
+            <span class="stat-label"><i class="bi bi-exclamation-triangle-fill me-1.5"></i>เฝ้าระวัง (Warning)</span>
+            <span class="stat-value"><%= summary.envStats ? summary.envStats.today_warning || 0 : 0 %> รอบ</span>
+          </div>
+          <div class="stat-row stat-row--fail">
+            <span class="stat-label"><i class="bi bi-x-circle-fill me-1.5"></i>พบปัญหา (Fail)</span>
+            <span class="stat-value"><%= summary.envStats ? summary.envStats.today_fail || 0 : 0 %> รอบ</span>
+          </div>
+          <div class="stat-row stat-row--pending">
+            <span class="stat-label"><i class="bi bi-clock-history me-1.5"></i>กำลังตรวจ (In Progress)</span>
+            <span class="stat-value"><%= summary.envStats ? summary.envStats.today_pending || 0 : 0 %> รอบ</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-4">
+      <div class="p-3 rounded-4 border h-100 text-center d-flex flex-column justify-content-center align-items-center" style="background:#f0fdf9;">
+        <div class="mb-2" style="color:#0d9488;"><i class="bi bi-thermometer-half fs-1"></i></div>
+        <div class="text-muted small fw-semibold mb-1">อุณหภูมิเฉลี่ยวันนี้</div>
+        <% const avgTemp = summary.envStats ? summary.envStats.avg_temp_today : null; %>
+        <% if (avgTemp !== null && avgTemp !== undefined) { %>
+          <div class="fw-bold fs-2 <%= avgTemp > 27 ? 'text-danger' : avgTemp > 24 ? 'text-warning' : 'text-success' %>">
+            <%= avgTemp %>°C
+          </div>
+          <div class="text-muted" style="font-size:0.72rem;">มาตรฐาน ASHRAE 18–27°C</div>
+        <% } else { %>
+          <div class="text-muted fw-semibold">ยังไม่มีข้อมูลวันนี้</div>
+          <div class="text-muted" style="font-size:0.72rem;">บันทึกค่าหลังตรวจแล้ว</div>
+        <% } %>
+        <a href="/env-inspections/history" class="btn btn-sm btn-outline-secondary mt-3 rounded-3 fw-semibold px-3">
+          <i class="bi bi-clock-history me-1"></i>ดูประวัติ
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <!-- TRENDS CHARTS SECTION (30 DAYS & 12 MONTHS) -->
 <div class="row g-4 mb-4">
@@ -518,9 +576,78 @@
   transform: translateY(-3px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
 }
-.border-dashed {
-  border-style: dashed !important;
+
+/* ── Status Row Component ── */
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  border-left: 3.5px solid transparent;
+  transition: background 0.15s ease, transform 0.15s ease;
+  position: relative;
 }
+.stat-row::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0.75rem;
+  right: 0.75rem;
+  height: 1px;
+  background: linear-gradient(to right, currentColor 0%, transparent 100%);
+  opacity: 0.12;
+}
+.stat-row:last-child::after { display: none; }
+
+.stat-row:hover {
+  transform: translateX(2px);
+}
+
+/* Pass – green */
+.stat-row--pass {
+  border-left-color: #198754;
+  color: #198754;
+}
+.stat-row--pass:hover { background: rgba(25, 135, 84, 0.06); }
+.stat-row--pass .stat-label { color: #198754; }
+.stat-row--pass .stat-value { color: #198754; font-weight: 700; font-size: 1.05rem; }
+
+/* Warning – amber */
+.stat-row--warning {
+  border-left-color: #e09c00;
+  color: #e09c00;
+}
+.stat-row--warning:hover { background: rgba(255, 193, 7, 0.08); }
+.stat-row--warning .stat-label { color: #997000; }
+.stat-row--warning .stat-value { color: #e09c00; font-weight: 700; font-size: 1.05rem; }
+
+/* Fail – red */
+.stat-row--fail {
+  border-left-color: #dc3545;
+  color: #dc3545;
+}
+.stat-row--fail:hover { background: rgba(220, 53, 69, 0.06); }
+.stat-row--fail .stat-label { color: #dc3545; }
+.stat-row--fail .stat-value { color: #dc3545; font-weight: 700; font-size: 1.05rem; }
+
+/* Pending – slate */
+.stat-row--pending {
+  border-left-color: #adb5bd;
+  color: #6c757d;
+}
+.stat-row--pending:hover { background: rgba(108, 117, 125, 0.06); }
+.stat-row--pending .stat-label { color: #6c757d; }
+.stat-row--pending .stat-value { color: #6c757d; font-weight: 600; font-size: 1.05rem; }
+
+/* Shared label style */
+.stat-label {
+  font-size: 0.84rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
 .fs-8.5 {
   font-size: 0.85rem !important;
 }

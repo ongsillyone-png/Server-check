@@ -1,0 +1,169 @@
+<%- include('../layouts/header') %>
+<%- include('../layouts/sidebar') %>
+
+<div class="d-flex justify-content-between flex-wrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <div>
+    <h1 class="h2 fw-bold text-dark"><i class="bi bi-thermometer-half text-teal me-2"></i>ประวัติการตรวจสภาพแวดล้อม</h1>
+    <p class="text-muted small mb-0">ประวัติรอบตรวจห้อง Server, ตู้ Rack และระบบแอร์ทำความเย็น</p>
+  </div>
+  <a href="/env-inspections/walk" class="btn btn-teal px-4 fw-bold rounded-3 d-flex align-items-center gap-2">
+    <i class="bi bi-play-fill fs-6"></i> เริ่มรอบตรวจใหม่
+  </a>
+</div>
+
+<!-- Filter Panel -->
+<div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+  <h6 class="fw-bold text-dark mb-3"><i class="bi bi-search text-teal me-2"></i>ตัวกรองการค้นหา</h6>
+  <form method="GET" action="/env-inspections/history">
+    <div class="row g-3">
+      <div class="col-12 col-sm-6 col-md-3">
+        <label class="form-label small fw-semibold text-muted">วันเริ่มต้น</label>
+        <input type="date" class="form-control" name="startDate" value="<%= filters.startDate || '' %>">
+      </div>
+      <div class="col-12 col-sm-6 col-md-3">
+        <label class="form-label small fw-semibold text-muted">วันสิ้นสุด</label>
+        <input type="date" class="form-control" name="endDate" value="<%= filters.endDate || '' %>">
+      </div>
+      <div class="col-12 col-sm-6 col-md-2">
+        <label class="form-label small fw-semibold text-muted">ห้อง Server</label>
+        <select class="form-select" name="roomId">
+          <option value="">-- ทั้งหมด --</option>
+          <% rooms.forEach(r => { %>
+            <option value="<%= r.id %>" <%= filters.roomId == r.id ? 'selected' : '' %>><%= r.room_name %></option>
+          <% }); %>
+        </select>
+      </div>
+      <div class="col-12 col-sm-6 col-md-2">
+        <label class="form-label small fw-semibold text-muted">ผู้ตรวจ</label>
+        <select class="form-select" name="inspectorId">
+          <option value="">-- ทั้งหมด --</option>
+          <% users.forEach(u => { %>
+            <option value="<%= u.id %>" <%= filters.inspectorId == u.id ? 'selected' : '' %>><%= u.name %></option>
+          <% }); %>
+        </select>
+      </div>
+      <div class="col-12 col-sm-6 col-md-2">
+        <label class="form-label small fw-semibold text-muted">ผลการตรวจ</label>
+        <select class="form-select" name="overallStatus">
+          <option value="">-- ทั้งหมด --</option>
+          <option value="pass"    <%= filters.overallStatus === 'pass'    ? 'selected' : '' %>>✅ ผ่าน</option>
+          <option value="warning" <%= filters.overallStatus === 'warning' ? 'selected' : '' %>>⚠️ เฝ้าระวัง</option>
+          <option value="fail"    <%= filters.overallStatus === 'fail'    ? 'selected' : '' %>>❌ พบปัญหา</option>
+        </select>
+      </div>
+      <div class="col-12 d-flex gap-2 justify-content-end align-items-end">
+        <button type="submit" class="btn btn-teal px-4 fw-semibold"><i class="bi bi-filter me-1"></i>ค้นหา</button>
+        <a href="/env-inspections/history" class="btn btn-light border px-4 fw-semibold text-muted"><i class="bi bi-arrow-counterclockwise me-1"></i>ล้าง</a>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Results Table -->
+<div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h6 class="fw-bold text-dark mb-0">
+      <i class="bi bi-list-ul text-teal me-2"></i>รายการทั้งหมด
+      <span class="badge bg-secondary ms-2"><%= pagination.total %> รอบ</span>
+    </h6>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table align-middle table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>รหัสรอบ</th>
+          <th>วันที่ตรวจ</th>
+          <th>ห้อง Server</th>
+          <th>ผู้ตรวจ</th>
+          <th>อุณหภูมิ</th>
+          <th>ความชื้น</th>
+          <th>ผลการตรวจ</th>
+          <th class="text-center">รายละเอียด</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (sessions && sessions.length > 0) { %>
+          <% sessions.forEach(sess => { %>
+            <tr>
+              <td><span class="fw-bold text-teal">#<%= sess.id %></span></td>
+              <td><%= formatThaiDate(sess.started_at, true) %></td>
+              <td><strong><%= sess.room_name %></strong></td>
+              <td><%= sess.inspector_name %></td>
+              <td>
+                <% if (sess.temperature_c !== null) { %>
+                  <span class="fw-semibold <%= sess.temperature_c > 27 ? 'text-danger' : sess.temperature_c > 24 ? 'text-warning' : 'text-success' %>">
+                    <%= sess.temperature_c %>°C
+                  </span>
+                <% } else { %>
+                  <span class="text-muted">—</span>
+                <% } %>
+              </td>
+              <td>
+                <% if (sess.humidity_pct !== null) { %>
+                  <span class="fw-semibold <%= (sess.humidity_pct < 20 || sess.humidity_pct > 80) ? 'text-danger' : 'text-dark' %>">
+                    <%= sess.humidity_pct %>%
+                  </span>
+                <% } else { %>
+                  <span class="text-muted">—</span>
+                <% } %>
+              </td>
+              <td>
+                <% if (sess.overall_status === 'pass') { %>
+                  <span class="badge bg-success rounded-pill px-3"><i class="bi bi-check-circle-fill me-1"></i>ผ่านการตรวจ</span>
+                <% } else if (sess.overall_status === 'warning') { %>
+                  <span class="badge bg-warning text-dark rounded-pill px-3"><i class="bi bi-exclamation-triangle-fill me-1"></i>เฝ้าระวัง</span>
+                <% } else if (sess.overall_status === 'fail') { %>
+                  <span class="badge bg-danger rounded-pill px-3"><i class="bi bi-x-circle-fill me-1"></i>พบปัญหา</span>
+                <% } else { %>
+                  <span class="badge bg-secondary rounded-pill px-3">กำลังตรวจ</span>
+                <% } %>
+              </td>
+              <td class="text-center">
+                <a href="/env-inspections/history/<%= sess.id %>" class="btn btn-sm btn-outline-teal px-3 fw-semibold rounded-3">
+                  <i class="bi bi-search me-1"></i>ดูรายละเอียด
+                </a>
+              </td>
+            </tr>
+          <% }); %>
+        <% } else { %>
+          <tr>
+            <td colspan="8" class="text-center py-5 text-muted">
+              <i class="bi bi-clipboard2-x fs-1 d-block mb-2 opacity-40"></i>
+              ไม่พบประวัติการตรวจสภาพแวดล้อมตามเงื่อนไขที่เลือก
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <% if (pagination.totalPages > 1) { %>
+    <nav class="mt-4">
+      <ul class="pagination pagination-sm justify-content-center mb-0">
+        <li class="page-item <%= pagination.hasPrev ? '' : 'disabled' %>">
+          <a class="page-link" href="?page=<%= pagination.page - 1 %>&startDate=<%= filters.startDate||'' %>&endDate=<%= filters.endDate||'' %>&roomId=<%= filters.roomId||'' %>&inspectorId=<%= filters.inspectorId||'' %>&overallStatus=<%= filters.overallStatus||'' %>">&laquo; ก่อนหน้า</a>
+        </li>
+        <% for(let i = 1; i <= pagination.totalPages; i++) { %>
+          <li class="page-item <%= pagination.page == i ? 'active' : '' %>">
+            <a class="page-link" href="?page=<%= i %>&startDate=<%= filters.startDate||'' %>&endDate=<%= filters.endDate||'' %>&roomId=<%= filters.roomId||'' %>&inspectorId=<%= filters.inspectorId||'' %>&overallStatus=<%= filters.overallStatus||'' %>"><%= i %></a>
+          </li>
+        <% } %>
+        <li class="page-item <%= pagination.hasNext ? '' : 'disabled' %>">
+          <a class="page-link" href="?page=<%= pagination.page + 1 %>&startDate=<%= filters.startDate||'' %>&endDate=<%= filters.endDate||'' %>&roomId=<%= filters.roomId||'' %>&inspectorId=<%= filters.inspectorId||'' %>&overallStatus=<%= filters.overallStatus||'' %>">ถัดไป &raquo;</a>
+        </li>
+      </ul>
+    </nav>
+  <% } %>
+</div>
+
+<style>
+.text-teal { color: #0d9488 !important; }
+.btn-teal { background: linear-gradient(135deg,#0d9488,#0ea5e9); color:#fff; border:none; }
+.btn-teal:hover { background: linear-gradient(135deg,#0f766e,#0284c7); color:#fff; }
+.btn-outline-teal { border:1.5px solid #0d9488; color:#0d9488; }
+.btn-outline-teal:hover { background:#0d9488; color:#fff; }
+</style>
+
+<%- include('../layouts/footer') %>
