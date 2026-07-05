@@ -1,0 +1,507 @@
+<%- include('../layouts/header') %>
+<%- include('../layouts/sidebar') %>
+
+<!-- Top Bar Control -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <div>
+    <h1 class="h2 fw-bold text-dark">ตรวจสอบ Virtual Machines</h1>
+    <p class="text-muted small mb-0">รอบตรวจ VM ที่: #<%= session.id %> | ผู้บันทึก: <%= user.name %> | เริ่มเมื่อ: <%= formatThaiDate(session.started_at, true) %></p>
+  </div>
+  <div class="btn-toolbar mb-2 mb-md-0 gap-2">
+    <button class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1 px-3" onclick="confirmCancelSession()">
+      <i class="bi bi-x-circle"></i> ยกเลิกรอบตรวจนี้
+    </button>
+    <form action="/inspections/vm-complete" method="POST" id="completeSessionForm">
+      <input type="hidden" name="sessionId" value="<%= session.id %>">
+      <button type="submit" class="btn btn-sm btn-success d-flex align-items-center gap-1 px-3 fw-bold">
+        <i class="bi bi-check-circle"></i> ส่งงาน/เสร็จสิ้นรอบตรวจ
+      </button>
+    </form>
+  </div>
+</div>
+
+<% if (typeof error !== 'undefined' && error) { %>
+  <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-3" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i><%= error %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<% } %>
+
+<!-- Main Multi-step Grid -->
+<div class="row g-4 mb-4">
+  <!-- Left Side: Wizard Navigation Tree -->
+  <div class="col-12 col-lg-5">
+
+    <!-- STEP 1: SELECT HOST -->
+    <div class="card border-0 shadow-sm rounded-4 mb-3">
+      <div class="card-header bg-white border-0 pt-3 pb-1">
+        <h6 class="fw-bold text-primary uppercase fs-8 tracking-wider mb-0">ขั้นตอนที่ 1: เลือก Host Server</h6>
+      </div>
+      <div class="card-body py-2">
+        <div class="d-flex flex-column gap-2" id="hostSelector">
+          <% hosts.forEach(host => { %>
+            <button class="btn btn-outline-secondary text-start p-3 border rounded-3 d-flex justify-content-between align-items-center w-100 host-btn"
+                    data-host-id="<%= host.host_id %>"
+                    onclick="selectHost(<%= host.host_id %>, this)">
+              <div>
+                <span class="fw-semibold text-dark d-block"><%= host.host_name %></span>
+                <span class="text-muted fs-8"><%= host.room_name %> | <%= host.building %> | <%= host.model || 'N/A' %></span>
+              </div>
+              <span class="badge rounded-pill <%= host.is_completed ? 'bg-success' : 'bg-secondary' %>">
+                <%= host.inspected_vms %> / <%= host.total_vms %>
+              </span>
+            </button>
+          <% }) %>
+          <% if (hosts.length === 0) { %>
+            <div class="text-center text-muted py-3 small">
+              <i class="bi bi-info-circle me-1"></i>ไม่พบ Physical Server ที่มี VM ในระบบ
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: SELECT VM -->
+    <div class="card border-0 shadow-sm rounded-4 mb-3 d-none animate-fade-in" id="vmCard">
+      <div class="card-header bg-white border-0 pt-3 pb-1">
+        <h6 class="fw-bold text-primary uppercase fs-8 tracking-wider mb-0">ขั้นตอนที่ 2: เลือก Virtual Machine</h6>
+      </div>
+      <div class="card-body py-2">
+        <div class="d-flex flex-column gap-2" id="vmList">
+          <!-- Dynamic contents loaded via AJAX -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Right Side: Checklist Form -->
+  <div class="col-12 col-lg-7">
+    <div class="card border-0 shadow-sm rounded-4 p-4 h-100" id="checklistFormCard">
+
+      <!-- Placeholder -->
+      <div id="noVmSelected" class="text-center py-5 my-5">
+        <div class="text-muted mb-3"><i class="bi bi-cpu fs-1"></i></div>
+        <h5 class="fw-bold text-muted">กรุณาเลือก Host และ VM ในรายการด้านซ้าย</h5>
+        <p class="text-muted small">ระบบจะโหลดรายการ Checklist สำหรับ VM ที่เลือกแบบเรียลไทม์</p>
+      </div>
+
+      <!-- Checklist Form Container -->
+      <div id="checklistFormContainer" class="d-none animate-fade-in">
+        <div class="d-flex justify-content-between align-items-start border-bottom pb-3 mb-3">
+          <div>
+            <span class="badge bg-info-subtle text-info mb-2" id="vmTypeBadge">Virtual Machine</span>
+            <h4 class="fw-bold text-dark mb-1" id="selectedVmName">VM Name</h4>
+            <span class="text-muted small" id="selectedVmMeta">IP: — | OS: —</span>
+          </div>
+          <span class="badge py-2 px-3 bg-secondary text-white" id="inspectedStatusBadge">รอดำเนินการ</span>
+        </div>
+
+        <form id="checklistSubmissionForm" onsubmit="submitChecklist(event)">
+          <input type="hidden" id="formVmId" name="vmId">
+
+          <!-- Checklist items -->
+          <div class="d-flex flex-column gap-4 mb-4" id="checklistItemsList">
+            <!-- Dynamic elements loaded via AJAX -->
+          </div>
+
+          <!-- Overall remark -->
+          <div class="border-top pt-3 mb-4">
+            <label for="vmRemark" class="form-label small fw-semibold">หมายเหตุ / ความเห็นโดยรวมของ VM นี้</label>
+            <textarea class="form-control" id="vmRemark" rows="2" placeholder="เช่น VM ทำงานปกติ หรือพบปัญหาการใช้งาน CPU สูง..."></textarea>
+          </div>
+
+          <!-- Submit -->
+          <div class="d-grid">
+            <button type="submit" class="btn btn-primary py-2 rounded-3 fw-bold d-flex align-items-center justify-content-center gap-2">
+              <i class="bi bi-save-fill"></i> บันทึกผลการตรวจ VM เครื่องนี้
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Cancel Session Form -->
+<form id="cancelSessionForm" action="/inspections/vm-cancel" method="POST" style="display: none;">
+  <input type="hidden" name="sessionId" value="<%= session.id %>">
+</form>
+
+<style>
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out forwards;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.host-btn.active, .vm-btn.active {
+  border-color: var(--bs-primary) !important;
+  background-color: var(--bs-primary-bg-subtle) !important;
+}
+.btn-group-toggle .btn {
+  border-width: 2px;
+}
+/* ปุ่ม FAIL ซ่อน border แดงเมื่อไม่ได้ถูกเลือก */
+.btn-check:not(:checked) + .btn-outline-danger {
+  border-color: #dee2e6;
+  color: #6c757d;
+}
+.btn-check:not(:checked) + .btn-outline-danger:hover {
+  border-color: #dc3545;
+  color: #dc3545;
+  background-color: transparent;
+}
+/* ปุ่ม PASS เป็น solid สีเขียวเมื่อถูกเลือก */
+.btn-check:checked + .btn-outline-success {
+  background-color: #198754;
+  border-color: #198754;
+  color: #fff;
+}
+</style>
+
+<script>
+const activeSessionId = <%= session.id %>;
+let selectedVmId = null;
+let selectedHostId = null;
+
+// Toggle photo upload on FAIL — เหมือน walk.ejs เครื่องจริง
+function togglePhotoUpload(itemId, val) {
+  const photoContainer = document.querySelector(`.photo-upload-container_${itemId}`);
+  if (photoContainer) {
+    if (val === 'fail') {
+      photoContainer.classList.remove('d-none');
+    } else {
+      photoContainer.classList.add('d-none');
+      const fileInput = photoContainer.querySelector('input[type="file"]');
+      if (fileInput) fileInput.value = '';
+    }
+  }
+}
+
+/* ── Step 1: Select Host ─────────────────────────── */
+function selectHost(hostId, btn) {
+  selectedHostId = hostId;
+  selectedVmId = null;
+
+  document.querySelectorAll('.host-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  // Reset step 2 & 3
+  document.getElementById('vmCard').classList.add('d-none');
+  document.getElementById('vmList').innerHTML = '<div class="text-center py-2"><div class="spinner-border spinner-border-sm text-primary"></div></div>';
+  document.getElementById('checklistFormContainer').classList.add('d-none');
+  document.getElementById('noVmSelected').classList.remove('d-none');
+
+  fetch(`/inspections/vm-api/hosts/${hostId}/vms?sessionId=${activeSessionId}`)
+    .then(r => r.json())
+    .then(data => {
+      renderVmList(data.vms);
+      document.getElementById('vmCard').classList.remove('d-none');
+    })
+    .catch(err => {
+      document.getElementById('vmList').innerHTML = `<div class="alert alert-danger small">${err.message}</div>`;
+      document.getElementById('vmCard').classList.remove('d-none');
+    });
+}
+
+function renderVmList(vms) {
+  const container = document.getElementById('vmList');
+  if (!vms || vms.length === 0) {
+    container.innerHTML = '<div class="text-muted text-center small py-2">ไม่พบ VM บน Host นี้</div>';
+    return;
+  }
+  container.innerHTML = vms.map(vm => {
+    let statusBadge = '';
+    let btnClass = 'border-secondary-subtle';
+    let statusDot = '';
+
+    if (vm.inspected) {
+      if (vm.inspection_status === 'fail') {
+        statusBadge = '<span class="badge bg-danger">ไม่ผ่านเกณฑ์</span>';
+        btnClass = 'border-danger-subtle bg-danger-subtle bg-opacity-10';
+        statusDot = '<i class="bi bi-x-circle-fill text-danger me-1"></i>';
+      } else if (vm.inspection_status === 'warning') {
+        statusBadge = '<span class="badge bg-warning text-dark">เฝ้าระวัง</span>';
+        btnClass = 'border-warning-subtle bg-warning-subtle bg-opacity-10';
+        statusDot = '<i class="bi bi-exclamation-circle-fill text-warning me-1"></i>';
+      } else {
+        statusBadge = '<span class="badge bg-success">ปกติ / ผ่าน</span>';
+        btnClass = 'border-success-subtle bg-success-subtle bg-opacity-10';
+        statusDot = '<i class="bi bi-check-circle-fill text-success me-1"></i>';
+      }
+    } else {
+      // ยังไม่ตรวจ — แสดง power state ของ VM
+      statusBadge = '<span class="badge bg-secondary">รอดำเนินการ</span>';
+      statusDot = vm.status === 'running'
+        ? '<i class="bi bi-circle-fill text-success me-1" style="font-size:0.55rem;vertical-align:middle;"></i>'
+        : vm.status === 'stopped'
+        ? '<i class="bi bi-circle-fill text-secondary me-1" style="font-size:0.55rem;vertical-align:middle;"></i>'
+        : '<i class="bi bi-circle-fill text-warning me-1" style="font-size:0.55rem;vertical-align:middle;"></i>';
+    }
+
+    return `
+      <button class="btn ${btnClass} text-start p-3 border rounded-3 d-flex justify-content-between align-items-center w-100 vm-btn"
+              onclick="selectVm(${vm.id}, '${vm.vm_name.replace(/'/g,"\\'")}', '${(vm.ip_address||'').replace(/'/g,"\\'")}', '${(vm.os_type||'').replace(/'/g,"\\'")}', this)">
+        <div>
+          <span class="fw-semibold text-dark small d-block">${statusDot}${vm.vm_name}</span>
+          <span class="text-muted fs-9">${vm.ip_address || 'No IP'} | ${vm.os_type || 'Unknown OS'}</span>
+        </div>
+        ${statusBadge}
+      </button>`;
+  }).join('');
+}
+
+/* ── Step 2: Select VM ─────────────────────────────── */
+function selectVm(vmId, vmName, vmIp, vmOs, btn) {
+  selectedVmId = vmId;
+
+  document.querySelectorAll('.vm-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  document.getElementById('formVmId').value = vmId;
+  document.getElementById('selectedVmName').innerText = vmName;
+  document.getElementById('selectedVmMeta').innerText = `IP: ${vmIp || '—'} | OS: ${vmOs || '—'}`;
+  document.getElementById('vmTypeBadge').innerText = 'Virtual Machine';
+
+  fetch(`/inspections/vm-api/vms/${vmId}/checklist?sessionId=${activeSessionId}`)
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('noVmSelected').classList.add('d-none');
+      document.getElementById('checklistFormContainer').classList.remove('d-none');
+
+      // Status badge
+      const statusBadge = document.getElementById('inspectedStatusBadge');
+      if (data.overall_status !== 'pending' && data.items.some(i => i.previous)) {
+        const statusMap = { 'pass': 'ปกติ / ผ่าน', 'warning': 'เฝ้าระวัง', 'fail': 'ไม่ผ่านเกณฑ์' };
+        statusBadge.innerText = statusMap[data.overall_status] || data.overall_status.toUpperCase();
+        statusBadge.className = `badge py-2 px-3 ${data.overall_status === 'fail' ? 'bg-danger' : (data.overall_status === 'warning' ? 'bg-warning text-dark' : 'bg-success')}`;
+      } else {
+        statusBadge.innerText = 'รอดำเนินการ';
+        statusBadge.className = 'badge py-2 px-3 bg-secondary text-white';
+      }
+
+      document.getElementById('vmRemark').value = data.remark || '';
+
+      const itemsList = document.getElementById('checklistItemsList');
+      itemsList.innerHTML = '';
+
+      if (data.items.length > 0) {
+        data.items.forEach(item => {
+          // ค่า default = 'pass' ถ้าไม่เคยตรวจ — เหมือนเครื่องจริง
+          const prevVal   = item.previous ? item.previous.result_value : 'pass';
+          const prevNum   = item.previous && item.previous.numeric_value !== null ? item.previous.numeric_value : '';
+          const prevTxt   = item.previous && item.previous.text_value   !== null ? item.previous.text_value   : '';
+          const prevRemark= item.previous && item.previous.remark       !== null ? item.previous.remark       : '';
+
+          let typeSpecificHtml = '';
+          if (item.item_type === 'numeric') {
+            typeSpecificHtml = `
+              <div class="col-12 mt-2">
+                <label class="form-label small fw-semibold text-muted">ระบุค่าตรวจวัด (ตัวเลข) *</label>
+                <input type="number" step="0.01" class="form-control form-control-sm" name="num_${item.id}" value="${prevNum}" required>
+                <div class="invalid-feedback">กรุณาระบุตัวเลขที่ถูกต้อง</div>
+              </div>`;
+          } else if (item.item_type === 'text') {
+            typeSpecificHtml = `
+              <div class="col-12 mt-2">
+                <label class="form-label small fw-semibold text-muted">ระบุข้อความรายละเอียด *</label>
+                <input type="text" class="form-control form-control-sm" name="text_${item.id}" value="${prevTxt}" required>
+                <div class="invalid-feedback">กรุณาระบุรายละเอียดข้อความ</div>
+              </div>`;
+          }
+
+          itemsList.innerHTML += `
+            <div class="checklist-item-wrapper border-bottom pb-3">
+              <div class="row g-2 align-items-center">
+                <div class="col-md-7">
+                  <h6 class="fw-bold mb-1 text-dark">${item.item_name}</h6>
+                  <p class="text-muted small mb-0 fs-8">${item.description || 'ไม่มีคำอธิบายเพิ่มเติม'}</p>
+                </div>
+                <div class="col-md-5 d-flex justify-content-end">
+                  <div class="btn-group btn-group-sm" role="group">
+                    <input type="radio" class="btn-check" name="result_${item.id}" id="pass_${item.id}" value="pass" ${prevVal === 'pass' ? 'checked' : ''} onchange="togglePhotoUpload(${item.id}, this.value)" required>
+                    <label class="btn btn-outline-success px-3" for="pass_${item.id}"><i class="bi bi-check2"></i> ปกติ (PASS)</label>
+
+                    <input type="radio" class="btn-check" name="result_${item.id}" id="fail_${item.id}" value="fail" ${prevVal === 'fail' ? 'checked' : ''} onchange="togglePhotoUpload(${item.id}, this.value)">
+                    <label class="btn btn-outline-danger px-3" for="fail_${item.id}"><i class="bi bi-x-lg"></i> ผิดปกติ (FAIL)</label>
+
+                    <input type="radio" class="btn-check" name="result_${item.id}" id="na_${item.id}" value="na" ${prevVal === 'na' ? 'checked' : ''} onchange="togglePhotoUpload(${item.id}, this.value)">
+                    <label class="btn btn-outline-secondary px-3" for="na_${item.id}">ไม่มี / N/A</label>
+                  </div>
+                </div>
+
+                ${typeSpecificHtml}
+
+                <div class="col-12 mt-2">
+                  <input type="text" class="form-control form-control-sm border-0 bg-light fs-8 py-1" name="remark_${item.id}" value="${prevRemark}" placeholder="ระบุบันทึกช่วยจำ/คำชี้แจง (ถ้ามี)...">
+                </div>
+
+                <div class="col-12 mt-2 photo-upload-container_${item.id} ${prevVal === 'fail' ? '' : 'd-none'}">
+                  <label class="form-label small fw-semibold text-danger mb-1 d-block">
+                    <i class="bi bi-camera-fill me-1"></i> แนบรูปหลักฐานความผิดปกติ (ไม่บังคับ)
+                  </label>
+                  <input type="file" class="form-control form-control-sm" name="photo_vm_${item.id}" accept="image/*">
+                </div>
+              </div>
+              <input type="hidden" name="item_type_${item.id}" value="${item.item_type}">
+            </div>`;
+        });
+      } else {
+        itemsList.innerHTML = '<div class="text-center text-muted small py-3">ไม่มีรายการ Checklist สำหรับ VM Template ปัจจุบัน</div>';
+      }
+
+      // Reset form validation state
+      document.getElementById('checklistSubmissionForm').classList.remove('was-validated');
+    })
+    .catch(err => {
+      console.error(err);
+      Swal.fire('Error', 'ไม่สามารถโหลด Checklist ของ VM ได้', 'error');
+    });
+}
+
+/* ── Submit Checklist ─────────────────────────────── */
+function submitChecklist(event) {
+  event.preventDefault();
+
+  const form = document.getElementById('checklistSubmissionForm');
+  if (!form.checkValidity()) {
+    event.stopPropagation();
+    form.classList.add('was-validated');
+    Swal.fire({
+      icon: 'warning',
+      title: 'ข้อมูลไม่ครบถ้วน',
+      text: 'กรุณากรอกข้อมูลและเลือกสถานะให้ครบทุกข้อกำหนด'
+    });
+    return;
+  }
+
+  const results = [];
+  const itemWrappers = document.querySelectorAll('.checklist-item-wrapper');
+
+  itemWrappers.forEach(wrapper => {
+    const radioInput = wrapper.querySelector('input[type="radio"]:checked');
+    const itemId = radioInput.name.split('_')[1];
+    const resultValue = radioInput.value;
+    const itemType = wrapper.querySelector(`input[name="item_type_${itemId}"]`).value;
+
+    let numVal = null;
+    let txtVal = null;
+    if (itemType === 'numeric') {
+      numVal = wrapper.querySelector(`input[name="num_${itemId}"]`).value;
+    } else if (itemType === 'text') {
+      txtVal = wrapper.querySelector(`input[name="text_${itemId}"]`).value;
+    }
+    const remarkVal = wrapper.querySelector(`input[name="remark_${itemId}"]`).value;
+
+    results.push({
+      template_item_id: Number(itemId),
+      item_type: itemType,
+      result_value: resultValue,
+      numeric_value: numVal,
+      text_value: txtVal,
+      remark: remarkVal
+    });
+  });
+
+  // ใช้ FormData เพื่อรองรับการแนบไฟล์รูป (เหมือน walk.ejs เครื่องจริง)
+  const formData = new FormData();
+  formData.append('sessionId', activeSessionId);
+  formData.append('vmId', selectedVmId);
+  formData.append('remark', document.getElementById('vmRemark').value);
+  formData.append('results', JSON.stringify(results));
+
+  // Append photo files for FAIL items
+  itemWrappers.forEach(wrapper => {
+    const radioInput = wrapper.querySelector('input[type="radio"]:checked');
+    const itemId = radioInput.name.split('_')[1];
+    if (radioInput.value === 'fail') {
+      const fileInput = wrapper.querySelector(`input[name="photo_vm_${itemId}"]`);
+      if (fileInput && fileInput.files && fileInput.files[0]) {
+        formData.append(`photo_${itemId}`, fileInput.files[0]);
+      }
+    }
+  });
+
+  Swal.fire({
+    title: 'กำลังบันทึกข้อมูล...',
+    allowOutsideClick: false,
+    didOpen: () => { Swal.showLoading(); }
+  });
+
+  fetch('/inspections/vm-api/save-vm', { method: 'POST', body: formData })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        const statusMap = { 'pass': 'ปกติ / ผ่าน', 'warning': 'เฝ้าระวัง', 'fail': 'ไม่ผ่านเกณฑ์' };
+        const thaiStatus = statusMap[data.overallStatus] || (data.overallStatus || '').toUpperCase();
+        Swal.fire({
+          icon: 'success',
+          title: 'บันทึกสำเร็จ',
+          text: `บันทึกผลการตรวจ VM เรียบร้อย (ผลโดยรวม: ${thaiStatus})`,
+          timer: 1500,
+          showConfirmButton: false
+        }).then(() => {
+          // Refresh VM list บน host เดิม
+          if (selectedHostId) {
+            fetch(`/inspections/vm-api/hosts/${selectedHostId}/vms?sessionId=${activeSessionId}`)
+              .then(r => r.json())
+              .then(d => renderVmList(d.vms));
+          }
+          // Refresh host counts
+          refreshHostProgress();
+        });
+      } else {
+        Swal.fire('Error', data.error || 'บันทึกข้อมูลไม่สำเร็จ', 'error');
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      Swal.fire('Error', 'เซิร์ฟเวอร์ขัดข้องในการบันทึกข้อมูล', 'error');
+    });
+}
+
+// Refresh host progress counts without full page reload
+function refreshHostProgress() {
+  fetch(`/inspections/vm-walk`)
+    .then(r => r.text())
+    .then(htmlStr => {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlStr, 'text/html');
+      const newHostSelector = doc.getElementById('hostSelector');
+      const currentHostSelector = document.getElementById('hostSelector');
+      if (newHostSelector && currentHostSelector) {
+        currentHostSelector.innerHTML = newHostSelector.innerHTML;
+        // Re-attach onclick for buttons
+        currentHostSelector.querySelectorAll('.host-btn').forEach(btn => {
+          const hostId = btn.dataset.hostId;
+          btn.onclick = function() { selectHost(Number(hostId), this); };
+          if (Number(hostId) === selectedHostId) {
+            btn.classList.add('active');
+          }
+        });
+      }
+    })
+    .catch(err => console.warn('refreshHostProgress failed:', err));
+}
+
+function confirmCancelSession() {
+  Swal.fire({
+    icon: 'warning',
+    title: 'ยืนยันการยกเลิก?',
+    text: `คุณต้องการยกเลิกรอบตรวจ VM ที่ #<%= session.id %> ใช่ไหม? ข้อมูลทั้งหมดในรอบนี้จะถูกยกเลิก`,
+    showCancelButton: true,
+    confirmButtonColor: '#dc3545',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'ยืนยัน ยกเลิกรอบตรวจ',
+    cancelButtonText: 'ไม่ยกเลิก'
+  }).then(result => {
+    if (result.isConfirmed) {
+      document.getElementById('cancelSessionForm').submit();
+    }
+  });
+}
+</script>
+
+<%- include('../layouts/footer') %>

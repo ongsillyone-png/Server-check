@@ -148,6 +148,22 @@
 .btn-group-toggle .btn {
   border-width: 2px;
 }
+/* ปุ่ม FAIL ซ่อน border แดงเมื่อไม่ได้ถูกเลือก */
+.btn-check:not(:checked) + .btn-outline-danger {
+  border-color: #dee2e6;
+  color: #6c757d;
+}
+.btn-check:not(:checked) + .btn-outline-danger:hover {
+  border-color: #dc3545;
+  color: #dc3545;
+  background-color: transparent;
+}
+/* ปุ่ม PASS เป็น solid สีเขียวเมื่อถูกเลือก */
+.btn-check:checked + .btn-outline-success {
+  background-color: #198754;
+  border-color: #198754;
+  color: #fff;
+}
 </style>
 
 <script>

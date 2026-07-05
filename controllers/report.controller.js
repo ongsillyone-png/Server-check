@@ -133,6 +133,25 @@ class ReportController {
   }
 
   /**
+   * Render VM check summary report page
+   * GET /reports/vm
+   */
+  static async showVmReport(req, res, next) {
+    try {
+      const ReportService = require('../services/report.service');
+      const data = await ReportService.getVmSummary();
+      res.render('report/summary', {
+        title: 'รายงานสรุปผลการเดินตรวจ Virtual Machines - Server Check',
+        currentPage: 'reports',
+        summaryType: 'vm',
+        data
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
    * Render user check summary report page
    * GET /reports/user
    */

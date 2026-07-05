@@ -165,7 +165,7 @@ class InspectionService {
       SELECT ti.*
       FROM inspection_template_items ti
       JOIN inspection_templates t ON ti.template_id = t.id
-      WHERE t.is_active = 1 AND ti.is_active = 1 AND ti.deleted_at IS NULL
+      WHERE t.is_active = 1 AND t.target_type = 'physical_server' AND ti.is_active = 1 AND ti.deleted_at IS NULL
       ORDER BY ti.sort_order ASC, ti.id ASC
     `;
     const checklistItems = await pool.query(templateSql);

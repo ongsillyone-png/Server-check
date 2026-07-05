@@ -172,6 +172,32 @@ class ReportRepository extends BaseRepository {
     `;
     return await this.query(sql);
   }
+
+  /**
+   * Fetch VM inspection summary data per virtual machine
+   */
+  static async getVmSummaryData() {
+    const sql = `
+      SELECT 
+        vm.id as vm_id,
+        vm.vm_name,
+        vm.ip_address,
+        vm.os_type,
+        ps.server_name as host_name,
+        COUNT(d.id) as total_inspected,
+        SUM(CASE WHEN d.status = 'pass' THEN 1 ELSE 0 END) as pass_count,
+        SUM(CASE WHEN d.status = 'warning' THEN 1 ELSE 0 END) as warn_count,
+        SUM(CASE WHEN d.status = 'fail' THEN 1 ELSE 0 END) as fail_count
+      FROM virtual_machines vm
+      INNER JOIN physical_servers ps ON vm.physical_server_id = ps.id
+      LEFT JOIN vm_inspection_details d ON vm.id = d.vm_id AND d.deleted_at IS NULL
+      LEFT JOIN vm_inspection_sessions s ON d.session_id = s.id AND s.status = 'completed'
+      WHERE vm.deleted_at IS NULL
+      GROUP BY vm.id, vm.vm_name, vm.ip_address, vm.os_type, ps.server_name
+      ORDER BY fail_count DESC, vm.vm_name
+    `;
+    return await this.query(sql);
+  }
 }
 
 module.exports = ReportRepository;

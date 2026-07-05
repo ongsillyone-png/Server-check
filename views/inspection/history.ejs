@@ -17,6 +17,7 @@
 <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
   <h6 class="fw-bold text-dark mb-3"><i class="bi bi-search text-primary me-2"></i>ตัวกรองการสืบค้นประวัติ</h6>
   <form id="filterForm" method="GET" action="/inspections/history">
+    <input type="hidden" name="type" id="filterType" value="<%= currentType %>">
     <div class="row g-3">
       <!-- Date Range Start -->
       <div class="col-12 col-sm-6 col-md-3">
@@ -75,6 +76,21 @@
 
 <!-- SESSIONS HISTORY LIST TABLE -->
 <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+  
+  <!-- Tabs Physical / VM -->
+  <ul class="nav nav-pills nav-fill bg-light p-1 rounded-3 mb-3" id="historyTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <a href="/inspections/history?type=physical" class="nav-link <%= currentType === 'physical' ? 'active' : '' %> rounded-3 text-dark small fw-semibold">
+        <i class="bi bi-pc-display-horizontal me-1"></i>Physical Server
+      </a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a href="/inspections/history?type=vm" class="nav-link <%= currentType === 'vm' ? 'active bg-info text-white' : '' %> rounded-3 text-dark small fw-semibold">
+        <i class="bi bi-cpu me-1"></i>Virtual Machines (VM)
+      </a>
+    </li>
+  </ul>
+
   <div class="table-responsive">
     <table class="table align-middle table-hover mb-0">
       <thead class="table-light">
@@ -197,6 +213,7 @@
 <%
   function getPaginationUrl(targetPage) {
     const params = new URLSearchParams();
+    params.set('type', currentType);
     for (const [key, val] of Object.entries(filters)) {
       if (val) params.set(key, val);
     }

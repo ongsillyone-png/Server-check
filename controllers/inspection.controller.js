@@ -213,6 +213,7 @@ class InspectionController {
     try {
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
+      const type = req.query.type || 'physical'; // 'physical' or 'vm'
 
       const filters = {
         startDate: req.query.startDate || '',
@@ -223,14 +224,22 @@ class InspectionController {
         inspectorId: req.query.inspectorId || ''
       };
 
-      const [historyResult, options] = await Promise.all([
-        InspectionService.getFilteredHistory(filters, page, limit),
-        InspectionService.getHistoryFilterOptions()
-      ]);
+      // Ensure VmInspectionService is required at the top, or require it here if not available globally in this file
+      const VmInspectionService = require('../services/vm-inspection.service');
+
+      let historyResult;
+      if (type === 'vm') {
+        historyResult = await VmInspectionService.getFilteredHistory(filters, page, limit);
+      } else {
+        historyResult = await InspectionService.getFilteredHistory(filters, page, limit);
+      }
+
+      const options = await InspectionService.getHistoryFilterOptions();
 
       res.render('inspection/history', {
         title: 'ประวัติและรายงานการเดินตรวจ - Server Check',
         currentPage: 'history',
+        currentType: type, // Pass type to view for UI logic
         sessions: historyResult.sessions,
         pagination: historyResult.pagination,
         filters,

@@ -12,6 +12,7 @@ router.get('/server', requireLogin, ReportController.showServerReport);
 router.get('/rack', requireLogin, ReportController.showRackReport);
 router.get('/room', requireLogin, ReportController.showRoomReport);
 router.get('/user', requireLogin, ReportController.showUserReport);
+router.get('/vm', requireLogin, ReportController.showVmReport);
 
 // Exports
 router.get('/export', requireLogin, ReportController.exportReportCSV);

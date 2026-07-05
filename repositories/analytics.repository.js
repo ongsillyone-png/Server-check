@@ -144,6 +144,35 @@ class AnalyticsRepository extends BaseRepository {
     `;
     return await this.query(sql);
   }
+  /**
+   * Get VM overall stats summary: total checks, PASS/WARN/FAIL count
+   */
+  static async getVmInspectionStatsSummary() {
+    const sql = `
+      SELECT 
+        (SELECT COUNT(*) FROM virtual_machines WHERE status = 'running' AND deleted_at IS NULL) as active_vms_count,
+        (SELECT COUNT(*) FROM vm_inspection_sessions WHERE status = 'completed' AND deleted_at IS NULL) as total_sessions_count,
+        COUNT(d.id) as total_inspections,
+        SUM(CASE WHEN d.status = 'pass' THEN 1 ELSE 0 END) as pass_count,
+        SUM(CASE WHEN d.status = 'warning' THEN 1 ELSE 0 END) as warn_count,
+        SUM(CASE WHEN d.status = 'fail' THEN 1 ELSE 0 END) as fail_count
+      FROM vm_inspection_details d
+      INNER JOIN vm_inspection_sessions s ON d.session_id = s.id AND s.status = 'completed' AND s.deleted_at IS NULL
+      WHERE d.deleted_at IS NULL
+    `;
+    const rows = await this.query(sql);
+    if (rows.length > 0) {
+      return {
+        active_vms_count: Number(rows[0].active_vms_count),
+        total_sessions_count: Number(rows[0].total_sessions_count),
+        total_inspections: Number(rows[0].total_inspections),
+        pass_count: Number(rows[0].pass_count || 0),
+        warn_count: Number(rows[0].warn_count || 0),
+        fail_count: Number(rows[0].fail_count || 0)
+      };
+    }
+    return { active_vms_count: 0, total_sessions_count: 0, total_inspections: 0, pass_count: 0, warn_count: 0, fail_count: 0 };
+  }
 }
 
 module.exports = AnalyticsRepository;

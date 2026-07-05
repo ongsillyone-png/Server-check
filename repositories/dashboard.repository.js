@@ -246,6 +246,88 @@ class DashboardRepository extends BaseRepository {
     `;
     return await this.query(sql, [parseInt(limit)]);
   }
+  /**
+   * Get VM inspection status counts (Pass, Fail, Warning) in a given timeframe
+   */
+  static async getVmInspectionStatsForPeriod(startDateStr, endDateStr) {
+    const sql = `
+      SELECT d.status, COUNT(*) as count
+      FROM vm_inspection_details d
+      INNER JOIN vm_inspection_sessions s ON d.session_id = s.id
+      INNER JOIN (
+          SELECT d2.vm_id, MAX(s2.completed_at) as max_completed_at
+          FROM vm_inspection_details d2
+          INNER JOIN vm_inspection_sessions s2 ON d2.session_id = s2.id
+          WHERE s2.status = 'completed'
+            AND s2.deleted_at IS NULL
+            AND d2.deleted_at IS NULL
+            AND s2.completed_at >= ?
+            AND s2.completed_at <= ?
+          GROUP BY d2.vm_id
+      ) latest ON d.vm_id = latest.vm_id
+        AND s.completed_at = latest.max_completed_at
+      WHERE s.status = 'completed'
+        AND s.deleted_at IS NULL
+        AND d.deleted_at IS NULL
+      GROUP BY d.status
+    `;
+    return await this.query(sql, [startDateStr, endDateStr]);
+  }
+
+  /**
+   * Get latest VM inspection sessions
+   */
+  static async getLatestVmInspectionSessions(limit = 5) {
+    const sql = `
+      SELECT 
+        s.id as session_id,
+        s.completed_at,
+        s.started_at,
+        s.status as session_status,
+        u.name as inspector_name,
+        COUNT(d.id) as total_inspected,
+        SUM(CASE WHEN d.status = 'pass' THEN 1 ELSE 0 END) as pass_count,
+        SUM(CASE WHEN d.status = 'warning' THEN 1 ELSE 0 END) as warning_count,
+        SUM(CASE WHEN d.status = 'fail' THEN 1 ELSE 0 END) as fail_count
+      FROM vm_inspection_sessions s
+      INNER JOIN users u ON s.inspector_id = u.id
+      LEFT JOIN vm_inspection_details d ON d.session_id = s.id AND d.deleted_at IS NULL
+      WHERE s.deleted_at IS NULL AND s.status != 'canceled'
+      GROUP BY s.id, s.completed_at, s.started_at, s.status, u.name
+      ORDER BY s.id DESC
+      LIMIT ?
+    `;
+    return await this.query(sql, [parseInt(limit)]);
+  }
+
+  /**
+   * Get top VMs with failures
+   */
+  static async getTopFailedVms(limit = 5) {
+    const sql = `
+      SELECT 
+        vm.id as vm_id,
+        vm.vm_name,
+        vm.ip_address,
+        ps.server_name as host_name,
+        SUM(CASE WHEN d.status = 'fail' THEN 1 ELSE 0 END) as fail_count,
+        SUM(CASE WHEN d.status = 'warning' THEN 1 ELSE 0 END) as warning_count,
+        COUNT(d.id) as total_inspections
+      FROM vm_inspection_details d
+      INNER JOIN virtual_machines vm ON d.vm_id = vm.id
+      INNER JOIN physical_servers ps ON vm.physical_server_id = ps.id
+      INNER JOIN vm_inspection_sessions s ON d.session_id = s.id
+      WHERE s.status = 'completed'
+        AND s.deleted_at IS NULL
+        AND d.deleted_at IS NULL
+        AND vm.deleted_at IS NULL
+      GROUP BY vm.id, vm.vm_name, vm.ip_address, ps.server_name
+      HAVING fail_count > 0 OR warning_count > 0
+      ORDER BY fail_count DESC, warning_count DESC
+      LIMIT ?
+    `;
+    return await this.query(sql, [parseInt(limit)]);
+  }
 }
 
 module.exports = DashboardRepository;

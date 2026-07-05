@@ -7,11 +7,17 @@ class AnalyticsService {
   static async getDashboardKPIs() {
     const avgSeconds = await AnalyticsRepository.getAverageInspectionTime();
     const summary = await AnalyticsRepository.getInspectionStatsSummary();
+    const vmSummary = await AnalyticsRepository.getVmInspectionStatsSummary();
 
     const avgMinutes = avgSeconds > 0 ? (avgSeconds / 60).toFixed(1) : '0';
     const totalInspected = summary.total_inspections;
     const passRate = totalInspected > 0 
       ? ((summary.pass_count / totalInspected) * 100).toFixed(1) 
+      : '100.0';
+
+    const vmTotalInspected = vmSummary.total_inspections;
+    const vmPassRate = vmTotalInspected > 0
+      ? ((vmSummary.pass_count / vmTotalInspected) * 100).toFixed(1)
       : '100.0';
 
     return {
@@ -22,7 +28,10 @@ class AnalyticsService {
       passRatePercent: passRate,
       failCount: summary.fail_count,
       warnCount: summary.warn_count,
-      passCount: summary.pass_count
+      passCount: summary.pass_count,
+      // VM KPIs
+      vmPassRatePercent: vmPassRate,
+      vmFailCount: vmSummary.fail_count
     };
   }
 

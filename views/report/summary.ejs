@@ -16,6 +16,9 @@
   } else if (summaryType === 'user') {
     reportTitle = 'รายงานสรุปผลการเข้าปฏิบัติงานเดินตรวจรายบุคคล';
     iconClass = 'bi-people';
+  } else if (summaryType === 'vm') {
+    reportTitle = 'รายงานสรุปผลการเดินตรวจ Virtual Machines (VM)';
+    iconClass = 'bi-cpu';
   }
 %>
 
@@ -98,6 +101,18 @@
               <th>สิทธิ์การใช้งาน (Role)</th>
               <th class="text-center" style="width: 25%;">จำนวนรอบที่เดินตรวจเช็คสำเร็จ (รอบ)</th>
             </tr>
+          <!-- VM HEADERS -->
+          <% } else if (summaryType === 'vm') { %>
+            <tr>
+              <th>VM Name</th>
+              <th>Host Server / OS</th>
+              <th>IP Address</th>
+              <th class="text-center" style="width: 10%;">ตรวจสะสม (ครั้ง)</th>
+              <th class="text-center text-success" style="width: 10%;">ปกติ (PASS)</th>
+              <th class="text-center text-warning" style="width: 10%;">เฝ้าระวัง (WARN)</th>
+              <th class="text-center text-danger" style="width: 10%;">ผิดปกติ (FAIL)</th>
+              <th class="text-center" style="width: 10%;">อัตราปกติ</th>
+            </tr>
           <% } %>
         </thead>
         <tbody>
@@ -176,12 +191,35 @@
                   <td><span class="badge bg-secondary-subtle text-dark border rounded-3 px-2 py-1"><%= row.role_name %></span></td>
                   <td class="text-center fw-bold text-primary fs-6"><%= row.completed_sessions %></td>
                 </tr>
+
+              <!-- VM ROWS -->
+              <% } else if (summaryType === 'vm') { %>
+                <% 
+                  const rate = row.total_inspected > 0 
+                    ? ((row.pass_count / row.total_inspected) * 100).toFixed(1) 
+                    : '0.0';
+                %>
+                <tr>
+                  <td><strong><i class="bi bi-cpu text-info me-1"></i><%= row.vm_name %></strong></td>
+                  <td>
+                    <span class="small d-block fw-semibold"><i class="bi bi-pc-display-horizontal text-muted me-1"></i><%= row.host_name %></span>
+                    <span class="badge bg-secondary-subtle text-secondary border rounded-2 mt-1" style="font-size:0.7rem;"><%= row.os_type || '-' %></span>
+                  </td>
+                  <td><code class="small"><%= row.ip_address || '-' %></code></td>
+                  <td class="text-center"><%= row.total_inspected %></td>
+                  <td class="text-center text-success"><%= row.pass_count %></td>
+                  <td class="text-center text-warning"><%= row.warn_count %></td>
+                  <td class="text-center text-danger"><%= row.fail_count %></td>
+                  <td class="text-center font-monospace">
+                    <span class="badge bg-info bg-opacity-10 text-info border border-info-subtle rounded-3"><%= rate %>%</span>
+                  </td>
+                </tr>
               <% } %>
 
             <% }) %>
           <% } else { %>
             <tr>
-              <td colspan="<%= summaryType === 'server' ? 8 : (summaryType === 'user' ? 4 : 7) %>" class="text-center py-5 text-muted">
+              <td colspan="<%= summaryType === 'server' || summaryType === 'vm' ? 8 : (summaryType === 'user' ? 4 : 7) %>" class="text-center py-5 text-muted">
                 <i class="bi bi-clipboard-x fs-1 mb-2 d-block text-secondary opacity-50"></i>
                 ไม่พบข้อมูลสถิติประวัติสะสม
               </td>

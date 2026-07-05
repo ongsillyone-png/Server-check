@@ -85,6 +85,18 @@ class ReportService {
     }));
   }
 
+  static async getVmSummary() {
+    const data = await ReportRepository.getVmSummaryData();
+    return data.map(item => ({
+      ...item,
+      vm_id: Number(item.vm_id),
+      total_inspected: Number(item.total_inspected),
+      pass_count: Number(item.pass_count),
+      warn_count: Number(item.warn_count),
+      fail_count: Number(item.fail_count)
+    }));
+  }
+
   /**
    * Helper to format report datasets for CSV exporting
    */

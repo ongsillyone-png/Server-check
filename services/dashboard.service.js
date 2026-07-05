@@ -34,6 +34,25 @@ class DashboardService {
   }
 
   /**
+   * Helper to get VM status statistics for a given timeframe
+   */
+  static async _getVmStatsForPeriod(startDate, endDate, totalVms) {
+    const startStr = this._formatLocalMySQLDateTime(startDate);
+    const endStr = this._formatLocalMySQLDateTime(endDate);
+
+    const rows = await DashboardRepository.getVmInspectionStatsForPeriod(startStr, endStr);
+
+    let pass = 0, warning = 0, fail = 0;
+    rows.forEach(r => {
+      if (r.status === 'pass') pass = Number(r.count);
+      else if (r.status === 'warning') warning = Number(r.count);
+      else if (r.status === 'fail') fail = Number(r.count);
+    });
+    const pending = Math.max(0, totalVms - (pass + warning + fail));
+    return { pass, warning, fail, pending };
+  }
+
+  /**
    * Fetch summary metrics for dashboard UI cards & lists
    */
   static async getDashboardSummary() {
@@ -56,21 +75,27 @@ class DashboardService {
     // Fetch baseline asset counts
     const assets = await DashboardRepository.getAssetsCounts();
     const totalServers = assets.servers;
+    const totalVms = assets.vms;
 
-    // Fetch stats for Today, Month, Year in parallel
-    const [todayStats, monthStats, yearStats, latestSessions] = await Promise.all([
+    // Fetch Physical + VM stats in parallel
+    const [
+      todayStats, monthStats, yearStats, latestSessions,
+      vmTodayStats, vmMonthStats, vmYearStats, vmLatestSessions
+    ] = await Promise.all([
       this._getStatsForPeriod(todayStart, todayEnd, totalServers),
       this._getStatsForPeriod(monthStart, monthEnd, totalServers),
       this._getStatsForPeriod(yearStart, yearEnd, totalServers),
-      DashboardRepository.getLatestInspectionSessions(5)
+      DashboardRepository.getLatestInspectionSessions(5),
+      this._getVmStatsForPeriod(todayStart, todayEnd, totalVms),
+      this._getVmStatsForPeriod(monthStart, monthEnd, totalVms),
+      this._getVmStatsForPeriod(yearStart, yearEnd, totalVms),
+      DashboardRepository.getLatestVmInspectionSessions(5)
     ]);
 
     return {
       assets,
-      todayStats,
-      monthStats,
-      yearStats,
-      latestSessions
+      todayStats, monthStats, yearStats, latestSessions,
+      vmTodayStats, vmMonthStats, vmYearStats, vmLatestSessions
     };
   }
 
