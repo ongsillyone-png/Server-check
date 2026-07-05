@@ -204,7 +204,7 @@
         const savedCooling = coolingLogs || [];
       %>
       <script>
-        const savedCoolingLogs = <%- JSON.stringify(savedCooling) %>;
+        const savedCoolingLogs = <%- JSON.stringify(savedCooling, (_,v) => typeof v === 'bigint' ? Number(v) : v) %>;
       </script>
     </div>
 
@@ -274,7 +274,7 @@
 // ── State ──────────────────────────────────────────────────────
 const SESSION_ID    = <%= session.id %>;
 const TOTAL_STEPS   = <%= totalSteps %>;
-const RACKS         = <%- JSON.stringify(racks) %>;
+const RACKS         = <%- JSON.stringify(racks, (_,v) => typeof v === 'bigint' ? Number(v) : v) %>;
 let   currentStep   = 1;
 let   coolingItems  = [];
 
@@ -296,7 +296,7 @@ function goToStep(n) {
 
 // ── Save Room Checks ───────────────────────────────────────────
 async function saveRoomAndNext() {
-  const defs = <%- JSON.stringify(roomCheckDefs) %>;
+  const defs = <%- JSON.stringify(roomCheckDefs, (_,v) => typeof v === 'bigint' ? Number(v) : v) %>;
   const body = { sessionId: SESSION_ID };
   let valid = true;
 
@@ -329,7 +329,7 @@ async function saveRoomAndNext() {
 
 // ── Save Rack Checks ───────────────────────────────────────────
 async function saveRackAndNext(rackId, currentStepNum) {
-  const defs = <%- JSON.stringify(rackCheckDefs) %>;
+  const defs = <%- JSON.stringify(rackCheckDefs, (_,v) => typeof v === 'bigint' ? Number(v) : v) %>;
   const body = { sessionId: SESSION_ID, rackId };
   let valid = true;
 
