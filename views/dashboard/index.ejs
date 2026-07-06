@@ -78,9 +78,67 @@
   </div>
 </div>
 
+
+<!-- ENVIRONMENT INSPECTION STATS CARDS -->
+<div class="card border-0 shadow-sm rounded-4 p-4 mb-4" style="border-left: 4px solid #0d9488 !important;">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="fw-bold text-dark mb-0"><i class="bi bi-thermometer-half me-2" style="color:#0d9488;"></i>สรุปการตรวจสภาพแวดล้อม ห้อง SERVER วันนี้</h5>
+    <a href="/env-inspections/walk" class="btn btn-sm fw-semibold rounded-3 text-white" style="background:linear-gradient(135deg,#0d9488,#0ea5e9);">
+      <i class="bi bi-play-fill me-1"></i>เริ่มตรวจสภาพแวดล้อม
+    </a>
+  </div>
+  <div class="row g-3">
+    <div class="col-12 col-md-8">
+      <div class="p-3 rounded-4 border h-100" style="background:#f0fdf9;">
+        <h6 class="fw-bold text-dark border-bottom pb-2 mb-2 d-flex justify-content-between align-items-center">
+          <span>วันนี้ (Today)</span>
+          <span class="badge rounded-pill text-white" style="background:#0d9488;font-size:0.72rem;">รอบตรวจแวดล้อม</span>
+        </h6>
+        <div class="d-flex flex-column gap-1 mt-3">
+          <div class="stat-row stat-row--pass">
+            <span class="stat-label"><i class="bi bi-check-circle-fill me-1.5"></i>ผ่านการตรวจ (Pass)</span>
+            <span class="stat-value"><%= summary.envStats ? summary.envStats.today_pass || 0 : 0 %> รอบ</span>
+          </div>
+          <div class="stat-row stat-row--warning">
+            <span class="stat-label"><i class="bi bi-exclamation-triangle-fill me-1.5"></i>เฝ้าระวัง (Warning)</span>
+            <span class="stat-value"><%= summary.envStats ? summary.envStats.today_warning || 0 : 0 %> รอบ</span>
+          </div>
+          <div class="stat-row stat-row--fail">
+            <span class="stat-label"><i class="bi bi-x-circle-fill me-1.5"></i>พบปัญหา (Fail)</span>
+            <span class="stat-value"><%= summary.envStats ? summary.envStats.today_fail || 0 : 0 %> รอบ</span>
+          </div>
+          <div class="stat-row stat-row--pending">
+            <span class="stat-label"><i class="bi bi-clock-history me-1.5"></i>กำลังตรวจ (In Progress)</span>
+            <span class="stat-value"><%= summary.envStats ? summary.envStats.today_pending || 0 : 0 %> รอบ</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-4">
+      <div class="p-3 rounded-4 border h-100 text-center d-flex flex-column justify-content-center align-items-center" style="background:#f0fdf9;">
+        <div class="mb-2" style="color:#0d9488;"><i class="bi bi-thermometer-half fs-1"></i></div>
+        <div class="text-muted small fw-semibold mb-1">อุณหภูมิเฉลี่ยวันนี้</div>
+        <% const avgTemp = summary.envStats ? summary.envStats.avg_temp_today : null; %>
+        <% if (avgTemp !== null && avgTemp !== undefined) { %>
+          <div class="fw-bold fs-2 <%= avgTemp > 27 ? 'text-danger' : avgTemp > 24 ? 'text-warning' : 'text-success' %>">
+            <%= avgTemp %>°C
+          </div>
+          <div class="text-muted" style="font-size:0.72rem;">มาตรฐาน ASHRAE 18–27°C</div>
+        <% } else { %>
+          <div class="text-muted fw-semibold">ยังไม่มีข้อมูลวันนี้</div>
+          <div class="text-muted" style="font-size:0.72rem;">บันทึกค่าหลังตรวจแล้ว</div>
+        <% } %>
+        <a href="/env-inspections/history" class="btn btn-sm btn-outline-secondary mt-3 rounded-3 fw-semibold px-3">
+          <i class="bi bi-clock-history me-1"></i>ดูประวัติ
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- PERIODIC INSPECTION STATS CARDS -->
 <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
-  <h5 class="fw-bold text-dark mb-3"><i class="bi bi-bar-chart-steps text-primary me-2"></i>สถานะเครื่องเซิร์ฟเวอร์ ล่าสุดวันนี้</h5>
+  <h5 class="fw-bold text-dark mb-3"><i class="bi bi-bar-chart-steps text-primary me-2"></i>สถานะอุปกรณ์ต่าง ๆ ล่าสุดวันนี้</h5>
   <div class="row g-3">
     <!-- Today Stats -->
     <div class="col-12 col-md-4">
@@ -162,6 +220,8 @@
   </div>
 </div>
 
+
+
 <!-- VM INSPECTION STATS CARDS -->
 <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" style="border-left: 4px solid #0dcaf0 !important;">
   <h5 class="fw-bold text-dark mb-3"><i class="bi bi-cpu text-info me-2"></i>สถานะ Virtual Machines ล่าสุดวันนี้</h5>
@@ -239,63 +299,6 @@
             <span class="stat-value"><%= summary.vmYearStats.pending %> เครื่อง</span>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ENVIRONMENT INSPECTION STATS CARDS -->
-<div class="card border-0 shadow-sm rounded-4 p-4 mb-4" style="border-left: 4px solid #0d9488 !important;">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h5 class="fw-bold text-dark mb-0"><i class="bi bi-thermometer-half me-2" style="color:#0d9488;"></i>สรุปการตรวจสภาพแวดล้อมวันนี้</h5>
-    <a href="/env-inspections/walk" class="btn btn-sm fw-semibold rounded-3 text-white" style="background:linear-gradient(135deg,#0d9488,#0ea5e9);">
-      <i class="bi bi-play-fill me-1"></i>เริ่มตรวจสภาพแวดล้อม
-    </a>
-  </div>
-  <div class="row g-3">
-    <div class="col-12 col-md-8">
-      <div class="p-3 rounded-4 border h-100" style="background:#f0fdf9;">
-        <h6 class="fw-bold text-dark border-bottom pb-2 mb-2 d-flex justify-content-between align-items-center">
-          <span>วันนี้ (Today)</span>
-          <span class="badge rounded-pill text-white" style="background:#0d9488;font-size:0.72rem;">รอบตรวจแวดล้อม</span>
-        </h6>
-        <div class="d-flex flex-column gap-1 mt-3">
-          <div class="stat-row stat-row--pass">
-            <span class="stat-label"><i class="bi bi-check-circle-fill me-1.5"></i>ผ่านการตรวจ (Pass)</span>
-            <span class="stat-value"><%= summary.envStats ? summary.envStats.today_pass || 0 : 0 %> รอบ</span>
-          </div>
-          <div class="stat-row stat-row--warning">
-            <span class="stat-label"><i class="bi bi-exclamation-triangle-fill me-1.5"></i>เฝ้าระวัง (Warning)</span>
-            <span class="stat-value"><%= summary.envStats ? summary.envStats.today_warning || 0 : 0 %> รอบ</span>
-          </div>
-          <div class="stat-row stat-row--fail">
-            <span class="stat-label"><i class="bi bi-x-circle-fill me-1.5"></i>พบปัญหา (Fail)</span>
-            <span class="stat-value"><%= summary.envStats ? summary.envStats.today_fail || 0 : 0 %> รอบ</span>
-          </div>
-          <div class="stat-row stat-row--pending">
-            <span class="stat-label"><i class="bi bi-clock-history me-1.5"></i>กำลังตรวจ (In Progress)</span>
-            <span class="stat-value"><%= summary.envStats ? summary.envStats.today_pending || 0 : 0 %> รอบ</span>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-12 col-md-4">
-      <div class="p-3 rounded-4 border h-100 text-center d-flex flex-column justify-content-center align-items-center" style="background:#f0fdf9;">
-        <div class="mb-2" style="color:#0d9488;"><i class="bi bi-thermometer-half fs-1"></i></div>
-        <div class="text-muted small fw-semibold mb-1">อุณหภูมิเฉลี่ยวันนี้</div>
-        <% const avgTemp = summary.envStats ? summary.envStats.avg_temp_today : null; %>
-        <% if (avgTemp !== null && avgTemp !== undefined) { %>
-          <div class="fw-bold fs-2 <%= avgTemp > 27 ? 'text-danger' : avgTemp > 24 ? 'text-warning' : 'text-success' %>">
-            <%= avgTemp %>°C
-          </div>
-          <div class="text-muted" style="font-size:0.72rem;">มาตรฐาน ASHRAE 18–27°C</div>
-        <% } else { %>
-          <div class="text-muted fw-semibold">ยังไม่มีข้อมูลวันนี้</div>
-          <div class="text-muted" style="font-size:0.72rem;">บันทึกค่าหลังตรวจแล้ว</div>
-        <% } %>
-        <a href="/env-inspections/history" class="btn btn-sm btn-outline-secondary mt-3 rounded-3 fw-semibold px-3">
-          <i class="bi bi-clock-history me-1"></i>ดูประวัติ
-        </a>
       </div>
     </div>
   </div>
