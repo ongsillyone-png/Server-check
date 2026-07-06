@@ -7,7 +7,7 @@ class DashboardController {
       const summary = await DashboardService.getDashboardSummary();
       
       res.render('dashboard/index', {
-        title: 'หน้าแรก / สรุปภาพรวม - Server Check',
+        title: 'หน้าแรก / สรุปภาพรวมวันนี้ - Server Check',
         currentPage: 'dashboard',
         summary
       });
