@@ -1,8 +1,8 @@
 <%- include('../layouts/header') %>
 <%- include('../layouts/sidebar') %>
 
-<!-- ECharts Library from CDN -->
-<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+<!-- ECharts Library -->
+<script src="/vendor/echarts/echarts.min.js"></script>
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
   <div>
@@ -80,14 +80,14 @@
 
 <!-- PERIODIC INSPECTION STATS CARDS -->
 <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
-  <h5 class="fw-bold text-dark mb-3"><i class="bi bi-bar-chart-steps text-primary me-2"></i>สรุปสถานะการตรวจเช็ครายเครื่องเซิร์ฟเวอร์</h5>
+  <h5 class="fw-bold text-dark mb-3"><i class="bi bi-bar-chart-steps text-primary me-2"></i>สถานะล่าสุดรายเครื่องเซิร์ฟเวอร์</h5>
   <div class="row g-3">
     <!-- Today Stats -->
     <div class="col-12 col-md-4">
       <div class="p-3 bg-light rounded-4 border h-100">
         <h6 class="fw-bold text-dark border-bottom pb-2 mb-2 d-flex justify-content-between align-items-center">
-          <span>วันนี้ (Today)</span>
-          <span class="badge bg-primary fs-9 rounded-pill">รอบการตรวจล่าสุด</span>
+          <span>ล่าสุดวันนี้ (Today)</span>
+          <span class="badge bg-primary fs-9 rounded-pill">สถานะล่าสุด</span>
         </h6>
         <div class="d-flex flex-column gap-1 mt-3">
           <div class="stat-row stat-row--pass">
@@ -113,7 +113,7 @@
     <!-- This Month Stats -->
     <div class="col-12 col-md-4">
       <div class="p-3 bg-light rounded-4 border h-100">
-        <h6 class="fw-bold text-dark border-bottom pb-2 mb-2">เดือนนี้ (This Month)</h6>
+        <h6 class="fw-bold text-dark border-bottom pb-2 mb-2">ล่าสุดในเดือนนี้ (This Month)</h6>
         <div class="d-flex flex-column gap-1 mt-3">
           <div class="stat-row stat-row--pass">
             <span class="stat-label"><i class="bi bi-check-circle-fill me-1.5"></i>ปกติ (Pass)</span>
@@ -138,7 +138,7 @@
     <!-- This Year Stats -->
     <div class="col-12 col-md-4">
       <div class="p-3 bg-light rounded-4 border h-100">
-        <h6 class="fw-bold text-dark border-bottom pb-2 mb-2">ปีนี้ (This Year)</h6>
+        <h6 class="fw-bold text-dark border-bottom pb-2 mb-2">ล่าสุดในปีนี้ (This Year)</h6>
         <div class="d-flex flex-column gap-1 mt-3">
           <div class="stat-row stat-row--pass">
             <span class="stat-label"><i class="bi bi-check-circle-fill me-1.5"></i>ปกติ (Pass)</span>
@@ -164,14 +164,14 @@
 
 <!-- VM INSPECTION STATS CARDS -->
 <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" style="border-left: 4px solid #0dcaf0 !important;">
-  <h5 class="fw-bold text-dark mb-3"><i class="bi bi-cpu text-info me-2"></i>สรุปสถานะการตรวจ Virtual Machines</h5>
+  <h5 class="fw-bold text-dark mb-3"><i class="bi bi-cpu text-info me-2"></i>สถานะล่าสุดของ Virtual Machines</h5>
   <div class="row g-3">
     <!-- VM Today Stats -->
     <div class="col-12 col-md-4">
       <div class="p-3 rounded-4 border h-100" style="background:#e8f9fb;">
         <h6 class="fw-bold text-dark border-bottom pb-2 mb-2 d-flex justify-content-between align-items-center">
-          <span>วันนี้ (Today)</span>
-          <span class="badge bg-info fs-9 rounded-pill">รอบ VM ล่าสุด</span>
+          <span>ล่าสุดวันนี้ (Today)</span>
+          <span class="badge bg-info fs-9 rounded-pill">สถานะล่าสุด</span>
         </h6>
         <div class="d-flex flex-column gap-1 mt-3">
           <div class="stat-row stat-row--pass">
@@ -196,7 +196,7 @@
     <!-- VM Month Stats -->
     <div class="col-12 col-md-4">
       <div class="p-3 rounded-4 border h-100" style="background:#e8f9fb;">
-        <h6 class="fw-bold text-dark border-bottom pb-2 mb-2">เดือนนี้ (This Month)</h6>
+        <h6 class="fw-bold text-dark border-bottom pb-2 mb-2">ล่าสุดในเดือนนี้ (This Month)</h6>
         <div class="d-flex flex-column gap-1 mt-3">
           <div class="stat-row stat-row--pass">
             <span class="stat-label"><i class="bi bi-check-circle-fill me-1.5"></i>ปกติ (Pass)</span>
@@ -220,7 +220,7 @@
     <!-- VM Year Stats -->
     <div class="col-12 col-md-4">
       <div class="p-3 rounded-4 border h-100" style="background:#e8f9fb;">
-        <h6 class="fw-bold text-dark border-bottom pb-2 mb-2">ปีนี้ (This Year)</h6>
+        <h6 class="fw-bold text-dark border-bottom pb-2 mb-2">ล่าสุดในปีนี้ (This Year)</h6>
         <div class="d-flex flex-column gap-1 mt-3">
           <div class="stat-row stat-row--pass">
             <span class="stat-label"><i class="bi bi-check-circle-fill me-1.5"></i>ปกติ (Pass)</span>
@@ -247,7 +247,7 @@
 <!-- ENVIRONMENT INSPECTION STATS CARDS -->
 <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" style="border-left: 4px solid #0d9488 !important;">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h5 class="fw-bold text-dark mb-0"><i class="bi bi-thermometer-half me-2" style="color:#0d9488;"></i>สรุปสถานะการตรวจสภาพแวดล้อม</h5>
+    <h5 class="fw-bold text-dark mb-0"><i class="bi bi-thermometer-half me-2" style="color:#0d9488;"></i>สรุปการตรวจสภาพแวดล้อมวันนี้</h5>
     <a href="/env-inspections/walk" class="btn btn-sm fw-semibold rounded-3 text-white" style="background:linear-gradient(135deg,#0d9488,#0ea5e9);">
       <i class="bi bi-play-fill me-1"></i>เริ่มตรวจสภาพแวดล้อม
     </a>
@@ -497,75 +497,6 @@
   </div>
 </div>
   
-  <div class="table-responsive">
-    <table class="table align-middle table-hover mb-0">
-      <thead class="table-light">
-        <tr>
-          <th>รหัสรอบ</th>
-          <th>วันที่และเวลา</th>
-          <th>ผู้ตรวจสอบ</th>
-          <th>ผลการตรวจอุปกรณ์</th>
-          <th>สถานะการเดินตรวจ</th>
-          <th class="text-center">จัดการ</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% if (summary.latestSessions && summary.latestSessions.length > 0) { %>
-          <% summary.latestSessions.forEach(sess => { %>
-            <tr>
-              <td><span class="fw-bold">#<%= sess.session_id %></span></td>
-              <td><%= formatThaiDate(sess.started_at, true) %></td>
-              <td><strong><%= sess.inspector_name %></strong></td>
-              <td>
-                <div class="d-flex gap-1.5">
-                  <% if (sess.pass_count > 0) { %>
-                    <span class="badge bg-success-subtle text-success border border-success-subtle">ปกติ: <%= sess.pass_count %></span>
-                  <% } %>
-                  <% if (sess.warning_count > 0) { %>
-                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle">เตือน: <%= sess.warning_count %></span>
-                  <% } %>
-                  <% if (sess.fail_count > 0) { %>
-                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle">ผิดปกติ: <%= sess.fail_count %></span>
-                  <% } %>
-                  <% if (sess.pass_count === 0 && sess.warning_count === 0 && sess.fail_count === 0) { %>
-                    <span class="text-muted fs-8.5">-</span>
-                  <% } %>
-                </div>
-              </td>
-              <td>
-                <% if (sess.session_status === 'completed') { %>
-                  <span class="badge bg-success rounded-pill px-2.5 py-1.5"><i class="bi bi-check-circle-fill me-1"></i>เสร็จสมบูรณ์</span>
-                <% } else if (sess.session_status === 'in_progress') { %>
-                  <span class="badge bg-warning text-dark rounded-pill px-2.5 py-1.5"><i class="bi bi-hourglass-split me-1"></i>กำลังตรวจ</span>
-                <% } %>
-              </td>
-              <td class="text-center">
-                <% if (sess.session_status === 'completed') { %>
-                  <form action="/inspections/reopen" method="POST" class="d-inline">
-                    <input type="hidden" name="sessionId" value="<%= sess.session_id %>">
-                    <button type="submit" class="btn btn-xs btn-outline-primary py-1 px-2.5 rounded-2 small fw-semibold">
-                      <i class="bi bi-pencil-square"></i> แก้ไขผลตรวจ
-                    </button>
-                  </form>
-                <% } else if (sess.session_status === 'in_progress' && user.id === sess.inspector_id) { %>
-                  <a href="/inspections/walk" class="btn btn-xs btn-primary py-1 px-2.5 rounded-2 small fw-semibold">
-                    <i class="bi bi-play-fill"></i> เดินตรวจต่อ
-                  </a>
-                <% } else { %>
-                  <span class="text-muted small">-</span>
-                <% } %>
-              </td>
-            </tr>
-          <% }) %>
-        <% } else { %>
-          <tr>
-            <td colspan="6" class="text-center py-4 text-muted">ไม่พบข้อมูลการเดินตรวจเช็คในระบบ</td>
-          </tr>
-        <% } %>
-      </tbody>
-    </table>
-  </div>
-</div>
 
 <style>
 /* Dashboard Styles & Animations */
@@ -661,27 +592,170 @@
   font-size: 0.75rem;
   padding: 0.25rem 0.5rem;
 }
+.simple-chart {
+  height: 100%;
+  overflow: auto;
+  padding: 0.25rem 0.5rem 0.5rem;
+}
+.simple-chart-row {
+  display: grid;
+  grid-template-columns: 86px 1fr 42px;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 28px;
+  font-size: 0.78rem;
+}
+.simple-chart-label {
+  color: #64748b;
+  white-space: nowrap;
+}
+.simple-chart-track {
+  display: flex;
+  height: 12px;
+  overflow: hidden;
+  background: #e5e7eb;
+  border-radius: 999px;
+}
+.simple-bar {
+  display: block;
+  min-width: 0;
+}
+.simple-bar-pass {
+  background: #198754;
+}
+.simple-bar-warning {
+  background: #f59f00;
+}
+.simple-bar-fail {
+  background: #dc3545;
+}
+.simple-chart-total {
+  color: #334155;
+  font-weight: 700;
+  text-align: right;
+}
+
 </style>
 
 <script>
+const embeddedAnalytics = <%- JSON.stringify(summary.analytics || {
+  dailyTrends: [],
+  monthlyTrends: [],
+  checklistDistribution: [],
+  topRooms: [],
+  topRacks: [],
+  topServers: []
+}) %>;
+
 document.addEventListener("DOMContentLoaded", function() {
-  // Initialize and load ECharts charts from analytics API
+  renderDashboardAnalytics(embeddedAnalytics);
+
   fetch('/dashboard/api/analytics')
-    .then(res => res.json())
+    .then(res => {
+      const contentType = res.headers.get('content-type') || '';
+      if (!res.ok || !contentType.includes('application/json')) {
+        throw new Error('Analytics API did not return JSON');
+      }
+      return res.json();
+    })
     .then(data => {
-      render30DaysChart(data.dailyTrends);
-      render12MonthsChart(data.monthlyTrends);
-      renderPieChart(data.checklistDistribution);
-      renderRiskLists(data.topRooms, data.topRacks, data.topServers);
+      renderDashboardAnalytics(data);
     })
     .catch(err => {
       console.error('Error loading analytics charts:', err);
     });
 });
 
+function renderDashboardAnalytics(data = {}) {
+  render30DaysChart(data.dailyTrends || []);
+  render12MonthsChart(data.monthlyTrends || []);
+  renderPieChart(data.checklistDistribution || []);
+  renderRiskLists(data.topRooms || [], data.topRacks || [], data.topServers || []);
+}
+
+function canUseEcharts() {
+  return typeof echarts !== 'undefined' && echarts && typeof echarts.init === 'function';
+}
+
+function showChartNotice(chartDom, message) {
+  chartDom.innerHTML = `
+    <div class="h-100 d-flex flex-column justify-content-center align-items-center text-muted text-center">
+      <i class="bi bi-info-circle fs-1 mb-2 text-primary"></i>
+      <div class="fw-semibold">${message}</div>
+    </div>
+  `;
+}
+
+function renderSimpleTrend(chartDom, rows, labelKey) {
+  if (!rows.length) {
+    showChartNotice(chartDom, 'ยังไม่มีข้อมูลสำหรับช่วงเวลานี้');
+    return;
+  }
+
+  const maxValue = Math.max(1, ...rows.map(row =>
+    Number(row.pass_count || 0) + Number(row.warning_count || 0) + Number(row.fail_count || 0)
+  ));
+
+  chartDom.innerHTML = `
+    <div class="simple-chart">
+      ${rows.map(row => {
+        const pass = Number(row.pass_count || 0);
+        const warning = Number(row.warning_count || 0);
+        const fail = Number(row.fail_count || 0);
+        const total = pass + warning + fail;
+        const label = labelKey === 'month' ? row.month : row.date;
+        return `
+          <div class="simple-chart-row">
+            <div class="simple-chart-label">${label}</div>
+            <div class="simple-chart-track">
+              <span class="simple-bar simple-bar-pass" style="width:${(pass / maxValue) * 100}%"></span>
+              <span class="simple-bar simple-bar-warning" style="width:${(warning / maxValue) * 100}%"></span>
+              <span class="simple-bar simple-bar-fail" style="width:${(fail / maxValue) * 100}%"></span>
+            </div>
+            <div class="simple-chart-total">${total}</div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+function renderSimplePie(chartDom, dist) {
+  let pass = 0, fail = 0, na = 0;
+  dist.forEach(d => {
+    if (d.result_value === 'pass') pass = Number(d.count);
+    else if (d.result_value === 'fail') fail = Number(d.count);
+    else if (d.result_value === 'na') na = Number(d.count);
+  });
+
+  const total = pass + fail + na;
+  if (!total) {
+    showChartNotice(chartDom, 'ยังไม่มีข้อมูลผลลัพธ์ข้อคำถาม');
+    return;
+  }
+
+  chartDom.innerHTML = `
+    <div class="h-100 d-flex flex-column justify-content-center gap-3">
+      <div class="d-flex justify-content-between align-items-center"><span class="text-success fw-semibold">ปกติ (Pass)</span><span>${pass} ข้อ</span></div>
+      <div class="progress" style="height:12px;"><div class="progress-bar bg-success" style="width:${(pass / total) * 100}%"></div></div>
+      <div class="d-flex justify-content-between align-items-center"><span class="text-danger fw-semibold">ผิดปกติ (Fail)</span><span>${fail} ข้อ</span></div>
+      <div class="progress" style="height:12px;"><div class="progress-bar bg-danger" style="width:${(fail / total) * 100}%"></div></div>
+      <div class="d-flex justify-content-between align-items-center"><span class="text-secondary fw-semibold">N/A</span><span>${na} ข้อ</span></div>
+      <div class="progress" style="height:12px;"><div class="progress-bar bg-secondary" style="width:${(na / total) * 100}%"></div></div>
+    </div>
+  `;
+}
+
 // Render 30 Days Trend Bar Chart
 function render30DaysChart(trends) {
   const chartDom = document.getElementById('chart30Days');
+  trends = Array.isArray(trends) ? trends : [];
+
+  if (!canUseEcharts()) {
+    renderSimpleTrend(chartDom, trends, 'date');
+    return;
+  }
+
   const myChart = echarts.init(chartDom);
   
   const dates = trends.map(t => {
@@ -731,6 +805,13 @@ function render30DaysChart(trends) {
 // Render 12 Months Trend Bar/Line Chart
 function render12MonthsChart(trends) {
   const chartDom = document.getElementById('chart12Months');
+  trends = Array.isArray(trends) ? trends : [];
+
+  if (!canUseEcharts()) {
+    renderSimpleTrend(chartDom, trends, 'month');
+    return;
+  }
+
   const myChart = echarts.init(chartDom);
 
   const months = trends.map(t => {
@@ -781,6 +862,13 @@ function render12MonthsChart(trends) {
 // Render Checklist Item Distribution Pie Chart
 function renderPieChart(dist) {
   const chartDom = document.getElementById('chartChecklistPie');
+  dist = Array.isArray(dist) ? dist : [];
+
+  if (!canUseEcharts()) {
+    renderSimplePie(chartDom, dist);
+    return;
+  }
+
   const myChart = echarts.init(chartDom);
 
   let pass = 0, fail = 0, na = 0;
@@ -842,6 +930,10 @@ function renderPieChart(dist) {
 
 // Render Top Risk Lists
 function renderRiskLists(rooms, racks, servers) {
+  rooms = Array.isArray(rooms) ? rooms : [];
+  racks = Array.isArray(racks) ? racks : [];
+  servers = Array.isArray(servers) ? servers : [];
+
   // Render Rooms
   const roomsList = document.getElementById('topRoomsList');
   if (rooms.length > 0) {

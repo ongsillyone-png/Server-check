@@ -9,20 +9,31 @@ class BaseRepository {
    */
   static async query(sql, params = [], connection = null) {
     if (connection) {
-      return await connection.query(sql, params);
+      const [rows] = await connection.query(sql, params);
+      return rows;
     }
+
     let conn;
+
     try {
       conn = await pool.getConnection();
-      const res = await conn.query(sql, params);
-      return res;
+
+      const [rows] = await conn.query(sql, params);
+
+      return rows;
+
     } catch (err) {
-      console.error(`Database Query Failed:\nSQL: ${sql}\nParams: ${JSON.stringify(params)}\nError:`, err.message);
+      console.error(
+        `Database Query Failed:\nSQL: ${sql}\nParams: ${JSON.stringify(params)}\nError:`,
+        err.message
+      );
       throw err;
+
     } finally {
       if (conn) conn.release();
     }
   }
 }
+
 
 module.exports = BaseRepository;

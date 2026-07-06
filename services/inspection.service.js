@@ -19,7 +19,7 @@ class InspectionService {
 
     // Check how many sessions the inspector has today (excluding canceled)
     const countToday = await InspectionSessionRepository.countSessionsTodayByInspector(inspectorId);
-    
+
     // Get limit from settings
     const limitSetting = await SettingRepository.findByKey('inspections_per_day');
     const limit = limitSetting ? parseInt(limitSetting.setting_value) : 1;
@@ -67,7 +67,7 @@ class InspectionService {
   static async getRoomsWithStatus(sessionId) {
     // Rooms metadata
     const rooms = await RoomRepository.findAll('', 100, 0); // reuse repository
-    
+
     // Get counts per room
     const countsSql = `
       SELECT 
@@ -80,7 +80,7 @@ class InspectionService {
       WHERE s.deleted_at IS NULL
       GROUP BY rk.room_id
     `;
-    const counts = await pool.query(countsSql, [sessionId]);
+    const [counts] = await pool.query(countsSql, [sessionId]);
     const countsMap = counts.reduce((acc, row) => {
       acc[Number(row.room_id)] = {
         total: Number(row.total_servers),
@@ -105,16 +105,39 @@ class InspectionService {
    */
   static async getRacksByRoomWithStatus(sessionId, roomId) {
     const racksSql = `
-      SELECT r.*,
-        COUNT(s.id) as total_servers,
-        SUM(CASE WHEN d.id IS NOT NULL THEN 1 ELSE 0 END) as inspected_servers
-      FROM racks r
-      LEFT JOIN physical_servers s ON s.rack_id = r.id AND s.deleted_at IS NULL
-      LEFT JOIN inspection_details d ON d.physical_server_id = s.id AND d.session_id = ? AND d.deleted_at IS NULL
-      WHERE r.room_id = ? AND r.deleted_at IS NULL
-      GROUP BY r.id
-    `;
-    const racks = await pool.query(racksSql, [sessionId, roomId]);
+    SELECT
+        r.id,
+        r.rack_name,
+        r.unit_size,
+        r.description,
+
+        COUNT(s.id) AS total_servers,
+        SUM(CASE WHEN d.id IS NOT NULL THEN 1 ELSE 0 END) AS inspected_servers
+
+    FROM racks r
+
+    LEFT JOIN physical_servers s
+        ON s.rack_id = r.id
+       AND s.deleted_at IS NULL
+
+    LEFT JOIN inspection_details d
+        ON d.physical_server_id = s.id
+       AND d.session_id = ?
+       AND d.deleted_at IS NULL
+
+    WHERE r.room_id = ?
+      AND r.deleted_at IS NULL
+
+    GROUP BY
+        r.id,
+        r.rack_name,
+        r.unit_size,
+        r.description
+
+    ORDER BY r.rack_name
+`;
+    const [racks] = await pool.query(racksSql, [sessionId, roomId]);
+
     return racks.map(rack => ({
       id: Number(rack.id),
       rack_name: rack.rack_name,
@@ -122,7 +145,9 @@ class InspectionService {
       description: rack.description,
       total_servers: Number(rack.total_servers),
       inspected_servers: Number(rack.inspected_servers),
-      is_completed: Number(rack.total_servers) > 0 && Number(rack.total_servers) === Number(rack.inspected_servers)
+      is_completed:
+        Number(rack.total_servers) > 0 &&
+        Number(rack.total_servers) === Number(rack.inspected_servers)
     }));
   }
 
@@ -141,7 +166,7 @@ class InspectionService {
       WHERE s.rack_id = ? AND s.deleted_at IS NULL
       ORDER BY s.rack_position_u DESC
     `;
-    const servers = await pool.query(sql, [sessionId, rackId]);
+    const [servers] = await pool.query(sql, [sessionId, rackId]);
     return servers.map(srv => ({
       id: Number(srv.id),
       server_name: srv.server_name,
@@ -168,7 +193,7 @@ class InspectionService {
       WHERE t.is_active = 1 AND t.target_type = 'physical_server' AND ti.is_active = 1 AND ti.deleted_at IS NULL
       ORDER BY ti.sort_order ASC, ti.id ASC
     `;
-    const checklistItems = await pool.query(templateSql);
+    const [checklistItems] = await pool.query(templateSql);
 
     // 2. Check if already inspected, if so get detail and answers
     const detail = await InspectionDetailRepository.findBySessionAndServer(sessionId, serverId);
@@ -306,7 +331,7 @@ class InspectionService {
     try {
       const details = await InspectionDetailRepository.findDetailsWithMetadataBySession(sessionId);
       const session = await InspectionSessionRepository.getSessionDetailsForReport(sessionId);
-      
+
       const NotificationService = require('./notification.service');
 
       for (const d of details) {
@@ -441,10 +466,10 @@ class InspectionService {
 
     for (const sess of sessions) {
       const details = await InspectionDetailRepository.findDetailsWithMetadataBySession(sess.session_id);
-      
+
       for (const d of details) {
         const results = await InspectionResultRepository.findResultsWithPhotosByDetail(d.detail_id);
-        
+
         for (const r of results) {
           let valueStr = '-';
           if (r.item_type === 'boolean') {

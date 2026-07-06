@@ -1,25 +1,30 @@
-const mariadb = require('mariadb');
+const mysql = require('mysql2/promise');
 require('dotenv').config();
 
-// Create connection pool to MariaDB
-const pool = mariadb.createPool({
+const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '3306'),
+  port: Number(process.env.DB_PORT || 3306),
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASS || '',
   database: process.env.DB_NAME || 'server_check',
+
+  waitForConnections: true,
   connectionLimit: 10,
-  connectTimeout: 10000
+  queueLimit: 0,
+
+  supportBigNumbers: true,
+  bigNumberStrings: false,
+  decimalNumbers: true
 });
 
-// Test database connection pool
-pool.getConnection()
-  .then(conn => {
+(async () => {
+  try {
+    const conn = await pool.getConnection();
     console.log('Database connection pool established successfully.');
     conn.release();
-  })
-  .catch(err => {
-    console.error('Error connecting to MariaDB pool:', err.message);
-  });
+  } catch (err) {
+    console.error(err);
+  }
+})();
 
 module.exports = pool;

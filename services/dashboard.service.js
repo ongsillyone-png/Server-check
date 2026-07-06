@@ -82,7 +82,8 @@ class DashboardService {
     const [
       todayStats, monthStats, yearStats, latestSessions,
       vmTodayStats, vmMonthStats, vmYearStats, vmLatestSessions,
-      envStats
+      envStats,
+      analytics
     ] = await Promise.all([
       this._getStatsForPeriod(todayStart, todayEnd, totalServers),
       this._getStatsForPeriod(monthStart, monthEnd, totalServers),
@@ -92,14 +93,16 @@ class DashboardService {
       this._getVmStatsForPeriod(monthStart, monthEnd, totalVms),
       this._getVmStatsForPeriod(yearStart, yearEnd, totalVms),
       DashboardRepository.getLatestVmInspectionSessions(5),
-      EnvInspectionService.getDashboardSummary()
+      EnvInspectionService.getDashboardSummary(),
+      this.getAnalyticsData()
     ]);
 
     return {
       assets,
       todayStats, monthStats, yearStats, latestSessions,
       vmTodayStats, vmMonthStats, vmYearStats, vmLatestSessions,
-      envStats
+      envStats,
+      analytics
     };
   }
 
