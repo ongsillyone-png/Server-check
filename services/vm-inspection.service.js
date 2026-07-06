@@ -28,10 +28,9 @@ class VmInspectionService {
   /**
    * Get active VM session for inspector
    */
-  static async getActiveSession(inspectorId) {
-    return await VmInspectionSessionRepository.findActiveSessionByInspector(inspectorId);
-  }
-
+  static async getActiveSession() {
+    return await VmInspectionSessionRepository.findActiveSession();
+}
   /**
    * Get data for VM prompt page
    */

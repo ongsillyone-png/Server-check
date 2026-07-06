@@ -6,17 +6,20 @@ class InspectionSessionRepository {
    * @param {number} inspectorId 
    * @returns {Promise<Object|null>}
    */
-  static async findActiveSessionByInspector(inspectorId) {
-    const sql = `
-      SELECT s.*, u.name as inspector_name
-      FROM inspection_sessions s
-      JOIN users u ON s.inspector_id = u.id
-      WHERE s.inspector_id = ? AND s.status = 'in_progress' AND s.deleted_at IS NULL
-      LIMIT 1
-    `;
-    const rows = await BaseRepository.query(sql, [inspectorId]);
-    return rows.length > 0 ? rows[0] : null;
-  }
+  static async findActiveSession() {
+  const sql = `
+    SELECT s.*, u.name AS inspector_name
+    FROM inspection_sessions s
+    JOIN users u ON s.inspector_id = u.id
+    WHERE s.status = 'in_progress'
+      AND s.deleted_at IS NULL
+    ORDER BY s.started_at DESC
+    LIMIT 1
+  `;
+
+  const rows = await BaseRepository.query(sql);
+  return rows.length > 0 ? rows[0] : null;
+}
 
   /**
    * Find a session by ID

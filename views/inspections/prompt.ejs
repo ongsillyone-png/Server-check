@@ -1,84 +1,121 @@
 <%- include('../layouts/header') %>
-<%- include('../layouts/sidebar') %>
+  <%- include('../layouts/sidebar') %>
 
-<div class="d-flex justify-content-center align-items-center py-4" style="min-height: 80vh;">
-  <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 text-center w-100" style="max-width: 600px;">
-    <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-4 d-inline-flex mb-4 mx-auto" style="width: fit-content;">
-      <i class="bi bi-clipboard2-check fs-1"></i>
-    </div>
-    <h3 class="fw-bold mb-2 text-dark">เริ่มเดินตรวจเช็คห้อง Server</h3>
-    <p class="text-muted small mb-4">ระบบไม่พบรอบตรวจเช็คที่ค้างอยู่ของคุณในขณะนี้ กรุณากดเริ่มรอบตรวจเช็คใหม่เพื่อเข้าสู่หน้าจอแบบฟอร์มบันทึกผลการเดินตรวจ</p>
-    
-    <% if (typeof error !== 'undefined' && error) { %>
-      <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-4 text-start small" role="alert">
-        <i class="bi bi-exclamation-triangle-fill me-2"></i><%= error %>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      </div>
-    <% } %>
-
-    <% 
-      const activeSessionsCount = todaySessions ? todaySessions.filter(s => s.status !== 'canceled').length : 0;
-      const hasReachedLimit = activeSessionsCount >= limit; 
-    %>
-    
-    <% if (hasReachedLimit) { %>
-      <div class="alert alert-warning text-start small mb-4 border-0 bg-warning bg-opacity-10 text-warning-emphasis">
-        <i class="bi bi-info-circle-fill me-2"></i>วันนี้ได้ทำการตรวจเช็คครบตามโควตาที่กำหนดแล้ว (<strong><%= limit %> รอบต่อวัน</strong>) หากคุณต้องการแก้ไขผลการตรวจเดิม กรุณากดปุ่ม <strong>แก้ไขรอบตรวจ</strong> ที่รายการด้านล่างนี้
-      </div>
-    <% } %>
-
-    <form action="/inspections/start" method="POST" class="mb-3">
-      <button type="submit" class="btn btn-primary btn-lg w-100 py-2.5 rounded-3 fw-bold d-flex align-items-center justify-content-center gap-2" <%= hasReachedLimit ? 'disabled' : '' %>>
-        <i class="bi bi-play-fill fs-4"></i> เริ่มรอบการเดินตรวจรอบใหม่
-      </button>
-    </form>
-    
-    <a href="/dashboard" class="btn btn-link text-muted small mb-4">กลับไปยัง หน้าสรุปภาพรวม (Dashboard)</a>
-
-    <% if (todaySessions && todaySessions.length > 0) { %>
-      <div class="mt-2 border-top pt-4 text-start">
-        <h6 class="fw-bold mb-3 text-dark"><i class="bi bi-clock-history me-1 text-primary"></i> ประวัติรอบการตรวจของวันนี้:</h6>
-        <div class="d-flex flex-column gap-2">
-          <% todaySessions.forEach((sess, idx) => { %>
-            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded-3 border">
-              <div>
-                <span class="fw-bold text-dark d-block mb-1">รอบที่ <%= idx + 1 %> (รหัสรอบ #<%= sess.id %>)</span>
-                <div class="text-muted fs-8">
-                  <span class="d-block"><i class="bi bi-person me-1"></i>ผู้ตรวจ: <strong><%= sess.inspector_name %></strong></span>
-                  <span class="d-block"><i class="bi bi-play me-1"></i>เวลาเริ่ม: <%= formatThaiDate(sess.started_at, true) %></span>
-                  <% if (sess.status === 'completed') { %>
-                    <span class="d-block"><i class="bi bi-check-lg me-1 text-success"></i>เสร็จสิ้น: <%= formatThaiDate(sess.completed_at, true) %></span>
-                  <% } %>
-                </div>
-              </div>
-              <div>
-                <% if (sess.status === 'completed') { %>
-                  <form action="/inspections/reopen" method="POST">
-                    <input type="hidden" name="sessionId" value="<%= sess.id %>">
-                    <button type="submit" class="btn btn-sm btn-outline-primary px-3 fw-bold rounded-2">
-                      <i class="bi bi-pencil-square"></i> แก้ไขรอบตรวจ
-                    </button>
-                  </form>
-                <% } else if (sess.status === 'in_progress') { %>
-                  <span class="badge bg-warning-subtle text-warning-emphasis px-3 py-2 rounded-pill"><i class="bi bi-hourglass-split me-1 animate-spin"></i>กำลังดำเนินการ</span>
-                <% } %>
-              </div>
-            </div>
-          <% }) %>
+    <div class="d-flex justify-content-center align-items-center py-4" style="min-height: 80vh;">
+      <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 text-center w-100" style="max-width: 600px;">
+        <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-4 d-inline-flex mb-4 mx-auto"
+          style="width: fit-content;">
+          <i class="bi bi-clipboard2-check fs-1"></i>
         </div>
+        <h3 class="fw-bold mb-2 text-dark">เริ่มเดินตรวจเช็คห้อง Server</h3>
+        <p class="text-muted small mb-4">ระบบไม่พบรอบตรวจเช็คที่ค้างอยู่ของคุณในขณะนี้
+          กรุณากดเริ่มรอบตรวจเช็คใหม่เพื่อเข้าสู่หน้าจอแบบฟอร์มบันทึกผลการเดินตรวจ</p>
+
+        <% if (typeof error !=='undefined' && error) { %>
+          <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-4 text-start small"
+            role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <%= error %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+          <% } %>
+
+            <% const completedSessionsCount=todaySessions ? todaySessions.filter(s=> s.status === 'completed').length
+              : 0;
+
+              const inProgressSession = todaySessions
+              ? todaySessions.find(s => s.status === 'in_progress')
+              : null;
+
+              const hasReachedLimit = completedSessionsCount >= limit;
+              %>
+
+              <% if (inProgressSession) { %>
+                <div class="alert alert-info text-start small mb-4 border-0 bg-info bg-opacity-10 text-info-emphasis">
+                  <i class="bi bi-hourglass-split me-2"></i>
+                  คุณมีรอบตรวจที่กำลังดำเนินการอยู่ กรุณาดำเนินการตรวจต่อให้เสร็จสิ้นก่อนเริ่มรอบใหม่
+                </div>
+
+                <% } else if (hasReachedLimit) { %>
+                  <div
+                    class="alert alert-warning text-start small mb-4 border-0 bg-warning bg-opacity-10 text-warning-emphasis">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    วันนี้ได้ทำการตรวจเช็คครบตามโควตาที่กำหนดแล้ว (<strong>
+                      <%= limit %> รอบต่อวัน
+                    </strong>) หากคุณต้องการแก้ไขผลการตรวจเดิม กรุณากดปุ่ม <strong>แก้ไขรอบตรวจ</strong>
+                    ที่รายการด้านล่างนี้
+                  </div>
+                  <% } %>
+
+                    <form action="/inspections/start" method="POST" class="mb-3">
+                      <button type="submit"
+                        class="btn btn-primary btn-lg w-100 py-2.5 rounded-3 fw-bold d-flex align-items-center justify-content-center gap-2"
+                        <%=(hasReachedLimit || inProgressSession) ? 'disabled' : '' %>>
+                        <i class="bi bi-play-fill fs-4"></i> เริ่มรอบการเดินตรวจรอบใหม่
+                      </button>
+                    </form>
+                    <a href="/dashboard" class="btn btn-link text-muted small mb-4">กลับไปยัง หน้าสรุปภาพรวม
+                      (Dashboard)</a>
+
+                    <% if (todaySessions && todaySessions.length> 0) { %>
+                      <div class="mt-2 border-top pt-4 text-start">
+                        <h6 class="fw-bold mb-3 text-dark"><i class="bi bi-clock-history me-1 text-primary"></i>
+                          ประวัติรอบการตรวจของวันนี้:</h6>
+                        <div class="d-flex flex-column gap-2">
+                          <% todaySessions.forEach((sess, idx)=> { %>
+                            <div
+                              class="d-flex justify-content-between align-items-center p-3 bg-light rounded-3 border">
+                              <div>
+                                <span class="fw-bold text-dark d-block mb-1">รอบที่ <%= idx + 1 %> (รหัสรอบ #<%= sess.id
+                                      %>)</span>
+                                <div class="text-muted fs-8">
+                                  <span class="d-block"><i class="bi bi-person me-1"></i>ผู้ตรวจ: <strong>
+                                      <%= sess.inspector_name %>
+                                    </strong></span>
+                                  <span class="d-block"><i class="bi bi-play me-1"></i>เวลาเริ่ม: <%=
+                                      formatThaiDate(sess.started_at, true) %></span>
+                                  <% if (sess.status==='completed' ) { %>
+                                    <span class="d-block"><i class="bi bi-check-lg me-1 text-success"></i>เสร็จสิ้น: <%=
+                                        formatThaiDate(sess.completed_at, true) %></span>
+                                    <% } %>
+                                </div>
+                              </div>
+                              <div>
+                                <% if (sess.status==='completed' ) { %>
+                                  <form action="/inspections/reopen" method="POST">
+                                    <input type="hidden" name="sessionId" value="<%= sess.id %>">
+                                    <button type="submit" class="btn btn-sm btn-outline-primary px-3 fw-bold rounded-2">
+                                      <i class="bi bi-pencil-square"></i> แก้ไขรอบตรวจ
+                                    </button>
+                                  </form>
+                                  <% } else if (sess.status==='in_progress' ) { %>
+                                    <span
+                                      class="badge bg-warning-subtle text-warning-emphasis px-3 py-2 rounded-pill"><i
+                                        class="bi bi-hourglass-split me-1 animate-spin"></i>กำลังดำเนินการ</span>
+                                    <% } %>
+                              </div>
+                            </div>
+                            <% }) %>
+                        </div>
+                      </div>
+                      <% } %>
       </div>
-    <% } %>
-  </div>
-</div>
+    </div>
 
-<style>
-.animate-spin {
-  animation: spin 2s linear infinite;
-}
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-</style>
+    <style>
+      .animate-spin {
+        animation: spin 2s linear infinite;
+      }
 
-<%- include('../layouts/footer') %>
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+
+    <%- include('../layouts/footer') %>

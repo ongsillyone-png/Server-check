@@ -4,17 +4,19 @@ class VmInspectionSessionRepository {
   /**
    * Find active in_progress VM session for an inspector
    */
-  static async findActiveSessionByInspector(inspectorId) {
+static async findActiveSession() {
     const sql = `
-      SELECT s.*, u.name as inspector_name
-      FROM vm_inspection_sessions s
-      JOIN users u ON s.inspector_id = u.id
-      WHERE s.inspector_id = ? AND s.status = 'in_progress' AND s.deleted_at IS NULL
-      LIMIT 1
+        SELECT s.*, u.name AS inspector_name
+        FROM vm_inspection_sessions s
+        JOIN users u ON s.inspector_id = u.id
+        WHERE s.status='in_progress'
+        AND s.deleted_at IS NULL
+        LIMIT 1
     `;
-    const rows = await BaseRepository.query(sql, [inspectorId]);
-    return rows.length > 0 ? rows[0] : null;
-  }
+
+    const rows = await BaseRepository.query(sql);
+    return rows.length ? rows[0] : null;
+}
 
   /**
    * Find a VM session by ID

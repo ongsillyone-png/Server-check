@@ -14,7 +14,7 @@ class InspectionService {
    * Start a walkthrough inspection session or retrieve active one
    */
   static async startSession(inspectorId) {
-    const active = await InspectionSessionRepository.findActiveSessionByInspector(inspectorId);
+    const active = await InspectionSessionRepository.findActiveSession();
     if (active) return active;
 
     // Check how many sessions the inspector has today (excluding canceled)
@@ -57,9 +57,9 @@ class InspectionService {
   /**
    * Get active walkthrough session
    */
-  static async getActiveSession(inspectorId) {
-    return await InspectionSessionRepository.findActiveSessionByInspector(inspectorId);
-  }
+  static async getActiveSession() {
+    return await InspectionSessionRepository.findActiveSession();
+}
 
   /**
    * Get rooms list with inspected vs total servers counts

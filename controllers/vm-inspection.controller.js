@@ -8,7 +8,7 @@ class VmInspectionController {
   static async showWalkthrough(req, res, next) {
     try {
       const userId = req.session.user.id;
-      const activeSession = await VmInspectionService.getActiveSession(userId);
+      const activeSession = await VmInspectionService.getActiveSession();
 
       if (!activeSession) {
         const { todaySessions, limit } = await VmInspectionService.getPromptData();
