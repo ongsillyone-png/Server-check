@@ -10,7 +10,7 @@ class VmInspectionService {
    * Start a new VM inspection session, or return existing active session
    */
   static async startSession(inspectorId) {
-    const active = await VmInspectionSessionRepository.findActiveSessionByInspector(inspectorId);
+    const active = await VmInspectionSessionRepository.findActiveSession();
     if (active) return active;
 
     const countToday = await VmInspectionSessionRepository.countSessionsTodayByInspector(inspectorId);
