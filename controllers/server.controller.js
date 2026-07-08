@@ -1,16 +1,24 @@
 const ServerService = require('../services/server.service');
 const RackRepository = require('../repositories/rack.repository');
 const AssetTypeRepository = require('../repositories/asset-type.repository');
+const RoomRepository = require('../repositories/room.repository');
 
 class ServerController {
   // GET /servers
   static async listServers(req, res, next) {
     try {
       const search = req.query.search || '';
+      const roomId = req.query.roomId || '';
+      const rackId = req.query.rackId || '';
+      const assetTypeId = req.query.assetTypeId || '';
+
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
 
-      const result = await ServerService.getPagedServers(search, page, limit);
+      const filters = { search, roomId, rackId, assetTypeId };
+      const result = await ServerService.getPagedServers(filters, page, limit);
+
+      const rooms = await RoomRepository.findAll('', 1000, 0);
       const racks = await RackRepository.findAll('', 1000, 0);
       const assetTypes = await AssetTypeRepository.findAll('', 1000, 0);
 
@@ -18,10 +26,14 @@ class ServerController {
         title: 'Physical Server Management - Server Check',
         currentPage: 'servers',
         servers: result.data,
+        rooms,
         racks,
         assetTypes,
         pagination: result.pagination,
         search,
+        roomId,
+        rackId,
+        assetTypeId,
         success: req.query.success || null,
         error: req.query.error || null
       });
@@ -64,7 +76,12 @@ class ServerController {
   static async exportServers(req, res, next) {
     try {
       const search = req.query.search || '';
-      const csvContent = await ServerService.exportCSV(search);
+      const roomId = req.query.roomId || '';
+      const rackId = req.query.rackId || '';
+      const assetTypeId = req.query.assetTypeId || '';
+
+      const filters = { search, roomId, rackId, assetTypeId };
+      const csvContent = await ServerService.exportCSV(filters);
       
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Content-Disposition', 'attachment; filename=servers-export.csv');

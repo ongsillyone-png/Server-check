@@ -1,33 +1,92 @@
 const BaseRepository = require('./base.repository');
 
 class ServerRepository extends BaseRepository {
-  static async findAll(search = '', limit = 10, offset = 0) {
+  static async findAll(filters = {}, limit = 10, offset = 0) {
+    let search = '';
+    let roomId = '';
+    let rackId = '';
+    let assetTypeId = '';
+
+    if (typeof filters === 'string') {
+      search = filters;
+    } else if (filters) {
+      search = filters.search || '';
+      roomId = filters.roomId || '';
+      rackId = filters.rackId || '';
+      assetTypeId = filters.assetTypeId || '';
+    }
+
     const searchVal = `%${search}%`;
-    const sql = `
+    let sql = `
       SELECT ps.*, r.rack_name, at.type_name, rm.room_name
       FROM physical_servers ps
       INNER JOIN racks r ON ps.rack_id = r.id
       INNER JOIN rooms rm ON r.room_id = rm.id
       INNER JOIN asset_types at ON ps.asset_type_id = at.id
-      WHERE ps.server_name LIKE ? OR ps.serial_number LIKE ? OR ps.ip_address LIKE ? OR r.rack_name LIKE ?
-      ORDER BY ps.id DESC 
-      LIMIT ? OFFSET ?
+      WHERE (ps.server_name LIKE ? OR ps.serial_number LIKE ? OR ps.ip_address LIKE ? OR r.rack_name LIKE ?)
     `;
-    const rows = await this.query(sql, [searchVal, searchVal, searchVal, searchVal, parseInt(limit), parseInt(offset)]);
+    const params = [searchVal, searchVal, searchVal, searchVal];
+
+    if (roomId) {
+      sql += ` AND r.room_id = ?`;
+      params.push(Number(roomId));
+    }
+    if (rackId) {
+      sql += ` AND ps.rack_id = ?`;
+      params.push(Number(rackId));
+    }
+    if (assetTypeId) {
+      sql += ` AND ps.asset_type_id = ?`;
+      params.push(Number(assetTypeId));
+    }
+
+    sql += ` ORDER BY ps.id DESC LIMIT ? OFFSET ?`;
+    params.push(parseInt(limit), parseInt(offset));
+
+    const rows = await this.query(sql, params);
     return rows;
   }
 
-  static async countAll(search = '') {
+  static async countAll(filters = {}) {
+    let search = '';
+    let roomId = '';
+    let rackId = '';
+    let assetTypeId = '';
+
+    if (typeof filters === 'string') {
+      search = filters;
+    } else if (filters) {
+      search = filters.search || '';
+      roomId = filters.roomId || '';
+      rackId = filters.rackId || '';
+      assetTypeId = filters.assetTypeId || '';
+    }
+
     const searchVal = `%${search}%`;
-    const sql = `
+    let sql = `
       SELECT COUNT(*) as total 
       FROM physical_servers ps
       INNER JOIN racks r ON ps.rack_id = r.id
       INNER JOIN rooms rm ON r.room_id = rm.id
       INNER JOIN asset_types at ON ps.asset_type_id = at.id
-      WHERE ps.server_name LIKE ? OR ps.serial_number LIKE ? OR ps.ip_address LIKE ? OR r.rack_name LIKE ?
+      WHERE (ps.server_name LIKE ? OR ps.serial_number LIKE ? OR ps.ip_address LIKE ? OR r.rack_name LIKE ?)
     `;
-    const res = await this.query(sql, [searchVal, searchVal, searchVal, searchVal]);
+    const params = [searchVal, searchVal, searchVal, searchVal];
+
+    if (roomId) {
+      sql += ` AND r.room_id = ?`;
+      params.push(Number(roomId));
+    }
+    if (rackId) {
+      sql += ` AND ps.rack_id = ?`;
+      params.push(Number(rackId));
+    }
+    if (assetTypeId) {
+      sql += ` AND ps.asset_type_id = ?`;
+      params.push(Number(assetTypeId));
+    }
+
+    const res = await this.query(sql, params);
     return Number(res[0].total);
   }
 

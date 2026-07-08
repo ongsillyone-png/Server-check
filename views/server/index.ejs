@@ -13,7 +13,7 @@
     <button class="btn btn-sm btn-outline-success d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#importModal">
       <i class="bi bi-file-earmark-arrow-up"></i> นำเข้า CSV
     </button>
-    <a href="/servers/export?search=<%= search %>" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1">
+    <a href="/servers/export?search=<%= search %>&roomId=<%= roomId %>&rackId=<%= rackId %>&assetTypeId=<%= assetTypeId %>" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1">
       <i class="bi bi-file-earmark-arrow-down"></i> ส่งออก CSV
     </a>
   </div>
@@ -36,15 +36,51 @@
 <!-- Search bar -->
 <div class="card border-0 shadow-sm rounded-4 mb-4">
   <div class="card-body">
-    <form method="GET" action="/servers" class="row g-2 align-items-center">
-      <div class="col-md-9 col-lg-10">
+    <form method="GET" action="/servers" class="row g-3">
+      <!-- Search Input -->
+      <div class="col-12 col-md-3">
         <div class="input-group">
           <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-          <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="ค้นหาด้วยชื่ออุปกรณ์, IP, Serial หรือตู้ Rack..." value="<%= search %>">
+          <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="ชื่อ, IP, Serial..." value="<%= search %>">
         </div>
       </div>
-      <div class="col-md-3 col-lg-2 d-grid">
-        <button type="submit" class="btn btn-dark">ค้นหา</button>
+      
+      <!-- Room Filter -->
+      <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+        <select name="roomId" id="filter_room_id" class="form-select" onchange="filterRacksByRoom(this.value)">
+          <option value="">-- เลือกห้อง Server --</option>
+          <% rooms.forEach(room => { %>
+            <option value="<%= room.id %>" <%= roomId == room.id ? 'selected' : '' %>><%= room.room_name %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <!-- Rack Filter -->
+      <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+        <select name="rackId" id="filter_rack_id" class="form-select">
+          <option value="">-- เลือกตู้ Rack --</option>
+          <% racks.forEach(rack => { %>
+            <option value="<%= rack.id %>" data-room-id="<%= rack.room_id %>" <%= rackId == rack.id ? 'selected' : '' %>><%= rack.rack_name %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <!-- Type Filter -->
+      <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+        <select name="assetTypeId" class="form-select">
+          <option value="">-- เลือกประเภท --</option>
+          <% assetTypes.forEach(type => { %>
+            <option value="<%= type.id %>" <%= assetTypeId == type.id ? 'selected' : '' %>><%= type.type_name %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <!-- Buttons -->
+      <div class="col-12 col-sm-6 col-md-3 col-lg-3 d-flex gap-2">
+        <button type="submit" class="btn btn-dark flex-grow-1">ค้นหา</button>
+        <% if (search || roomId || rackId || assetTypeId) { %>
+          <a href="/servers" class="btn btn-outline-secondary" title="ล้างตัวกรอง"><i class="bi bi-x-lg"></i></a>
+        <% } %>
       </div>
     </form>
   </div>
@@ -133,15 +169,15 @@
     <nav aria-label="Page navigation" class="mt-4">
       <ul class="pagination justify-content-center">
         <li class="page-item <%= pagination.page <= 1 ? 'disabled' : '' %>">
-          <a class="page-link" href="?search=<%= encodeURIComponent(search) %>&page=<%= pagination.page - 1 %>">ย้อนกลับ</a>
+          <a class="page-link" href="?search=<%= encodeURIComponent(search) %>&roomId=<%= roomId %>&rackId=<%= rackId %>&assetTypeId=<%= assetTypeId %>&page=<%= pagination.page - 1 %>">ย้อนกลับ</a>
         </li>
         <% for(let i=1; i<=pagination.totalPages; i++) { %>
           <li class="page-item <%= pagination.page === i ? 'active' : '' %>">
-            <a class="page-link" href="?search=<%= encodeURIComponent(search) %>&page=<%= i %>"><%= i %></a>
+            <a class="page-link" href="?search=<%= encodeURIComponent(search) %>&roomId=<%= roomId %>&rackId=<%= rackId %>&assetTypeId=<%= assetTypeId %>&page=<%= i %>"><%= i %></a>
           </li>
         <% } %>
         <li class="page-item <%= pagination.page >= pagination.totalPages ? 'disabled' : '' %>">
-          <a class="page-link" href="?search=<%= encodeURIComponent(search) %>&page=<%= pagination.page + 1 %>">ถัดไป</a>
+          <a class="page-link" href="?search=<%= encodeURIComponent(search) %>&roomId=<%= roomId %>&rackId=<%= rackId %>&assetTypeId=<%= assetTypeId %>&page=<%= pagination.page + 1 %>">ถัดไป</a>
         </li>
       </ul>
     </nav>
@@ -418,6 +454,43 @@ function confirmDelete(btn) {
   document.getElementById('deleteForm').action = '/servers/' + id + '/delete';
   document.getElementById('deleteItemName').innerText = name;
 }
+
+// ── Dynamic Room & Rack Dependent Filtering ──
+function filterRacksByRoom(roomId) {
+  const rackSelect = document.getElementById('filter_rack_id');
+  const options = rackSelect.querySelectorAll('option');
+  
+  rackSelect.value = ''; // Reset selection
+  
+  options.forEach(opt => {
+    const optRoomId = opt.getAttribute('data-room-id');
+    if (!roomId || !optRoomId || optRoomId === roomId) {
+      opt.style.display = 'block';
+    } else {
+      opt.style.display = 'none';
+    }
+  });
+}
+
+// Keep filtered state active on page load if Room filter is selected
+document.addEventListener('DOMContentLoaded', function() {
+  const filterRoom = document.getElementById('filter_room_id');
+  if (filterRoom && filterRoom.value) {
+    const rackSelect = document.getElementById('filter_rack_id');
+    const selectedRackVal = "<%= rackId %>";
+    
+    const options = rackSelect.querySelectorAll('option');
+    options.forEach(opt => {
+      const optRoomId = opt.getAttribute('data-room-id');
+      if (!optRoomId || optRoomId === filterRoom.value) {
+        opt.style.display = 'block';
+      } else {
+        opt.style.display = 'none';
+      }
+    });
+    rackSelect.value = selectedRackVal;
+  }
+});
 </script>
 
 <%- include('../layouts/footer') %>

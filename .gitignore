@@ -55,3 +55,4 @@ docs/
 
 # Database Seeder Scripts
 seed_all_inspections_history_4m.txt
+seed_all_inspections_today.txt

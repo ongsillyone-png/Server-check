@@ -4,14 +4,14 @@ const AssetTypeRepository = require('../repositories/asset-type.repository');
 const { parseCSV, generateCSV } = require('../helpers/csv.helper');
 
 class ServerService {
-  static async getPagedServers(search = '', page = 1, limit = 10) {
+  static async getPagedServers(filters = {}, page = 1, limit = 10) {
     const pageNum = Math.max(1, parseInt(page));
     const limitNum = Math.max(1, parseInt(limit));
     const offset = (pageNum - 1) * limitNum;
 
-    const totalRecords = await ServerRepository.countAll(search);
+    const totalRecords = await ServerRepository.countAll(filters);
     const totalPages = Math.ceil(totalRecords / limitNum);
-    const servers = await ServerRepository.findAll(search, limitNum, offset);
+    const servers = await ServerRepository.findAll(filters, limitNum, offset);
 
     return {
       data: servers,
@@ -121,9 +121,9 @@ class ServerService {
     return successCount;
   }
 
-  static async exportCSV(search = '') {
-    const totalRecords = await ServerRepository.countAll(search);
-    const servers = await ServerRepository.findAll(search, totalRecords || 1, 0);
+  static async exportCSV(filters = {}) {
+    const totalRecords = await ServerRepository.countAll(filters);
+    const servers = await ServerRepository.findAll(filters, totalRecords || 1, 0);
     const headerMapping = [
       'id', 'rack_id', 'rack_name', 'room_name', 'asset_type_id', 'type_name', 
       'server_name', 'model', 'serial_number', 'ip_address', 'asset_number', 
