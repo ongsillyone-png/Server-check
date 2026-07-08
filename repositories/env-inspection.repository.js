@@ -26,17 +26,20 @@ class EnvInspectionRepository {
 
   // ── Sessions ───────────────────────────────────────────────────────────
 
-  static async findActiveSessionByInspector(inspectorId) {
-    const sql = `
-      SELECT s.*, r.room_name, u.name AS inspector_name
-      FROM env_inspection_sessions s
-      JOIN rooms r ON s.room_id = r.id
-      JOIN users u ON s.inspector_id = u.id
-      WHERE s.inspector_id = ? AND s.status = 'in_progress' AND s.deleted_at IS NULL
-      LIMIT 1`;
-    const rows = await BaseRepository.query(sql, [inspectorId]);
-    return rows.length > 0 ? rows[0] : null;
-  }
+  static async findActiveSession() {
+  const sql = `
+    SELECT s.*, r.room_name, u.name AS inspector_name
+    FROM env_inspection_sessions s
+    JOIN rooms r ON s.room_id = r.id
+    JOIN users u ON s.inspector_id = u.id
+    WHERE s.status = 'in_progress'
+      AND s.deleted_at IS NULL
+    LIMIT 1
+  `;
+  const rows = await BaseRepository.query(sql);
+  return rows.length > 0 ? rows[0] : null;
+}
+  
 
   static async findById(id) {
     const sql = `

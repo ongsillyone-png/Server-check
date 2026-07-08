@@ -52,3 +52,6 @@ Thumbs.db
 
 # Documentation
 docs/
+
+# Database Seeder Scripts
+seed_all_inspections_history_4m.txt

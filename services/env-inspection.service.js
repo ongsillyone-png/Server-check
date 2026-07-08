@@ -19,7 +19,7 @@ class EnvInspectionService {
   // ── Active session ─────────────────────────────────────────────────────────
 
   static async getActiveSession(userId) {
-    return await EnvRepo.findActiveSessionByInspector(userId);
+    return await EnvRepo.findActiveSession();
   }
 
   // ── Start session ──────────────────────────────────────────────────────────
@@ -27,7 +27,7 @@ class EnvInspectionService {
   static async startSession(userId, roomId) {
     if (!roomId) throw new Error('กรุณาเลือกห้อง Server ที่จะตรวจก่อน');
 
-    const existing = await EnvRepo.findActiveSessionByInspector(userId);
+    const existing = await EnvRepo.findActiveSession();
     if (existing) throw new Error('คุณมีรอบตรวจค้างอยู่แล้ว กรุณาทำรอบปัจจุบันให้เสร็จก่อน');
 
     const count = await EnvRepo.countSessionsTodayByInspector(userId);
@@ -40,7 +40,7 @@ class EnvInspectionService {
   // ── Cancel session ─────────────────────────────────────────────────────────
 
   static async cancelSession(userId) {
-    const session = await EnvRepo.findActiveSessionByInspector(userId);
+    const session = await EnvRepo.findActiveSession();
     if (!session) throw new Error('ไม่พบรอบตรวจที่ค้างอยู่');
     await EnvRepo.cancelSession(session.id, userId);
   }
@@ -51,7 +51,7 @@ class EnvInspectionService {
     const session = await EnvRepo.findById(sessionId);
     if (!session) throw new Error('ไม่พบรอบตรวจ');
     if (session.status === 'in_progress') throw new Error('รอบนี้ยังอยู่ระหว่างดำเนินการ');
-    const active = await EnvRepo.findActiveSessionByInspector(userId);
+    const active = await EnvRepo.findActiveSession();
     if (active) throw new Error('คุณมีรอบตรวจค้างอยู่แล้ว กรุณาทำรอบปัจจุบันให้เสร็จก่อน');
     await EnvRepo.reopenSession(sessionId, userId);
   }
@@ -59,7 +59,7 @@ class EnvInspectionService {
   // ── Get walk data (active session full detail) ─────────────────────────────
 
   static async getWalkData(userId) {
-    const session = await EnvRepo.findActiveSessionByInspector(userId);
+    const session = await EnvRepo.findActiveSession();
     if (!session) return null;
 
     const [racks, roomChecks, rackChecks, coolingLogs] = await Promise.all([
