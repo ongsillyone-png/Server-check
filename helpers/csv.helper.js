@@ -4,6 +4,11 @@
  * @returns {Array<Array<string>>} 2D array of values
  */
 function parseCSV(csvText) {
+  // Strip UTF-8 BOM if present
+  if (csvText.startsWith('\ufeff')) {
+    csvText = csvText.substring(1);
+  }
+
   const lines = [];
   let row = [""];
   lines.push(row);
@@ -51,7 +56,7 @@ function generateCSV(data, headers) {
       return `"${val.replace(/"/g, '""')}"`;
     }).join(',');
   });
-  return [headerRow, ...rows].join('\r\n');
+  return '\ufeff' + [headerRow, ...rows].join('\r\n');
 }
 
 module.exports = {
